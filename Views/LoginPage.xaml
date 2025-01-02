@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CommuniZEN.Views.LoginPage"
+             Title="Login">
+
+    <ScrollView>
+        <Grid Padding="20" RowSpacing="20">
+            <VerticalStackLayout Spacing="15">
+                <!-- Logo or Title -->
+                <Label Text="CommuniZEN"
+                       FontSize="32"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       Margin="0,40,0,20"/>
+
+                <!-- Error Message -->
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="Red"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}"
+                       HorizontalOptions="Center"/>
+
+                <!-- Login Form -->
+                <Frame BackgroundColor="White"
+                       Padding="20"
+                       CornerRadius="10"
+                       HasShadow="True">
+                    <VerticalStackLayout Spacing="15">
+                        <Entry Placeholder="Email"
+                               Text="{Binding EmailInput}"
+                               Keyboard="Email"
+                               />
+
+                        <Entry Placeholder="Password"
+                               Text="{Binding PasswordInput}"
+                               IsPassword="True"/>
+
+                        <Button Text="Login"
+                                Command="{Binding LoginCommand}"
+                                IsEnabled="{Binding CanLogin}"
+                                HeightRequest="50"
+                                Margin="0,10,0,0"/>
+
+                        <!-- Separator -->
+                        <BoxView Color="Gray" 
+                                HeightRequest="1" 
+                                Margin="0,10"/>
+
+                        <!-- Google Login -->
+                        <Button Text="Sign in with Google"
+                                Command="{Binding LoginWithGoogleCommand}"
+                                BackgroundColor="#4285F4"
+                                TextColor="White"
+                                HeightRequest="50"/>
+
+                        <!-- Register Link -->
+                        <Button Text="Don't have an account? Register here"
+                                Command="{Binding NavigateToRegisterCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="#3498DB"
+                                FontSize="14"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Loading Indicator -->
+                <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                 IsVisible="{Binding IsLoading}"
+                                 HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+    </ScrollView>
+</ContentPage>

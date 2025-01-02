@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"
+             x:Class="CommuniZEN.Views.RegisterPage"
+             Title="RegisterPage">
+
+    <ScrollView>
+        <Grid Padding="20" RowSpacing="10">
+            <VerticalStackLayout Spacing="15">
+                <!-- Error Message -->
+                <Label Text="{Binding ErrorMessage}"
+                       TextColor="Red"
+                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}"
+                       Margin="0,0,0,10"/>
+
+                <!-- Basic Information -->
+                <Entry Text="{Binding FullName}"
+                       Placeholder="Full Name"
+                       Margin="0,0,0,10"/>
+
+                <Entry Text="{Binding Email}"
+                       Placeholder="Email"
+                       Keyboard="Email"
+                       Margin="0,0,0,10"/>
+
+                <Entry Text="{Binding Password}"
+                       Placeholder="Password"
+                       IsPassword="True"
+                       Margin="0,0,0,10"/>
+
+                <Entry Text="{Binding ConfirmPassword}"
+                       Placeholder="Confirm Password"
+                       IsPassword="True"
+                       Margin="0,0,0,10"/>
+
+                <Entry Text="{Binding PhoneNumber}"
+                       Placeholder="Phone Number"
+                       Keyboard="Telephone"
+                       Margin="0,0,0,10"/>
+
+                <!-- Role Selection -->
+                <Frame BackgroundColor="#F8F9FA" 
+                       Padding="15,5" 
+                       CornerRadius="10"
+                       HasShadow="False"
+                       BorderColor="Transparent">
+
+                    <!-- Role Selection -->
+                    <Picker Title="Select Role"
+                       ItemsSource="{Binding AvailableRoles}"
+                       SelectedItem="{Binding SelectedRoleDisplay}"
+                       Margin="0,0,0,15"/>
+                </Frame>
+
+                <!-- Practitioner Fields -->
+                <VerticalStackLayout IsVisible="{Binding IsPractitionerFieldsVisible}">
+                    <Entry Text="{Binding LicenseNumber}"
+                           Placeholder="License Number"
+                           Margin="0,0,0,10"/>
+
+                    <Entry Text="{Binding Specialization}"
+                           Placeholder="Specialization"
+                           Margin="0,0,0,10"/>
+                </VerticalStackLayout>
+
+                <!-- Register Button -->
+                <Button Text="Register"
+                   Command="{Binding RegisterCommand}"
+                   IsEnabled="{Binding IsNotRegistering}"
+                   HeightRequest="50"
+                   Margin="0,20,0,0"/>
+
+                <!-- Login Link -->
+                <Button Text="Already have an account? Login here"
+                        Command="{Binding NavigateToLoginCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="#3498DB"/>
+
+            </VerticalStackLayout>
+        </Grid>
+    </ScrollView>
+</ContentPage>

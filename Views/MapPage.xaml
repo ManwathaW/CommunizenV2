@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8" ?>
+    <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:CommuniZEN.Controls"
+                 xmlns:models="clr-namespace:CommuniZEN.Models"
+             x:Class="CommuniZEN.Views.MapPage">
+
+    <ContentPage.Resources>
+
+        <Style x:Key="CardStyle" TargetType="Frame">
+            <Setter Property="BackgroundColor" Value="White"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="HasShadow" Value="True"/>
+            <Setter Property="BorderColor" Value="#E8F0FE"/>
+        </Style>
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#4B89DC"/>
+            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HeightRequest" Value="40"/>
+        </Style>
+
+        <Style x:Key="CustomEntryStyle" TargetType="Entry">
+            <Setter Property="BackgroundColor" Value="Transparent"/>
+            <Setter Property="TextColor" Value="#2B5C9B"/>
+            <Setter Property="PlaceholderColor" Value="#95A5A6"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="CursorPosition" Value="0"/>
+            <Setter Property="SelectionLength" Value="0"/>
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="Transparent"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                        <VisualState x:Name="Focused">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="Transparent"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+
+
+        <Style x:Key="FeatureCardStyle" TargetType="Frame">
+            <Setter Property="BackgroundColor" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Padding" Value="0,2,0,0"/>
+
+            <Setter Property="HasShadow" Value="True"/>
+            <Setter Property="BorderColor" Value="#E8F0FE"/>
+            <Setter Property="HeightRequest" Value="150"/>
+            <Setter Property="WidthRequest" Value="300"/>
+
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#E6F3FF" Offset="0.0" />
+                        <GradientStop Color="#CCE7FF" Offset="0.5" />
+                        <GradientStop Color="#B3DBFF" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CardTitleStyle" TargetType="Label">
+            <Setter Property="Margin" Value="0,-10,0,0"/>
+            <Setter Property="TextColor" Value="DarkBlue"/>
+            <Setter Property="Padding" Value="0,10,0,0"/>
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+
+        <Style x:Key="CardDescriptionStyle" TargetType="Label">
+            <Setter Property="TextColor" Value="#7F98C3"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="HorizontalTextAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,-10,0,0"/>
+
+            <Setter Property="LineBreakMode" Value="TailTruncation"/>
+            <Setter Property="MaxLines" Value="2"/>
+        </Style>
+
+    </ContentPage.Resources>
+
+
+    <Grid RowDefinitions="Auto,*">
+            <!-- Search Bar -->
+            <Frame Style="{StaticResource CardStyle}"
+               HeightRequest="45"
+               Padding="0,0,0,0"
+               Margin="15">
+                <Grid ColumnDefinitions="Auto,*,Auto" 
+                  ColumnSpacing="10">
+                    <!-- Back Button -->
+                    <ImageButton Grid.Column="0"
+                            Source="back.png"
+                            HeightRequest="34"
+                            WidthRequest="34"
+                            BackgroundColor="Transparent"
+                            Command="{Binding GoBackCommand}"/>
+
+                    <!-- Search Entry -->
+                    <Entry Grid.Column="1"
+                       Placeholder="Search practitioners..."
+                       Text="{Binding SearchQuery}"
+                       Opacity="0.3"
+                       Style="{StaticResource CustomEntryStyle}"
+                       PlaceholderColor="#7F98C3"
+                       VerticalOptions="Center"/>
+
+                    <!-- View Toggle Button -->
+                    <Button Grid.Column="2"
+                        Text="{Binding IsMapView, Converter={StaticResource ViewTypeConverter}}"
+                        Command="{Binding ToggleViewCommand}"
+                        Style="{StaticResource ActionButtonStyle}"
+                        WidthRequest="80"/>
+                </Grid>
+            </Frame>
+
+            <!-- Content Area -->
+            <Grid Grid.Row="1">
+                <!-- Map View -->
+                <controls:CustomMap 
+                IsVisible="{Binding IsMapView}"
+                CustomPins="{Binding MapPins}"
+                IsShowingUser="True"
+                MapType="Street"/>
+
+                <!-- List View -->
+                <CollectionView 
+                IsVisible="{Binding IsMapView, Converter={StaticResource InverseBoolConverter}}"
+                ItemsSource="{Binding Practitioners}"
+                Margin="15,0">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:PracticeProfile">
+                            <Frame Style="{StaticResource CardStyle}"
+                               Margin="0,0,0,15"
+                               Padding="15">
+                                <Grid ColumnDefinitions="Auto,*,Auto" 
+                                  RowDefinitions="Auto,Auto,Auto"
+                                  RowSpacing="5">
+                                    <!-- Practitioner Image -->
+                                    <Frame Grid.RowSpan="3"
+                                       HeightRequest="80"
+                                       WidthRequest="80"
+                                       CornerRadius="40"
+                                       IsClippedToBounds="True"
+                                       Padding="0"
+                                       BorderColor="#E8F0FE"
+                                       Margin="0,0,15,0">
+                                        <Image Source="{Binding ProfileImage}"
+                                           Aspect="AspectFill"/>
+                                    </Frame>
+
+                                    <Label Grid.Column="1"
+                                       Text="{Binding PracticeName}"
+                                       Style="{StaticResource HeaderLabelStyle}"
+                                       FontAttributes="Bold"
+                                       FontSize="16"/>
+                                    <Label Grid.Column="1" 
+                                       Grid.Row="1"
+                                       Text="{Binding Specialization}"
+                                       TextColor="#7F98C3"/>
+                                    <Label Grid.Column="1" 
+                                       Grid.Row="2"
+                                       Text="{Binding Location}"
+                                       TextColor="#95A5A6"/>
+
+                                    <Button Grid.Column="2" 
+                                        Grid.Row="1"
+                                        Text="Book"
+                                        Style="{StaticResource ActionButtonStyle}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.BookAppointmentCommand}"
+                                        CommandParameter="{Binding .}"/>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Grid>
+    </ContentPage>

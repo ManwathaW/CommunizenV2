@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
+             x:Class="CommuniZEN.Views.PractitionerDashboardPage"
+             Title="My Practice Profiles">
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header -->
+        <Grid ColumnDefinitions="*,Auto" Padding="20" BackgroundColor="#f8f9fa">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="{Binding PractitionerName}"
+                       FontSize="24"
+                       FontAttributes="Bold"/>
+                <Label Text="{Binding MainSpecialization}"
+                       FontSize="16"
+                       TextColor="Gray"/>
+            </VerticalStackLayout>
+
+            <Button Grid.Column="1"
+                    Text="Add Profile"
+                    Command="{Binding ShowAddProfileCommand}"
+                    BackgroundColor="#4CAF50"
+                    TextColor="White"
+                    CornerRadius="20"
+                    Padding="20,10"/>
+        </Grid>
+
+        <!-- Main Content -->
+        <ScrollView Grid.Row="1">
+            <Grid RowDefinitions="Auto,*">
+                <!-- Add/Edit Profile Section -->
+                <Frame IsVisible="{Binding IsAddingProfile}"
+                       Padding="20"
+                       Margin="20"
+                       BorderColor="Transparent"
+                       CornerRadius="10"
+                       HasShadow="True">
+
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Create New Profile"
+                               FontSize="20"
+                               FontAttributes="Bold"/>
+
+                        <!-- Profile Image -->
+                        <Frame HeightRequest="200" 
+                               HasShadow="True" 
+                               Padding="0" 
+                               CornerRadius="10">
+                            <Grid>
+                                <Image Source="{Binding NewProfileImage}"
+                                       Aspect="AspectFill"/>
+                                <Button Text="Change Photo"
+                                        Command="{Binding PickImageCommand}"
+                                        VerticalOptions="End"
+                                        Margin="10"
+                                        Opacity="0.8"
+                                        BackgroundColor="#333333"
+                                        TextColor="White"/>
+                            </Grid>
+                        </Frame>
+
+                        <!-- Profile Details -->
+                        <Entry Placeholder="Practice Name"
+                               Text="{Binding NewPracticeName}"/>
+
+                        <Entry Placeholder="Specialization"
+                               Text="{Binding NewSpecialization}"/>
+
+                        <!-- Location Selection -->
+                        <Frame Padding="15" 
+                               HasShadow="True" 
+                               CornerRadius="10">
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="Practice Location"
+                                       FontAttributes="Bold"/>
+
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Entry Placeholder="Search location..."
+                                           Text="{Binding LocationSearch}"/>
+                                    <Button Grid.Column="1"
+                                            Text="Search"
+                                            Command="{Binding SearchLocationCommand}"
+                                            Margin="5,0,0,0"/>
+                                </Grid>
+
+                                <Frame HeightRequest="200" 
+                                       Padding="0" 
+                                       IsClippedToBounds="True">
+                                    <maps:Map x:Name="locationMap"
+                                             IsShowingUser="True"
+                                             MapType="Street"/>
+                                </Frame>
+
+                                <Label Text="{Binding SelectedLocation}"
+                                       TextColor="Gray"/>
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <!-- Action Buttons -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Button Text="Cancel"
+                                    Command="{Binding CancelAddProfileCommand}"
+                                    BackgroundColor="#9E9E9E"
+                                    TextColor="White"/>
+
+                            <Button Grid.Column="1"
+                                    Text="Save Profile"
+                                    Command="{Binding SaveProfileCommand}"
+                                    BackgroundColor="#4CAF50"
+                                    TextColor="White"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Existing Profiles List -->
+                <CollectionView Grid.Row="1"
+                              ItemsSource="{Binding PracticeProfiles}"
+                              IsVisible="{Binding IsAddingProfile, Converter={StaticResource InverseBoolConverter}}"
+                              Margin="20">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,0,0,15" 
+                                   Padding="15" 
+                                   BorderColor="Transparent"
+                                   CornerRadius="10"
+                                   HasShadow="True">
+                                <Grid RowDefinitions="Auto,Auto,Auto" 
+                                      ColumnDefinitions="Auto,*,Auto">
+
+                                    <!-- Profile Image -->
+                                    <Frame Grid.RowSpan="3"
+                                           HeightRequest="80"
+                                           WidthRequest="80"
+                                           CornerRadius="40"
+                                           IsClippedToBounds="True"
+                                           Padding="0"
+                                           BorderColor="Transparent">
+                                        <Image Source="{Binding ProfileImage}"
+                                               Aspect="AspectFill"/>
+                                    </Frame>
+
+                                    <!-- Profile Details -->
+                                    <Label Grid.Column="1"
+                                           Text="{Binding PracticeName}"
+                                           FontSize="18"
+                                           FontAttributes="Bold"/>
+
+                                    <Label Grid.Column="1" 
+                                           Grid.Row="1"
+                                           Text="{Binding Specialization}"
+                                           TextColor="Gray"/>
+
+                                    <Label Grid.Column="1" 
+                                           Grid.Row="2"
+                                           Text="{Binding Location}"
+                                           TextColor="Gray"/>
+
+                                    <!-- Actions -->
+                                    <StackLayout Grid.Column="2" 
+                                               Grid.RowSpan="3"
+                                               Orientation="Horizontal"
+                                               Spacing="10">
+                                        <Button Text="Edit"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditProfileCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#2196F3"
+                                                TextColor="White"
+                                                CornerRadius="15"
+                                                HeightRequest="30"
+                                                Padding="15,0"/>
+
+                                        <Button Text="Delete"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteProfileCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#FF5252"
+                                                TextColor="White"
+                                                CornerRadius="15"
+                                                HeightRequest="30"
+                                                Padding="15,0"/>
+                                    </StackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </ScrollView>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Extended.UI.Controls;assembly=SkiaSharp.Extended.UI"
+             x:Class="CommuniZEN.Views.ChatbotIntro"
+             Title="">
+    
+    <Grid RowDefinitions="*,Auto,Auto,Auto" 
+          Padding="20"
+          RowSpacing="20">
+
+        <!-- Lottie Animation -->
+        <skia:SKLottieView Grid.Row="0"
+                           Margin="0,-15,0,0"
+                           Source="chatbot.json"
+                           RepeatCount="-1"
+                           IsAnimationEnabled="True"
+                           HeightRequest="450"
+                           WidthRequest="450"/>
+
+
+        <!-- Welcome Text -->
+        <Label Grid.Row="1"
+               Text="Welcome to Mental Health Assistant"
+               FontSize="24"
+               TextColor="#2B5C9B"
+               FontAttributes="Bold"
+               HorizontalOptions="Center"
+               HorizontalTextAlignment="Center"/>
+
+        <!-- Description -->
+        <Label Grid.Row="2"
+               Text="Here to listen, support, and guide you through your mental wellness journey. While I'm not a replacement for professional help, I offer a safe space for conversation and support."
+               FontSize="16"
+               TextColor="#7F98C3"
+               HorizontalTextAlignment="Center"
+               LineBreakMode="WordWrap"/>
+
+        <!-- Continue Button -->
+        <Button Grid.Row="3"
+                Text="Continue"
+                Command="{Binding ContinueCommand}"
+                HeightRequest="50"
+                CornerRadius="25"
+                Margin="40,0"
+                BackgroundColor="#4B89DC"
+                TextColor="White"
+                FontAttributes="Bold"
+                FontSize="16">
+            <Button.Shadow>
+                <Shadow Brush="#4B89DC"
+
+                        Offset="0,4"
+                        Radius="8"
+                        Opacity="0.7"/>
+            </Button.Shadow>
+        </Button>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "343938337235",
+    "project_id": "communizen-c112",
+    "storage_bucket": "communizen-c112.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:343938337235:android:5546cb5b89330781148726",
+        "android_client_info": {
+          "package_name": "com.Group5.CommuniZEN"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjQAkyGjbTQKjI9tBvzT4JQH-ST86o7EM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
