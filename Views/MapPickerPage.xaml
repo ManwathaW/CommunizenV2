@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
+             x:Class="CommuniZEN.Views.MapPickerPage"
+             Title="Select Location">
+
+    <Grid RowDefinitions="*, Auto">
+        <maps:Map x:Name="locationMap"
+                  Grid.Row="0"
+                  IsShowingUser="True"
+                  MapType="Street"/>
+
+        <StackLayout Grid.Row="1" 
+                     Padding="20"
+                     Spacing="10"
+                     BackgroundColor="White">
+            <Label Text="{Binding SelectedAddress}"
+                   TextColor="#2B5C9B"
+                   FontSize="16"/>
+            <Button Text="Confirm Location"
+                    Command="{Binding ConfirmLocationCommand}"
+                    BackgroundColor="#4B89DC"
+                    TextColor="White"/>
+        </StackLayout>
+    </Grid>
+</ContentPage>

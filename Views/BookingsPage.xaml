@@ -2,11 +2,74 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CommuniZEN.Views.BookingsPage"
-             Title="BookingsPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+              xmlns:converters="clr-namespace:CommuniZEN.Converters"     
+             BackgroundColor="#F5F9FF">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:Base64ToImageSourceConverter x:Key="Base64ToImageSourceConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+        <Label Text="Available Practitioners" 
+               TextColor="#2B5C9B"
+               FontSize="24"
+               FontAttributes="Bold"
+               Margin="20"/>
+
+        <RefreshView Grid.Row="1" 
+                     Command="{Binding RefreshCommand}"
+                     IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding Practitioners}"
+                          EmptyView="No practitioners available at the moment.">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame Margin="20,10" 
+                               Padding="15" 
+                               BackgroundColor="White"
+                               BorderColor="#E8F0FE"
+                               CornerRadius="15"
+                               HasShadow="True">
+
+                            <Grid RowDefinitions="Auto,Auto,Auto" 
+                                  ColumnDefinitions="Auto,*" 
+                                  RowSpacing="10">
+                                <Frame Grid.RowSpan="3"
+                                       HeightRequest="80"
+                                       WidthRequest="80"
+                                       CornerRadius="40"
+                                       IsClippedToBounds="True"
+                                       Padding="0"
+                                       BorderColor="#E8F0FE">
+                                    <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
+                                           Aspect="AspectFill"/>
+                                </Frame>
+
+                                <Label Grid.Column="1"
+                                       Text="{Binding Name}"
+                                       TextColor="#2B5C9B"
+                                       FontAttributes="Bold"
+                                       FontSize="18"/>
+
+                                <Label Grid.Row="1"
+                                       Grid.Column="1"
+                                       Text="{Binding Specialization}"
+                                       TextColor="#4B89DC"
+                                       FontSize="14"/>
+
+                                <Label Grid.Row="2"
+                                       Grid.Column="1"
+                                       Text="{Binding Location}"
+                                       TextColor="#7F98C3"
+                                       FontSize="14"
+                                       MaxLines="2"
+                                       LineBreakMode="TailTruncation"/>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
 </ContentPage>

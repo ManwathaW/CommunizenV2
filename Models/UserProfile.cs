@@ -18,7 +18,7 @@ namespace CommuniZEN.Models
         public DateTime CreatedAt { get; set; }
         public DateTime? LastUpdated { get; set; }
         public bool IsActive { get; set; }
-        public string ProfileImage { get; set; } = "profile_placeholder.png"; // Added this
+        public string ProfileImage { get; set; }
         public string Location { get; set; } = "Location not specified"; // Added this
         public Dictionary<string, object> Settings { get; set; } = new();
     }

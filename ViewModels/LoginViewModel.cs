@@ -68,7 +68,7 @@ namespace CommuniZEN.ViewModels
                     });
                 }
 
-                // Navigate based on role
+                // Navigate based on role and show custom TabBar
                 if (userProfile.Role == UserRole.Practitioner)
                 {
                     await Shell.Current.GoToAsync("//practitionerdashboard");
@@ -76,6 +76,7 @@ namespace CommuniZEN.ViewModels
                 else
                 {
                     await Shell.Current.GoToAsync("//mainpage");
+                   
                 }
             }
             catch (Exception ex)

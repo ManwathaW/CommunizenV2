@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CommuniZEN.Models;
-using CommuniZEN.Interfaces;
-using CommuniZEN.Services;
-using Firebase.Database;
-
+﻿using CommuniZEN.Models;
 
 namespace CommuniZEN.Interfaces
 {
@@ -22,12 +13,15 @@ namespace CommuniZEN.Interfaces
         Task<bool> CheckUserExistsAsync(string userId);
         Task SaveUserSessionAsync(string userId, UserSession session);
         Task<Dictionary<string, object>> GetUserStatisticsAsync(string userId);
+
+        // PracticeProfile methods
         Task<List<PracticeProfile>> GetAllPractitionersAsync();
-        Task<List<PracticeProfile>> SearchPractitionersAsync(string searchQuery); // Changed return type
         Task<string> UploadProfileImageAsync(string userId, Stream imageStream);
+        Task<string> GetProfileImageAsync(string userId);
         Task SavePracticeProfileAsync(string userId, PracticeProfile profile);
         Task DeletePracticeProfileAsync(string userId, string profileId);
         Task<List<PracticeProfile>> GetPractitionerProfilesAsync(string userId);
-
+        Task UpdatePracticeProfileAsync(string userId, string profileId, PracticeProfile profile);
+        Task<List<PracticeProfile>> SearchPractitionersAsync(string searchQuery);
     }
-    }
+}

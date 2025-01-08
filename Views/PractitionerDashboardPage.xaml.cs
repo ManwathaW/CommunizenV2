@@ -1,9 +1,15 @@
+using CommuniZEN.ViewModels;
+
 namespace CommuniZEN.Views;
 
 public partial class PractitionerDashboardPage : ContentPage
 {
-	public PractitionerDashboardPage()
+
+    private readonly PractitionerDashboardViewModel _viewModel;
+    public PractitionerDashboardPage(PractitionerDashboardViewModel viewModel)
 	{
 		InitializeComponent();
-	}
+        _viewModel = viewModel;
+        BindingContext = viewModel;
+    }
 }

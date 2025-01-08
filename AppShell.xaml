@@ -6,43 +6,86 @@
     xmlns:sf="clr-namespace:Syncfusion.Maui.Toolkit.SegmentedControl;assembly=Syncfusion.Maui.Toolkit"
     xmlns:views="clr-namespace:CommuniZEN.Views"
     Shell.FlyoutBehavior="Flyout"
+    Shell.TabBarBackgroundColor="#F5F9FF"
+    Shell.TabBarUnselectedColor="#95A5A6"
+    Shell.TabBarTitleColor="#4B89DC"
+    Shell.TabBarForegroundColor="#4B89DC"
     Title="CommuniZEN">
 
+    <Shell.Resources>
+        <Style TargetType="Tab">
+            <Setter Property="Shell.BackgroundColor" Value="Transparent"/>
+            <Setter Property="Shell.TabBarBackgroundColor" Value="#F5F9FF"/>
+            <Setter Property="Shell.TabBarTitleColor" Value="DarkBlue"/>
+            <Setter Property="Shell.TabBarUnselectedColor" Value="#4B89DC"/>
+            <Setter Property="Shell.TabBarForegroundColor" Value="DarkBlue"/>
+        </Style>
+    </Shell.Resources>
 
     <!-- Authentication -->
     <ShellContent
+        Shell.FlyoutBehavior="Disabled"
+        Shell.NavBarIsVisible="False"
         Title="Login"
         ContentTemplate="{DataTemplate views:LoginPage}"
-        Route="login" />
-
+        Route="login" 
+        FlyoutItemIsVisible="False"/>
     <ShellContent
+        Shell.FlyoutBehavior="Disabled"
+        Shell.NavBarIsVisible="False"
         Title="Register"
         ContentTemplate="{DataTemplate views:RegisterPage}"
-        Route="register" />
-
- 
-  
+        Route="register"
+        FlyoutItemIsVisible="False"/>
+    
+    <!-- Practitioner Dashboard -->
+    <ShellContent 
+        Shell.FlyoutBehavior="Flyout"
+        Title="Dashboard"
+        Route="practitionerdashboard"
+        ContentTemplate="{DataTemplate views:PractitionerDashboardPage}"/>
+    
     <!-- Main Pages -->
-    <TabBar Route="main">
-        <Tab Title="Home">
+    <FlyoutItem Title="Main" Route="main">
+        <Tab Title="Home" Icon="home_icon.png">
             <ShellContent 
-                Route="mainpage"
-                ContentTemplate="{DataTemplate views:MainPage}"/>
+                Title="Home"
+                ContentTemplate="{DataTemplate views:MainPage}"
+                Route="mainpage"/>
         </Tab>
-    </TabBar>
+        <Tab Title="Chat" Icon="chat_icon.png">
+            <ShellContent 
+                Title="Chat"
+                ContentTemplate="{DataTemplate views:ChatbotIntro}"
+                Route="chatbotintro"/>
+        </Tab>
+        
+        
+        <Tab Title="Schedule" Icon="appointment_icon.png">
+            <ShellContent 
+                Shell.FlyoutBehavior="Disabled"
+                Title="Profile"
+                ContentTemplate="{DataTemplate views:BookingsPage }"
+                Route="chatbotintro"/>
+        </Tab>
+        
+        <Tab Title="Profile" Icon="profile_icon.png">
+            <ShellContent 
+                Title="Profile"
+                ContentTemplate="{DataTemplate views:ChatbotIntro}"
+                Route="chatbotintro"/>
+        </Tab>
 
-    <TabBar Route="practitioner">
-        <Tab Title="Dashboard">
-            <ShellContent 
-                Route="practitionerdashboard"
-                ContentTemplate="{DataTemplate views:PractitionerDashboardPage}"/>
-        </Tab>
-    </TabBar>
+
+    </FlyoutItem>
+
+
 
     <Shell.FlyoutFooter>
         <Grid Padding="15">
             <sf:SfSegmentedControl x:Name="ThemeSegmentedControl" 
-                VerticalOptions="Center" HorizontalOptions="Center" SelectionChanged="SfSegmentedControl_SelectionChanged"
+                VerticalOptions="Center" HorizontalOptions="Center" 
+                SelectionChanged="SfSegmentedControl_SelectionChanged"
                 SegmentWidth="40" SegmentHeight="40">
                 <sf:SfSegmentedControl.ItemsSource>
                     <x:Array Type="{x:Type sf:SfSegmentItem}">
@@ -53,5 +96,4 @@
             </sf:SfSegmentedControl>
         </Grid>
     </Shell.FlyoutFooter>
-
 </Shell>

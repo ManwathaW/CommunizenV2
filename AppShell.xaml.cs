@@ -4,6 +4,8 @@ using Font = Microsoft.Maui.Font;
 using CommuniZEN.Views;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Maps;
+using CommuniZEN.Controls;
+using System.Diagnostics;
 
 namespace CommuniZEN
 {
@@ -12,51 +14,36 @@ namespace CommuniZEN
         public AppShell()
         {
             InitializeComponent();
-            var currentTheme = Application.Current!.UserAppTheme;
-           
+            RegisterRoutes();
+            this.Navigated += OnNavigated;
         }
-
 
         private void RegisterRoutes()
         {
             Routing.RegisterRoute("login", typeof(LoginPage));
+            Routing.RegisterRoute("bookings", typeof(BookingsPage));   
             Routing.RegisterRoute("main", typeof(MainPage));
             Routing.RegisterRoute("register", typeof(RegisterPage));
+            Routing.RegisterRoute("chatbotintro", typeof(ChatbotIntro));
+            Routing.RegisterRoute("practitionerdashboard", typeof(PractitionerDashboardPage));
         }
 
-
-        public static async Task DisplaySnackbarAsync(string message)
+        private void OnNavigated(object sender, ShellNavigatedEventArgs e)
         {
-            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
-            var snackbarOptions = new SnackbarOptions
+            if (CurrentItem is TabBar tabBar)
             {
-                BackgroundColor = Color.FromArgb("#FF3300"),
-                TextColor = Colors.White,
-                ActionButtonTextColor = Colors.Yellow,
-                CornerRadius = new CornerRadius(0),
-                Font = Font.SystemFontOfSize(18),
-                ActionButtonFont = Font.SystemFontOfSize(14)
-            };
-
-            var snackbar = Snackbar.Make(message, visualOptions: snackbarOptions);
-
-            await snackbar.Show(cancellationTokenSource.Token);
+                foreach (ShellSection item in tabBar.Items)
+                {
+                    bool isSelected = item == CurrentItem.CurrentItem;
+                    Shell.SetTabBarBackgroundColor(item, Colors.White);
+                    Shell.SetTabBarUnselectedColor(item, isSelected ? Color.FromArgb("#4B89DC") : Color.FromArgb("#95A5A6"));
+                    Shell.SetTabBarTitleColor(item, isSelected ? Color.FromArgb("#4B89DC") : Color.FromArgb("#95A5A6"));
+                }
+            }
         }
 
-        public static async Task DisplayToastAsync(string message)
-        {
-            // Toast is currently not working in MCT on Windows
-            if (OperatingSystem.IsWindows())
-                return;
-
-            var toast = Toast.Make(message, textSize: 18);
-
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-            await toast.Show(cts.Token);
-        }
-
-        private void SfSegmentedControl_SelectionChanged(object sender, Syncfusion.Maui.Toolkit.SegmentedControl.SelectionChangedEventArgs e)
+        private void SfSegmentedControl_SelectionChanged(object sender,
+            Syncfusion.Maui.Toolkit.SegmentedControl.SelectionChangedEventArgs e)
         {
             Application.Current!.UserAppTheme = e.NewIndex == 0 ? AppTheme.Light : AppTheme.Dark;
         }

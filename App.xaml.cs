@@ -41,7 +41,7 @@ namespace CommuniZEN
             services.AddTransient<RegisterViewModel>();
             services.AddTransient<LoginViewModel>();
             services.AddTransient<MainPageViewModel>();
-            services.AddTransient<MapPageViewModel>();
+ 
             services.AddTransient<ChatbotintroViewModel>();
             //Pages
             services.AddTransient<LoginPage>(); 
@@ -51,6 +51,7 @@ namespace CommuniZEN
             services.AddTransient<RegisterPage>();
             services.AddTransient<MainPage>();
             services.AddTransient<PractitionerDashboardPage>();
+            services.AddTransient<MapPickerPage>();
 
             //Routing
             Routing.RegisterRoute("chatbotpage", typeof(ChatbotPage));
@@ -60,6 +61,7 @@ namespace CommuniZEN
             Routing.RegisterRoute("register", typeof(RegisterPage));
             Routing.RegisterRoute("mainpage", typeof(MainPage));
             Routing.RegisterRoute("practitionerdashboard", typeof(PractitionerDashboardPage));
+            Routing.RegisterRoute("mapPicker", typeof(MapPickerPage));
 
             ServiceProvider = services.BuildServiceProvider();
 

@@ -4,11 +4,14 @@
              xmlns:local="clr-namespace:CommuniZEN"
              xmlns:converters="clr-namespace:CommuniZEN.Converters"
              x:Class="CommuniZEN.App">
-    
-    
+
+
     <Application.Resources>
         <ResourceDictionary>
-           
+
+            <Color x:Key="TabBarSelectedColor">#4B89DC</Color>
+            <Color x:Key="TabBarUnselectedColor">#95A5A6</Color>
+
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />

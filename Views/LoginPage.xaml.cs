@@ -8,4 +8,6 @@ public partial class LoginPage : ContentPage
 		InitializeComponent();
         BindingContext = App.ServiceProvider.GetService<LoginViewModel>();
     }
+
+
 }

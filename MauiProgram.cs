@@ -8,6 +8,7 @@ using CommuniZEN.Views;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Maps;
 using SkiaSharp.Views.Maui.Controls.Hosting;
+using Firebase.Database;
 
 
 
@@ -36,7 +37,18 @@ namespace CommuniZEN
                 });
 
 #if DEBUG
-    		builder.Logging.AddDebug();
+
+            builder.Services.AddSingleton<FirebaseClient>(serviceProvider =>
+          new FirebaseClient(
+              "https://communizen-c112-default-rtdb.asia-southeast1.firebasedatabase.app/",
+              new FirebaseOptions
+              {
+                  AuthTokenAsyncFactory = () => Task.FromResult(FirebaseConfig.ApiKey)
+              }));
+
+
+
+            builder.Logging.AddDebug();
     		builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
 
@@ -51,13 +63,18 @@ namespace CommuniZEN
             builder.Services.AddTransient<MainPageViewModel>();
             builder.Services.AddTransient<ChatbotintroViewModel>();
             builder.Services.AddTransient<ChatbotViewModel>();
-            builder.Services.AddTransient<MapPageViewModel>();
+            builder.Services.AddTransient<PractitionerDashboardViewModel>();
+            builder.Services.AddTransient<BookingsViewModel>();
+            builder.Services.AddTransient<MapPickerViewModel>();
+
             builder.Services.AddTransient<LoginPage>();
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<ChatbotIntro>();
             builder.Services.AddTransient<ChatbotPage>();
             builder.Services.AddTransient<MapPage>();
             builder.Services.AddTransient<PractitionerDashboardPage>();
+            builder.Services.AddTransient<BookingsPage>();
+            builder.Services.AddTransient<MapPage>();
 
 
 

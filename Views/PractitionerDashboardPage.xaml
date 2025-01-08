@@ -1,190 +1,189 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
              x:Class="CommuniZEN.Views.PractitionerDashboardPage"
-             Title="My Practice Profiles">
+             xmlns:converters="clr-namespace:CommuniZEN.Converters"
+             BackgroundColor="#F5F9FF">
 
-    <Grid RowDefinitions="Auto,*">
-        <!-- Header -->
-        <Grid ColumnDefinitions="*,Auto" Padding="20" BackgroundColor="#f8f9fa">
-            <VerticalStackLayout Spacing="4">
-                <Label Text="{Binding PractitionerName}"
-                       FontSize="24"
-                       FontAttributes="Bold"/>
-                <Label Text="{Binding MainSpecialization}"
-                       FontSize="16"
-                       TextColor="Gray"/>
-            </VerticalStackLayout>
+    <ContentPage.Resources>
 
-            <Button Grid.Column="1"
-                    Text="Add Profile"
-                    Command="{Binding ShowAddProfileCommand}"
-                    BackgroundColor="#4CAF50"
-                    TextColor="White"
-                    CornerRadius="20"
-                    Padding="20,10"/>
-        </Grid>
+        <converters:Base64ToImageSourceConverter x:Key="Base64ToImageSourceConverter"/>
 
-        <!-- Main Content -->
-        <ScrollView Grid.Row="1">
-            <Grid RowDefinitions="Auto,*">
-                <!-- Add/Edit Profile Section -->
-                <Frame IsVisible="{Binding IsAddingProfile}"
-                       Padding="20"
-                       Margin="20"
-                       BorderColor="Transparent"
-                       CornerRadius="10"
-                       HasShadow="True">
+        <ResourceDictionary>
+            <Style x:Key="HeaderLabelStyle" TargetType="Label">
+                <Setter Property="TextColor" Value="#2B5C9B"/>
+                <Setter Property="FontSize" Value="24"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="Margin" Value="0,0,0,20"/>
+            </Style>
 
+            <Style x:Key="CardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="White"/>
+                <Setter Property="CornerRadius" Value="15"/>
+                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="Padding" Value="20"/>
+                <Setter Property="Margin" Value="15"/>
+                <Setter Property="BorderColor" Value="#E8F0FE"/>
+            </Style>
+
+            <Style x:Key="EntryStyle" TargetType="Entry">
+                <Setter Property="BackgroundColor" Value="#F8FAFF"/>
+                <Setter Property="TextColor" Value="#2B5C9B"/>
+                <Setter Property="PlaceholderColor" Value="#95A5A6"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="Margin" Value="0,5,0,15"/>
+                <Setter Property="HeightRequest" Value="45"/>
+            </Style>
+
+            <Style x:Key="EditorStyle" TargetType="Editor">
+                <Setter Property="BackgroundColor" Value="#F8FAFF"/>
+                <Setter Property="TextColor" Value="#2B5C9B"/>
+                <Setter Property="PlaceholderColor" Value="#95A5A6"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="Margin" Value="0,5,0,15"/>
+                <Setter Property="HeightRequest" Value="100"/>
+                <Setter Property="AutoSize" Value="TextChanges"/>
+            </Style>
+
+            <Style x:Key="ButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#4B89DC"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="20,10"/>
+                <Setter Property="Margin" Value="0,5"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20">
+            <!-- Edit Form - Only visible when IsEditing is true -->
+            <VerticalStackLayout IsVisible="{Binding IsEditing}">
+                <Label Text="Practitioner Profile" 
+                       Style="{StaticResource HeaderLabelStyle}"/>
+
+                <Frame Style="{StaticResource CardStyle}">
                     <VerticalStackLayout Spacing="15">
-                        <Label Text="Create New Profile"
-                               FontSize="20"
-                               FontAttributes="Bold"/>
-
-                        <!-- Profile Image -->
-                        <Frame HeightRequest="200" 
-                               HasShadow="True" 
-                               Padding="0" 
-                               CornerRadius="10">
-                            <Grid>
-                                <Image Source="{Binding NewProfileImage}"
-                                       Aspect="AspectFill"/>
-                                <Button Text="Change Photo"
-                                        Command="{Binding PickImageCommand}"
-                                        VerticalOptions="End"
-                                        Margin="10"
-                                        Opacity="0.8"
-                                        BackgroundColor="#333333"
-                                        TextColor="White"/>
-                            </Grid>
+                        <Frame HeightRequest="120" 
+                               WidthRequest="120" 
+                               CornerRadius="60"
+                               IsClippedToBounds="True"
+                               Padding="0"
+                               HorizontalOptions="Center"
+                               BorderColor="#E8F0FE">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ChangeProfilePictureCommand}"/>
+                            </Frame.GestureRecognizers>
+                            <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
+                                   Aspect="AspectFill"
+                                   HeightRequest="120"
+                                   WidthRequest="120"/>
                         </Frame>
 
-                        <!-- Profile Details -->
-                        <Entry Placeholder="Practice Name"
-                               Text="{Binding NewPracticeName}"/>
+                        <Label Text="Tap to change profile picture"
+                               TextColor="#95A5A6"
+                               HorizontalOptions="Center"/>
+
+                        <Entry Placeholder="Full Name"
+                               Text="{Binding Name}"
+                               Style="{StaticResource EntryStyle}"/>
 
                         <Entry Placeholder="Specialization"
-                               Text="{Binding NewSpecialization}"/>
+                               Text="{Binding Specialization}"
+                               Style="{StaticResource EntryStyle}"/>
 
-                        <!-- Location Selection -->
-                        <Frame Padding="15" 
-                               HasShadow="True" 
-                               CornerRadius="10">
-                            <VerticalStackLayout Spacing="10">
-                                <Label Text="Practice Location"
-                                       FontAttributes="Bold"/>
+                        <Editor Placeholder="Bio (Tell us about yourself and your practice)"
+                                Text="{Binding Bio}"
+                                Style="{StaticResource EditorStyle}"/>
 
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Entry Placeholder="Search location..."
-                                           Text="{Binding LocationSearch}"/>
-                                    <Button Grid.Column="1"
-                                            Text="Search"
-                                            Command="{Binding SearchLocationCommand}"
-                                            Margin="5,0,0,0"/>
-                                </Grid>
+                        <!-- Add this to your editing section -->
+                        <StackLayout Spacing="10" Orientation="Horizontal"  >
+                            <Entry HorizontalOptions="FillAndExpand"
+                                   Placeholder="Location"
+                                   Text="{Binding Location}"
+                                   Style="{StaticResource EntryStyle}"
+                                   IsReadOnly="True"/>
 
-                                <Frame HeightRequest="200" 
-                                       Padding="0" 
-                                       IsClippedToBounds="True">
-                                    <maps:Map x:Name="locationMap"
-                                             IsShowingUser="True"
-                                             MapType="Street"/>
-                                </Frame>
+                            <ImageButton Source="map.png"
+                                          Command="{Binding OpenMapPickerCommand}"
+                                         HeightRequest="60"
+                                         WidthRequest="60"/>
 
-                                <Label Text="{Binding SelectedLocation}"
-                                       TextColor="Gray"/>
-                            </VerticalStackLayout>
-                        </Frame>
+                        </StackLayout>
 
-                        <!-- Action Buttons -->
-                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                            <Button Text="Cancel"
-                                    Command="{Binding CancelAddProfileCommand}"
-                                    BackgroundColor="#9E9E9E"
-                                    TextColor="White"/>
 
-                            <Button Grid.Column="1"
-                                    Text="Save Profile"
-                                    Command="{Binding SaveProfileCommand}"
-                                    BackgroundColor="#4CAF50"
-                                    TextColor="White"/>
-                        </Grid>
+
+                        <Button Text="Save Profile"
+                                Command="{Binding SaveProfileCommand}"
+                                Style="{StaticResource ButtonStyle}"/>
+
+                        <Button Text="Cancel"
+                                Command="{Binding CancelEditCommand}"
+                                BackgroundColor="#95A5A6"
+                                Style="{StaticResource ButtonStyle}"/>
                     </VerticalStackLayout>
                 </Frame>
+            </VerticalStackLayout>
 
-                <!-- Existing Profiles List -->
-                <CollectionView Grid.Row="1"
-                              ItemsSource="{Binding PracticeProfiles}"
-                              IsVisible="{Binding IsAddingProfile, Converter={StaticResource InverseBoolConverter}}"
-                              Margin="20">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame Margin="0,0,0,15" 
-                                   Padding="15" 
-                                   BorderColor="Transparent"
-                                   CornerRadius="10"
-                                   HasShadow="True">
-                                <Grid RowDefinitions="Auto,Auto,Auto" 
-                                      ColumnDefinitions="Auto,*,Auto">
+            <!-- Preview Card - Always visible -->
+            <Label Text="Your Profile" 
+                   Style="{StaticResource HeaderLabelStyle}"
+                   Margin="0,20,0,10"/>
 
-                                    <!-- Profile Image -->
-                                    <Frame Grid.RowSpan="3"
-                                           HeightRequest="80"
-                                           WidthRequest="80"
-                                           CornerRadius="40"
-                                           IsClippedToBounds="True"
-                                           Padding="0"
-                                           BorderColor="Transparent">
-                                        <Image Source="{Binding ProfileImage}"
-                                               Aspect="AspectFill"/>
-                                    </Frame>
+            <Frame Style="{StaticResource CardStyle}">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding EditProfileCommand}"/>
+                </Frame.GestureRecognizers>
 
-                                    <!-- Profile Details -->
-                                    <Label Grid.Column="1"
-                                           Text="{Binding PracticeName}"
-                                           FontSize="18"
-                                           FontAttributes="Bold"/>
+                <Grid RowDefinitions="Auto,Auto,Auto" 
+                      ColumnDefinitions="Auto,*" 
+                      RowSpacing="10">
 
-                                    <Label Grid.Column="1" 
-                                           Grid.Row="1"
-                                           Text="{Binding Specialization}"
-                                           TextColor="Gray"/>
+                    <Frame Grid.RowSpan="3"
+                           HeightRequest="80"
+                           WidthRequest="80"
+                           CornerRadius="40"
+                           IsClippedToBounds="True"
+                           Padding="0"
+                           BorderColor="#E8F0FE">
+                        <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
+                               Aspect="AspectFill"/>
+                    </Frame>
 
-                                    <Label Grid.Column="1" 
-                                           Grid.Row="2"
-                                           Text="{Binding Location}"
-                                           TextColor="Gray"/>
+                    <Label Grid.Column="1"
+                           Text="{Binding Name}"
+                           TextColor="#2B5C9B"
+                           FontAttributes="Bold"
+                           FontSize="18"/>
 
-                                    <!-- Actions -->
-                                    <StackLayout Grid.Column="2" 
-                                               Grid.RowSpan="3"
-                                               Orientation="Horizontal"
-                                               Spacing="10">
-                                        <Button Text="Edit"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditProfileCommand}"
-                                                CommandParameter="{Binding .}"
-                                                BackgroundColor="#2196F3"
-                                                TextColor="White"
-                                                CornerRadius="15"
-                                                HeightRequest="30"
-                                                Padding="15,0"/>
+                    <Label Grid.Row="1"
+                           Grid.Column="1"
+                           Text="{Binding Specialization}"
+                           TextColor="#4B89DC"
+                           FontSize="14"/>
 
-                                        <Button Text="Delete"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteProfileCommand}"
-                                                CommandParameter="{Binding .}"
-                                                BackgroundColor="#FF5252"
-                                                TextColor="White"
-                                                CornerRadius="15"
-                                                HeightRequest="30"
-                                                Padding="15,0"/>
-                                    </StackLayout>
-                                </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </Grid>
-        </ScrollView>
-    </Grid>
+                    <Label Grid.Row="2"
+                           Grid.Column="1"
+                           Text="{Binding Bio}"
+                           TextColor="#7F98C3"
+                           FontSize="14"
+                           MaxLines="2"
+                           LineBreakMode="TailTruncation"/>
+                </Grid>
+            </Frame>
+
+            <!-- Delete button below preview card -->
+            <Button Text="Delete Profile"
+                    Command="{Binding DeleteProfileCommand}"
+                    BackgroundColor="#FF6B6B"
+                    Style="{StaticResource ButtonStyle}"
+                    Margin="0,10,0,0"
+                    IsVisible="{Binding HasProfile}"/>
+        </VerticalStackLayout>
+    </ScrollView>
+
+
 </ContentPage>

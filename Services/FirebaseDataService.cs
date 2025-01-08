@@ -5,21 +5,25 @@ using Firebase.Database.Query;
 using FirebaseAdmin.Auth;
 using Firebase.Auth;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 public class FirebaseDataService : IFirebaseDataService
 {
     private readonly FirebaseClient _firebaseClient;
+    private readonly string _authToken;
 
     public FirebaseDataService()
     {
+        _authToken = FirebaseConfig.ApiKey;
         _firebaseClient = new FirebaseClient(
-            "https://communizen-c112-default-rtdb.asia-southeast1.firebasedatabase.app/",  // Updated URL
+            "https://communizen-c112-default-rtdb.asia-southeast1.firebasedatabase.app/",
             new FirebaseOptions
             {
-                AuthTokenAsyncFactory = () => Task.FromResult(FirebaseConfig.ApiKey)
+                AuthTokenAsyncFactory = () => Task.FromResult(_authToken)
             });
     }
 
+    #region User Profile Management
     public async Task CreateUserProfileAsync(string userId, RegisterRequest profile)
     {
         try
@@ -27,7 +31,6 @@ public class FirebaseDataService : IFirebaseDataService
             if (string.IsNullOrEmpty(userId))
                 throw new ArgumentException("User ID cannot be empty");
 
-            // Create user profile
             var userData = new
             {
                 Email = profile.Email,
@@ -38,19 +41,19 @@ public class FirebaseDataService : IFirebaseDataService
                 ProfileImage = "profile_placeholder.png"
             };
 
-            // Save user data
             await _firebaseClient
                 .Child("users")
                 .Child(userId)
                 .PutAsync(JsonConvert.SerializeObject(userData));
 
-            // If practitioner, create practice profile
             if (profile.Role == UserRole.Practitioner)
             {
-                var practiceData = new
+                var practiceData = new PracticeProfile
                 {
+                    Id = Guid.NewGuid().ToString(),
+                    UserId = userId,
                     Email = profile.Email,
-                    FullName = profile.FullName,
+                    Name = profile.FullName,
                     PracticeName = $"Dr. {profile.FullName}'s Practice",
                     PhoneNumber = profile.PhoneNumber,
                     Specialization = profile.Specialization ?? "General Practice",
@@ -59,27 +62,20 @@ public class FirebaseDataService : IFirebaseDataService
                     Latitude = 0.0,
                     Longitude = 0.0,
                     ProfileImage = "profile_placeholder.png",
-                    CreatedAt = DateTime.UtcNow.ToString("o"),
-                    Id = Guid.NewGuid().ToString()
+                    CreatedAt = DateTime.UtcNow
                 };
 
-                await _firebaseClient
-                    .Child("practitioners")
-                    .Child(userId)
-                    .Child(practiceData.Id)
-                    .PutAsync(JsonConvert.SerializeObject(practiceData));
+                await SavePracticeProfileAsync(userId, practiceData);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error creating profile: {ex.Message}");
+            Debug.WriteLine($"Error creating profile: {ex.Message}");
             throw new Exception($"Failed to create user profile: {ex.Message}", ex);
         }
     }
 
-    // ... Rest of your existing methods remain the same ...
-
-public async Task<UserProfile> GetUserProfileAsync(string userId)
+    public async Task<UserProfile> GetUserProfileAsync(string userId)
     {
         try
         {
@@ -88,28 +84,24 @@ public async Task<UserProfile> GetUserProfileAsync(string userId)
                 .Child(userId)
                 .OnceSingleAsync<UserProfile>();
 
-            if (userProfile == null)
+            if (userProfile != null)
             {
-                // Create a default profile if none exists
-                userProfile = new UserProfile
-                {
-                    Id = userId,
-                    Email = "", // This will be set from auth
-                    CreatedAt = DateTime.UtcNow,
-                    IsActive = true
-                };
-
-                await _firebaseClient
-                    .Child("users")
+                var imageData = await _firebaseClient
+                    .Child("profile_images")
                     .Child(userId)
-                    .PutAsync(userProfile);
+                    .OnceSingleAsync<Dictionary<string, string>>();
+
+                if (imageData != null && imageData.ContainsKey("imageData"))
+                {
+                    userProfile.ProfileImage = imageData["imageData"];
+                }
             }
 
             return userProfile;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to retrieve or create user profile: {ex.Message}");
+            throw new Exception($"Failed to retrieve user profile: {ex.Message}");
         }
     }
 
@@ -142,7 +134,9 @@ public async Task<UserProfile> GetUserProfileAsync(string userId)
             throw new Exception($"Failed to delete user profile: {ex.Message}");
         }
     }
+    #endregion
 
+    #region User Management
     public async Task<bool> CheckUserExistsAsync(string userId)
     {
         try
@@ -177,7 +171,203 @@ public async Task<UserProfile> GetUserProfileAsync(string userId)
             throw new Exception($"Failed to retrieve users by role: {ex.Message}");
         }
     }
+    #endregion
 
+    #region Practice Profile Management
+    public async Task SavePracticeProfileAsync(string userId, PracticeProfile profile)
+    {
+        try
+        {
+            await _firebaseClient
+                .Child("practitioners")
+                .Child(userId)
+                .Child(profile.Id)
+                .PutAsync(JsonConvert.SerializeObject(profile));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to save practice profile: {ex.Message}");
+        }
+    }
+
+    public async Task UpdatePracticeProfileAsync(string userId, string profileId, PracticeProfile profile)
+    {
+        try
+        {
+            await _firebaseClient
+                .Child("practitioners")
+                .Child(userId)
+                .Child(profileId)
+                .PutAsync(JsonConvert.SerializeObject(profile));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to update practice profile: {ex.Message}");
+        }
+    }
+
+    public async Task DeletePracticeProfileAsync(string userId, string profileId)
+    {
+        try
+        {
+            await _firebaseClient
+                .Child("practitioners")
+                .Child(userId)
+                .Child(profileId)
+                .DeleteAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to delete practice profile: {ex.Message}");
+        }
+    }
+
+    public async Task<List<PracticeProfile>> GetAllPractitionersAsync()
+    {
+        try
+        {
+            Debug.WriteLine("Getting all practitioners from Firebase");
+            var allPractitioners = new List<PracticeProfile>();
+
+            // Get all user nodes first
+            var userNodes = await _firebaseClient
+                .Child("practitioners")
+                .OnceAsync<Dictionary<string, PracticeProfile>>();
+
+            // For each user node
+            foreach (var userNode in userNodes)
+            {
+                var userId = userNode.Key;
+                var practitionerProfiles = userNode.Object;
+
+                if (practitionerProfiles != null)
+                {
+                    foreach (var profile in practitionerProfiles.Values)
+                    {
+                        try
+                        {
+                            // Get profile image
+                            profile.ProfileImage = await GetProfileImageAsync(userId);
+                            allPractitioners.Add(profile);
+                            Debug.WriteLine($"Added practitioner: {profile.Name}, ID: {profile.Id}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Error processing practitioner: {ex.Message}");
+                        }
+                    }
+                }
+            }
+
+            Debug.WriteLine($"Total practitioners found: {allPractitioners.Count}");
+            return allPractitioners;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error in GetAllPractitionersAsync: {ex.Message}");
+            Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            throw new Exception($"Failed to get practitioners: {ex.Message}");
+        }
+    }
+
+    public async Task<List<PracticeProfile>> GetPractitionerProfilesAsync(string userId)
+    {
+        try
+        {
+            var profiles = await _firebaseClient
+                .Child("practitioners")
+                .Child(userId)
+                .OnceAsync<PracticeProfile>();
+
+            var result = profiles?.Select(p =>
+            {
+                p.Object.Id = p.Key;
+                return p.Object;
+            }).ToList() ?? new List<PracticeProfile>();
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get practitioner profiles: {ex.Message}");
+        }
+    }
+
+    public async Task<List<PracticeProfile>> SearchPractitionersAsync(string searchQuery)
+    {
+        try
+        {
+            var allProfiles = await GetAllPractitionersAsync();
+
+            if (string.IsNullOrWhiteSpace(searchQuery))
+                return allProfiles;
+
+            return allProfiles.Where(p =>
+                p.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                p.PracticeName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                p.Specialization.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                p.Location.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)
+            ).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to search practitioners: {ex.Message}");
+        }
+    }
+    #endregion
+
+    #region Image Management
+    public async Task<string> UploadProfileImageAsync(string userId, Stream imageStream)
+    {
+        try
+        {
+            Debug.WriteLine($"Starting image upload for user: {userId}");
+            using var memoryStream = new MemoryStream();
+            await imageStream.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+            var base64Image = Convert.ToBase64String(imageBytes);
+
+            var imageData = new { imageData = base64Image };
+            await _firebaseClient
+                .Child("profile_images")
+                .Child(userId)
+                .PutAsync(JsonConvert.SerializeObject(imageData));
+
+            Debug.WriteLine("Image uploaded successfully");
+            return base64Image;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error in UploadProfileImageAsync: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<string> GetProfileImageAsync(string userId)
+    {
+        try
+        {
+            var imageData = await _firebaseClient
+                .Child("profile_images")
+                .Child(userId)
+                .OnceSingleAsync<Dictionary<string, string>>();
+
+            if (imageData != null && imageData.ContainsKey("imageData"))
+            {
+                return imageData["imageData"];
+            }
+
+            return "profile_placeholder.png";
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting profile image: {ex.Message}");
+            return "profile_placeholder.png";
+        }
+    }
+    #endregion
+
+    #region Session and Statistics
     public async Task SaveUserSessionAsync(string userId, UserSession session)
     {
         try
@@ -209,110 +399,21 @@ public async Task<UserProfile> GetUserProfileAsync(string userId)
             throw new Exception($"Failed to retrieve user statistics: {ex.Message}");
         }
     }
+    #endregion
 
-    public async Task<List<PracticeProfile>> GetAllPractitionersAsync()
+    #region Authentication
+    public async Task<string> GetCurrentUserIdAsync()
     {
         try
         {
-            var practitioners = await _firebaseClient
-                .Child("practitioners")
-                .OnceAsync<PracticeProfile>();
-
-            return practitioners?.Select(p => p.Object).ToList() ?? new List<PracticeProfile>();
+            var auth = FirebaseAuth.DefaultInstance;
+            var decodedToken = await auth.VerifyIdTokenAsync(_authToken);
+            return decodedToken.Uid;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get practitioners: {ex.Message}");
+            throw new Exception($"Failed to get user ID: {ex.Message}");
         }
     }
-
-    public async Task<List<PracticeProfile>> SearchPractitionersAsync(string searchQuery)
-    {
-        try
-        {
-            var allProfiles = await GetAllPractitionersAsync();
-
-            if (string.IsNullOrWhiteSpace(searchQuery))
-                return allProfiles;
-
-            return allProfiles.Where(p =>
-                p.PracticeName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                p.Specialization.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                p.Location.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)
-            ).ToList();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to search practitioners: {ex.Message}");
-        }
-    }
-
-    public async Task<string> UploadProfileImageAsync(string userId, Stream imageStream)
-    {
-        try
-        {
-            var imagePath = $"profile_images/{userId}/{Guid.NewGuid()}.jpg";
-            // Note: You'll need to implement the actual image upload to Firebase Storage
-            // This is a placeholder that returns a fake URL
-            return $"https://firebasestorage.googleapis.com/{imagePath}";
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to upload image: {ex.Message}");
-        }
-    }
-
-    public async Task SavePracticeProfileAsync(string userId, PracticeProfile profile)
-    {
-        try
-        {
-            await _firebaseClient
-                .Child("practitioners")
-                .Child(userId)
-                .Child(profile.Id)
-                .PutAsync(JsonConvert.SerializeObject(profile));
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to save practice profile: {ex.Message}");
-        }
-    }
-
-    public async Task DeletePracticeProfileAsync(string userId, string profileId)
-    {
-        try
-        {
-            await _firebaseClient
-                .Child("practitioners")
-                .Child(userId)
-                .Child(profileId)
-                .DeleteAsync();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to delete practice profile: {ex.Message}");
-        }
-    }
-
-    public async Task<List<PracticeProfile>> GetPractitionerProfilesAsync(string userId)
-    {
-        try
-        {
-            var profiles = await _firebaseClient
-                .Child("practitioners")
-                .Child(userId)
-                .OnceAsync<PracticeProfile>();
-
-            return profiles?.Select(p => p.Object).ToList() ?? new List<PracticeProfile>();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to get practitioner profiles: {ex.Message}");
-        }
-    }
-
-    
-    
-
-
+    #endregion
 }
