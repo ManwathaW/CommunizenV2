@@ -416,4 +416,263 @@ public class FirebaseDataService : IFirebaseDataService
         }
     }
     #endregion
+
+    #region Managing Appointments 
+
+    public async Task<Availability> GetPractitionerAvailabilityAsync(string practitionerId)
+    {
+        try
+        {
+            var availability = await _firebaseClient
+                .Child("availability")
+                .Child(practitionerId)
+                .OnceSingleAsync<Availability>();
+
+            if (availability == null)
+            {
+                // Return default availability if none is set
+                return new Availability
+                {
+                    PractitionerId = practitionerId,
+                    AvailableDays = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" },
+                    TimeSlots = new List<string>
+                {
+                    "09:00 - 10:00",
+                    "10:00 - 11:00",
+                    "11:00 - 12:00",
+                    "14:00 - 15:00",
+                    "15:00 - 16:00",
+                    "16:00 - 17:00"
+                }
+                };
+            }
+
+            return availability;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting practitioner availability: {ex.Message}");
+            throw new Exception($"Failed to get practitioner availability: {ex.Message}");
+        }
+    }
+
+    public async Task UpdateAppointmentStatusAsync(string appointmentId, AppointmentStatus status)
+    {
+        try
+        {
+            var appointment = await _firebaseClient
+                .Child("appointments")
+                .Child(appointmentId)
+                .OnceSingleAsync<Appointment>();
+
+            if (appointment != null)
+            {
+                appointment.Status = status;
+
+                // Update in practitioner's appointments
+                await _firebaseClient
+                    .Child("appointments")
+                    .Child(appointment.PractitionerId)
+                    .Child(appointmentId)
+                    .PutAsync(JsonConvert.SerializeObject(appointment));
+
+                // Update in user's appointments
+                await _firebaseClient
+                    .Child("user_appointments")
+                    .Child(appointment.UserId)
+                    .Child(appointmentId)
+                    .PutAsync(JsonConvert.SerializeObject(appointment));
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to update appointment status: {ex.Message}");
+        }
+    }
+
+    // method to get appointments
+    public async Task<List<Appointment>> GetAppointmentsAsync(string practitionerId)
+    {
+        try
+        {
+            var appointments = await _firebaseClient
+                .Child("appointments")
+                .Child(practitionerId)
+                .OnceAsync<Appointment>();
+
+            return appointments?.Select(a =>
+            {
+                a.Object.Id = a.Key;
+                return a.Object;
+            }).ToList() ?? new List<Appointment>();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting appointments: {ex.Message}");
+            throw new Exception($"Failed to get appointments: {ex.Message}");
+        }
+    }
+
+    public async Task SaveAvailabilityAsync(string practitionerId, Availability availability)
+    {
+        try
+        {
+            await _firebaseClient
+                .Child("availability")
+                .Child(practitionerId)
+                .PutAsync(JsonConvert.SerializeObject(availability));
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error saving availability: {ex.Message}");
+            throw new Exception($"Failed to save availability: {ex.Message}");
+        }
+    }
+
+
+    public async Task SaveAppointmentAsync(Appointment appointment)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(appointment.Id))
+            {
+                appointment.Id = Guid.NewGuid().ToString();
+            }
+
+            appointment.CreatedAt = DateTime.UtcNow;
+            await _firebaseClient
+                .Child("appointments")
+                .Child(appointment.PractitionerId)
+                .Child(appointment.Id)
+                .PutAsync(JsonConvert.SerializeObject(appointment));
+
+            // Also save to user's appointments
+            await _firebaseClient
+                .Child("user_appointments")
+                .Child(appointment.UserId)
+                .Child(appointment.Id)
+                .PutAsync(JsonConvert.SerializeObject(appointment));
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to save appointment: {ex.Message}");
+        }
+    }
+
+
+
+    public async Task<List<Appointment>> GetUserAppointmentsAsync(string userId)
+    {
+        try
+        {
+            var appointments = await _firebaseClient
+                .Child("user_appointments")
+                .Child(userId)
+                .OnceAsync<Appointment>();
+
+            return appointments?.Select(a => {
+                a.Object.Id = a.Key;
+                return a.Object;
+            }).ToList() ?? new List<Appointment>();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get user appointments: {ex.Message}");
+        }
+    }
+
+    public async Task<List<Appointment>> GetPractitionerAppointmentsAsync(string practitionerId)
+    {
+        try
+        {
+            var appointments = await _firebaseClient
+                .Child("appointments")
+                .Child(practitionerId)
+                .OnceAsync<Appointment>();
+
+            return appointments?.Select(a => {
+                a.Object.Id = a.Key;
+                return a.Object;
+            }).ToList() ?? new List<Appointment>();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get practitioner appointments: {ex.Message}");
+        }
+    }
+
+  
+
+    public async Task<bool> IsTimeSlotAvailableAsync(string practitionerId, DateTime date, string timeSlot)
+    {
+        try
+        {
+            var appointments = await _firebaseClient
+                .Child("appointments")
+                .Child(practitionerId)
+                .OrderBy("Date")
+                .EqualTo(date.ToString("o"))
+                .OnceAsync<Appointment>();
+
+            var conflictingAppointment = appointments?.FirstOrDefault(a =>
+                a.Object.TimeSlot == timeSlot &&
+                a.Object.Status != AppointmentStatus.Cancelled &&
+                a.Object.Status != AppointmentStatus.Rejected);
+
+            return conflictingAppointment == null;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to check time slot availability: {ex.Message}");
+        }
+    }
+
+    public async Task<List<Appointment>> GetAllPractitionerAppointmentsAsync(string practitionerId)
+    {
+        try
+        {
+            var appointments = await _firebaseClient
+                .Child("appointments")
+                .Child(practitionerId)
+                .OnceAsync<Appointment>();
+
+            return appointments?.Select(a =>
+            {
+                a.Object.Id = a.Key;
+                return a.Object;
+            }).ToList() ?? new List<Appointment>();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting appointments: {ex.Message}");
+            throw new Exception($"Failed to get appointments: {ex.Message}");
+        }
+    }
+
+    public async Task DeleteAppointmentAsync(string appointmentId, string practitionerId, string userId)
+    {
+        try
+        {
+            // Delete from practitioner's appointments
+            await _firebaseClient
+                .Child("appointments")
+                .Child(practitionerId)
+                .Child(appointmentId)
+                .DeleteAsync();
+
+            // Delete from user's appointments
+            await _firebaseClient
+                .Child("user_appointments")
+                .Child(userId)
+                .Child(appointmentId)
+                .DeleteAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to delete appointment: {ex.Message}");
+        }
+    }
+
+    #endregion
+
 }

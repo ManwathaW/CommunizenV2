@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CommuniZEN.Views.PractitionerAppointmentsPage"
+                         Title="Appointments Management"
+             BackgroundColor="#F5F9FF">
+
+    <Grid RowDefinitions="Auto,*">
+        <ActivityIndicator IsVisible="{Binding IsLoading}"
+                          IsRunning="{Binding IsLoading}"
+                          Grid.RowSpan="2"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center"/>
+
+        <!-- Content -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20" Spacing="20">
+                <!-- Pending Appointments -->
+                <Label Text="Pending Requests"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="#2B3A67"/>
+
+                <CollectionView ItemsSource="{Binding PendingAppointments}">
+                    <CollectionView.EmptyView>
+                        <Label Text="No pending appointment requests"
+                               TextColor="#666666"
+                               HorizontalOptions="Center"/>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,5" 
+                                   Padding="15"
+                                   BorderColor="#E8F0FE"
+                                   BackgroundColor="White"
+                                   CornerRadius="10">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto" 
+                                      ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding UserName}"
+                                           FontAttributes="Bold"
+                                           TextColor="#2B3A67"/>
+
+                                    <Label Grid.Row="1" 
+                                           Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}"
+                                           TextColor="#666666"/>
+
+                                    <Label Grid.Row="2"
+                                           Text="{Binding TimeSlot}"
+                                           TextColor="#666666"/>
+
+                                    <StackLayout Grid.Row="3" 
+                                               Grid.ColumnSpan="2" 
+                                               Orientation="Horizontal" 
+                                               Spacing="10"
+                                               Margin="0,10,0,0">
+                                        <Button Text="Approve"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ApproveAppointmentCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#4CAF50"
+                                                TextColor="White"
+                                                HeightRequest="35"
+                                                HorizontalOptions="FillAndExpand"/>
+
+                                        <Button Text="Reject"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RejectAppointmentCommand}"
+                                                CommandParameter="{Binding .}"
+                                                BackgroundColor="#FF4B4B"
+                                                TextColor="White"
+                                                HeightRequest="35"
+                                                HorizontalOptions="FillAndExpand"/>
+                                    </StackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Upcoming Appointments -->
+                <Label Text="Upcoming Appointments"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="#2B3A67"
+                       Margin="0,20,0,0"/>
+
+                <CollectionView ItemsSource="{Binding UpcomingAppointments}">
+                    <CollectionView.EmptyView>
+                        <Label Text="No upcoming appointments"
+                               TextColor="#666666"
+                               HorizontalOptions="Center"/>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,5" 
+                                   Padding="15"
+                                   BorderColor="#E8F0FE"
+                                   BackgroundColor="White"
+                                   CornerRadius="10">
+                                <Grid RowDefinitions="Auto,Auto,Auto">
+                                    <Label Text="{Binding UserName}"
+                                           FontAttributes="Bold"
+                                           TextColor="#2B3A67"/>
+
+                                    <Label Grid.Row="1" 
+                                           Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}"
+                                           TextColor="#666666"/>
+
+                                    <Label Grid.Row="2"
+                                           Text="{Binding TimeSlot}"
+                                           TextColor="#666666"/>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Past Appointments -->
+                <Label Text="Past Appointments"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="#2B3A67"
+                       Margin="0,20,0,0"/>
+
+                <CollectionView ItemsSource="{Binding PastAppointments}">
+                    <CollectionView.EmptyView>
+                        <Label Text="No past appointments"
+                               TextColor="#666666"
+                               HorizontalOptions="Center"/>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,5" 
+                                   Padding="15"
+                                   BorderColor="#E8F0FE"
+                                   BackgroundColor="White"
+                                   Opacity="0.7"
+                                   CornerRadius="10">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+                                    <Label Text="{Binding UserName}"
+                                           FontAttributes="Bold"
+                                           TextColor="#2B3A67"/>
+
+                                    <Label Grid.Row="1" 
+                                           Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}"
+                                           TextColor="#666666"/>
+
+                                    <Label Grid.Row="2"
+                                           Text="{Binding TimeSlot}"
+                                           TextColor="#666666"/>
+
+                                    <Label Grid.Row="3"
+                                           Text="{Binding Status}"
+                                           TextColor="{Binding Status, Converter={StaticResource StatusToColorConverter}}"/>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

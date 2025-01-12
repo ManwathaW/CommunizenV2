@@ -12,6 +12,9 @@
             <Color x:Key="TabBarSelectedColor">#4B89DC</Color>
             <Color x:Key="TabBarUnselectedColor">#95A5A6</Color>
 
+            <converters:StatusToColorConverter x:Key="StatusToColorConverter"/>
+            <converters:StatusToBoolConverter x:Key="StatusToBoolConverter"/>
+
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />

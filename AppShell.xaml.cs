@@ -25,7 +25,10 @@ namespace CommuniZEN
             Routing.RegisterRoute("main", typeof(MainPage));
             Routing.RegisterRoute("register", typeof(RegisterPage));
             Routing.RegisterRoute("chatbotintro", typeof(ChatbotIntro));
-            Routing.RegisterRoute("practitionerdashboard", typeof(PractitionerDashboardPage));
+            Routing.RegisterRoute("practitionerdashboard", typeof(PractitionerDashboardPage)); 
+            Routing.RegisterRoute("practitionerprofile", typeof(PractitionerProfilePage));
+            Routing.RegisterRoute("appointments", typeof(ClientAppointmentsPage));
+            Routing.RegisterRoute("practitionerappointments", typeof(PractitionerAppointmentsPage));
         }
 
         private void OnNavigated(object sender, ShellNavigatedEventArgs e)

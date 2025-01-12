@@ -2,7 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CommuniZEN.Views.BookingsPage"
-              xmlns:converters="clr-namespace:CommuniZEN.Converters"     
+              xmlns:converters="clr-namespace:CommuniZEN.Converters"   
+             xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"
              BackgroundColor="#F5F9FF">
 
     <ContentPage.Resources>
@@ -42,6 +43,13 @@
                                        IsClippedToBounds="True"
                                        Padding="0"
                                        BorderColor="#E8F0FE">
+
+                                    <Frame.GestureRecognizers>
+                                        <TapGestureRecognizer 
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:BookingsViewModel}}, Path=ViewPractitionerProfileCommand}"
+                                            CommandParameter="{Binding .}"/>
+                                    </Frame.GestureRecognizers>
+
                                     <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
                                            Aspect="AspectFill"/>
                                 </Frame>

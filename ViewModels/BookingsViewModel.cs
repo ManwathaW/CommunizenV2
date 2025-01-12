@@ -1,8 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommuniZEN.Models;
 using CommuniZEN.Interfaces;
-using CommuniZEN.Services;
+using CommuniZEN.Models;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
@@ -72,6 +71,21 @@ namespace CommuniZEN.ViewModels
                 IsRefreshing = false;
             }
         }
+
+        [RelayCommand]
+        private async Task ViewPractitionerProfile(PracticeProfile practitioner)
+        {
+            if (practitioner == null) return;
+
+            var parameters = new Dictionary<string, object>
+            {
+              { "PractitionerId", practitioner.Id },
+              { "PractitionerUserId", practitioner.UserId }
+            };
+
+            await Shell.Current.GoToAsync("practitionerprofile", parameters);
+        }
+
 
         [RelayCommand]
         private async Task Refresh()

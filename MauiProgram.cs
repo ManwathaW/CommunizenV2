@@ -51,14 +51,16 @@ namespace CommuniZEN
             builder.Logging.AddDebug();
     		builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
-
+            // Register Services
             builder.Services.AddSingleton<IGeolocation>(Geolocation.Default);
             builder.Services.AddSingleton<IGeocoding>(Geocoding.Default);
-
             builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
             builder.Services.AddSingleton<IFirebaseDataService, FirebaseDataService>();
+            builder.Services.AddTransient<ClientAppointmentsPage>();
+            builder.Services.AddTransient<PractitionerAppointmentsPage>();
+            builder.Services.AddTransient<PractitionerProfilePage>();
 
-        
+            // Register ViewModels
             builder.Services.AddTransient<LoginViewModel>();
             builder.Services.AddTransient<MainPageViewModel>();
             builder.Services.AddTransient<ChatbotintroViewModel>();
@@ -66,6 +68,10 @@ namespace CommuniZEN
             builder.Services.AddTransient<PractitionerDashboardViewModel>();
             builder.Services.AddTransient<BookingsViewModel>();
             builder.Services.AddTransient<MapPickerViewModel>();
+            builder.Services.AddTransient<PractitionerProfileViewModel>();
+            builder.Services.AddTransient<ClientAppointmentsViewModel>();
+            builder.Services.AddTransient<PractitionerAppointmentsViewModel>();
+            builder.Services.AddTransient<PractitionerProfileViewModel>();
 
             builder.Services.AddTransient<LoginPage>();
             builder.Services.AddTransient<MainPage>();
@@ -75,6 +81,8 @@ namespace CommuniZEN
             builder.Services.AddTransient<PractitionerDashboardPage>();
             builder.Services.AddTransient<BookingsPage>();
             builder.Services.AddTransient<MapPage>();
+            builder.Services.AddTransient<PractitionerAppointmentsPage>();
+            builder.Services.AddTransient<PractitionerProfilePage>();
 
 
 

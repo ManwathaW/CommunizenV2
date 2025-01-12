@@ -45,6 +45,12 @@
         Route="practitionerdashboard"
         ContentTemplate="{DataTemplate views:PractitionerDashboardPage}"/>
     
+    <!--practitioners profile-->
+    <ShellContent 
+      Shell.FlyoutBehavior="Disabled"
+      Route="practitionerappointments"
+      ContentTemplate="{DataTemplate views:PractitionerAppointmentsPage}"/>
+
     <!-- Main Pages -->
     <FlyoutItem Title="Main" Route="main">
         <Tab Title="Home" Icon="home_icon.png">
@@ -72,8 +78,8 @@
         <Tab Title="Profile" Icon="profile_icon.png">
             <ShellContent 
                 Title="Profile"
-                ContentTemplate="{DataTemplate views:ChatbotIntro}"
-                Route="chatbotintro"/>
+                ContentTemplate="{DataTemplate views:PractitionerAppointmentsPage}"
+                Route="practitionerprofile"/>
         </Tab>
 
 
