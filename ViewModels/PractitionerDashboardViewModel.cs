@@ -15,6 +15,26 @@ namespace CommuniZEN.ViewModels
         private readonly IFirebaseAuthService _authService;
         #endregion
 
+        #region Constants
+        private readonly List<string> DefaultTimeSlots = new()
+        {
+            "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+            "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
+            "16:00", "16:30", "17:00", "17:30"
+        };
+
+        private readonly List<DayOption> DefaultWorkingDays = new()
+        {
+            new DayOption { DayName = "Mon", IsSelected = false },
+            new DayOption { DayName = "Tue", IsSelected = false },
+            new DayOption { DayName = "Wed", IsSelected = false },
+            new DayOption { DayName = "Thu", IsSelected = false },
+            new DayOption { DayName = "Fri", IsSelected = false },
+            new DayOption { DayName = "Sat", IsSelected = false },
+            new DayOption { DayName = "Sun", IsSelected = false }
+        };
+        #endregion
+
         #region Profile Properties
         [ObservableProperty]
         private PracticeProfile profile;
@@ -62,6 +82,20 @@ namespace CommuniZEN.ViewModels
         private string newTimeSlot;
         #endregion
 
+        #region Appointment Properties
+        [ObservableProperty]
+        private ObservableCollection<AppointmentDate> availableDates;
+
+        [ObservableProperty]
+        private AppointmentDate selectedDate;
+
+        [ObservableProperty]
+        private ObservableCollection<TimeSlot> availableTimeSlots;
+
+        [ObservableProperty]
+        private bool isUpdatingAvailability;
+        #endregion
+
         #region Constructor
         public PractitionerDashboardViewModel(IFirebaseDataService dataService, IFirebaseAuthService authService)
         {
@@ -69,94 +103,48 @@ namespace CommuniZEN.ViewModels
             _authService = authService;
             Profile = new PracticeProfile();
             InitializeCollections();
+            InitializeAvailableDates();
             _ = LoadProfileAsync();
         }
 
         private void InitializeCollections()
         {
             TimeSlots = new ObservableCollection<TimeSlot>();
-            InitializeWorkingDays();
-        }
-        #endregion
-
-        #region Availability Management
-        private void InitializeWorkingDays()
-        {
-            WorkingDays = new ObservableCollection<DayOption>
-        {
-            new DayOption { DayName = "Mon", IsSelected = false },
-            new DayOption { DayName = "Tue", IsSelected = false },
-            new DayOption { DayName = "Wed", IsSelected = false },
-            new DayOption { DayName = "Thu", IsSelected = false },
-            new DayOption { DayName = "Fri", IsSelected = false },
-            new DayOption { DayName = "Sat", IsSelected = false },
-            new DayOption { DayName = "Sun", IsSelected = false }
-        };
+            AvailableDates = new ObservableCollection<AppointmentDate>();
+            WorkingDays = new ObservableCollection<DayOption>(DefaultWorkingDays);
         }
 
-        [RelayCommand]
-        private void ToggleDay(DayOption day)
+        private void InitializeAvailableDates()
         {
-            if (day != null)
+            var today = DateTime.Today;
+            AvailableDates.Clear();
+
+            for (int i = 0; i < 30; i++)
             {
-                day.IsSelected = !day.IsSelected;
-            }
-        }
-
-        [RelayCommand]
-        private void AddTimeSlot()
-        {
-            if (string.IsNullOrWhiteSpace(NewTimeSlot)) return;
-
-            TimeSlots.Add(new TimeSlot { Time = NewTimeSlot });
-            NewTimeSlot = string.Empty;
-        }
-
-        [RelayCommand]
-        private void RemoveTimeSlot(TimeSlot slot)
-        {
-            if (slot != null)
-            {
-                TimeSlots.Remove(slot);
-            }
-        }
-
-        private async Task SaveAvailability()
-        {
-            if (Profile == null || string.IsNullOrEmpty(Profile.Id)) return;
-
-            var availability = new Availability
-            {
-                PractitionerId = Profile.Id,
-                AvailableDays = WorkingDays.Where(d => d.IsSelected)
-                                          .Select(d => d.DayName)
-                                          .ToList(),
-                TimeSlots = TimeSlots.Select(t => t.Time).ToList()
-            };
-
-            await _dataService.SaveAvailabilityAsync(Profile.Id, availability);
-        }
-
-        private async Task LoadAvailability()
-        {
-            if (Profile == null || string.IsNullOrEmpty(Profile.Id)) return;
-
-            var availability = await _dataService.GetPractitionerAvailabilityAsync(Profile.Id);
-            if (availability != null)
-            {
-                foreach (var day in WorkingDays)
+                var date = today.AddDays(i);
+                if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
                 {
-                    day.IsSelected = availability.AvailableDays.Contains(day.DayName);
-                }
+                    var timeSlots = DefaultTimeSlots.Select(time => new TimeSlot
+                    {
+                        Time = time,
+                        IsAvailable = true,
+                        IsSelected = false
+                    }).ToList();
 
-                TimeSlots.Clear();
-                foreach (var time in availability.TimeSlots)
-                {
-                    TimeSlots.Add(new TimeSlot { Time = time });
+                    AvailableDates.Add(new AppointmentDate
+                    {
+                        Date = date,
+                        TimeSlots = timeSlots,
+                        IsAvailable = true,
+                        IsSelected = false
+                    });
                 }
             }
         }
+
         #endregion
+
+      
 
         #region Profile Management
         private async Task LoadProfileAsync()
@@ -171,7 +159,7 @@ namespace CommuniZEN.ViewModels
                 {
                     Profile = existingProfile;
                     SetProfileProperties(existingProfile);
-                    await LoadAvailability();
+                    
                 }
                 else
                 {
@@ -225,7 +213,7 @@ namespace CommuniZEN.ViewModels
 
                 UpdateProfileData(userId);
                 await _dataService.SavePracticeProfileAsync(userId, Profile);
-                await SaveAvailability();
+                
 
                 HasProfile = true;
                 IsEditing = false;

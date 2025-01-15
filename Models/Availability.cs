@@ -12,13 +12,14 @@ namespace CommuniZEN.Models
         public string Id { get; set; }
         public string PractitionerId { get; set; }
         public List<string> AvailableDays { get; set; }
-        public List<string> TimeSlots { get; set; }
+        public List<TimeSlot> TimeSlots { get; set; }
+        public List<DayAvailability> DailySchedule { get; set; }
 
         public Availability()
         {
             AvailableDays = new List<string>();
-            TimeSlots = new List<string>();
+            TimeSlots = new List<TimeSlot>();
+            DailySchedule = new List<DayAvailability>();
         }
     }
-
 }

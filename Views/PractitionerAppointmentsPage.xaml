@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:CommuniZEN.Converters"
              x:Class="CommuniZEN.Views.PractitionerAppointmentsPage"
-                         Title="Appointments Management"
+             Title="Appointments Management"
              BackgroundColor="#F5F9FF">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+            <converters:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
+            <converters:StatusToColorConverter x:Key="StatusToColorConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*">
         <ActivityIndicator IsVisible="{Binding IsLoading}"
@@ -12,9 +21,102 @@
                           HorizontalOptions="Center"
                           VerticalOptions="Center"/>
 
-        <!-- Content -->
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20" Spacing="20">
+                <!-- Availability Management Section -->
+                <Frame BorderColor="#E8F0FE" BackgroundColor="White" Padding="15">
+                    <VerticalStackLayout Spacing="15">
+                        <Label Text="Manage Availability"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="#2B3A67"/>
+
+                        <!-- Date Selection -->
+                        <ScrollView Orientation="Horizontal"
+                                  HorizontalScrollBarVisibility="Never">
+                            <CollectionView ItemsSource="{Binding AvailableDates}"
+                                          SelectionMode="Single">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout Orientation="Horizontal"
+                                                     ItemSpacing="10"/>
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Frame Padding="15,10"
+                                               BorderColor="#E8F0FE"
+                                               BackgroundColor="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}"
+                                               WidthRequest="100"
+                                               Margin="5">
+                                            <Frame.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectDateCommand}"
+                                                                    CommandParameter="{Binding}"/>
+                                            </Frame.GestureRecognizers>
+                                            <VerticalStackLayout Spacing="5">
+                                                <Label Text="{Binding Date, StringFormat='{0:MMM}'}"
+                                                       FontSize="14"
+                                                       TextColor="#666666"
+                                                       HorizontalOptions="Center"/>
+                                                <Label Text="{Binding Date, StringFormat='{0:dd}'}"
+                                                       FontSize="24"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#2B3A67"
+                                                       HorizontalOptions="Center"/>
+                                                <Label Text="{Binding Date, StringFormat='{0:ddd}'}"
+                                                       FontSize="12"
+                                                       TextColor="#666666"
+                                                       HorizontalOptions="Center"/>
+                                            </VerticalStackLayout>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </ScrollView>
+
+                        <!-- Time Slots -->
+                        <VerticalStackLayout IsVisible="{Binding IsDateSelected}">
+                            <Label Text="Available Times"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="#2B3A67"
+                                   Margin="0,10"/>
+
+                            <CollectionView ItemsSource="{Binding TimeSlots}"
+                                          HeightRequest="200">
+                                <CollectionView.ItemsLayout>
+                                    <GridItemsLayout Orientation="Vertical"
+                                                   Span="4"
+                                                   VerticalItemSpacing="10"
+                                                   HorizontalItemSpacing="10"/>
+                                </CollectionView.ItemsLayout>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Frame Padding="10"
+                                               BorderColor="#E8F0FE"
+                                               BackgroundColor="{Binding IsAvailable, Converter={StaticResource BoolToColorConverter}}"
+                                               Margin="5">
+                                            <Frame.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleTimeSlotCommand}"
+                                                                    CommandParameter="{Binding}"/>
+                                            </Frame.GestureRecognizers>
+                                            <Label Text="{Binding Time}"
+                                                   FontSize="14"
+                                                   TextColor="#2B3A67"
+                                                   HorizontalOptions="Center"/>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+
+                            <Button Text="Save Availability"
+                                    Command="{Binding UpdateAvailabilityCommand}"
+                                    BackgroundColor="#4B89DC"
+                                    TextColor="White"
+                                    HeightRequest="40"
+                                    Margin="0,10,0,0"/>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Frame>
+
                 <!-- Pending Appointments -->
                 <Label Text="Pending Requests"
                        FontSize="20"
@@ -55,7 +157,7 @@
                                                Margin="0,10,0,0">
                                         <Button Text="Approve"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ApproveAppointmentCommand}"
-                                                CommandParameter="{Binding .}"
+                                                CommandParameter="{Binding}"
                                                 BackgroundColor="#4CAF50"
                                                 TextColor="White"
                                                 HeightRequest="35"
@@ -63,7 +165,7 @@
 
                                         <Button Text="Reject"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RejectAppointmentCommand}"
-                                                CommandParameter="{Binding .}"
+                                                CommandParameter="{Binding}"
                                                 BackgroundColor="#FF4B4B"
                                                 TextColor="White"
                                                 HeightRequest="35"

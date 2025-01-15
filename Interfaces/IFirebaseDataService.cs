@@ -3,7 +3,6 @@ using static CommuniZEN.Models.Appointment;
 
 namespace CommuniZEN.Interfaces
 {
-
     public interface IFirebaseDataService
     {
         #region User Profile Management
@@ -49,5 +48,4 @@ namespace CommuniZEN.Interfaces
         Task<bool> IsTimeSlotAvailableAsync(string practitionerId, DateTime date, string timeSlot);
         #endregion
     }
-
 }

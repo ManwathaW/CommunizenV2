@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using CommuniZEN.Models;
+﻿using CommuniZEN.Models;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CommuniZEN.Converters
 {
@@ -26,23 +21,6 @@ namespace CommuniZEN.Converters
                 };
             }
             return Colors.Black;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class StatusToBoolConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            if (value is AppointmentStatus status)
-            {
-                return status == AppointmentStatus.Pending || status == AppointmentStatus.Approved;
-            }
-            return false;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
