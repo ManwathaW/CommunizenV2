@@ -32,6 +32,7 @@ namespace CommuniZEN.Interfaces
         #region Image Management
         Task<string> UploadProfileImageAsync(string userId, Stream imageStream);
         Task<string> GetProfileImageAsync(string userId);
+        Task<string> UploadChatImageAsync(string chatId, Stream imageStream);
         #endregion
 
         #region Availability Management

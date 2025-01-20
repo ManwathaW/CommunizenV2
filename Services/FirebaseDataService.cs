@@ -601,7 +601,31 @@ public class FirebaseDataService : IFirebaseDataService
         }
     }
 
-  
+
+    public async Task<string> UploadChatImageAsync(string chatId, Stream imageStream)
+    {
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await imageStream.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+            var base64Image = Convert.ToBase64String(imageBytes);
+
+            var imagePath = $"chat_images/{chatId}/{Guid.NewGuid()}";
+            var imageData = new { imageData = base64Image };
+
+            await _firebaseClient
+                .Child(imagePath)
+                .PutAsync(JsonConvert.SerializeObject(imageData));
+
+            return imagePath;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error uploading chat image: {ex.Message}");
+            throw;
+        }
+    }
 
     public async Task<bool> IsTimeSlotAvailableAsync(string practitionerId, DateTime date, string timeSlot)
     {

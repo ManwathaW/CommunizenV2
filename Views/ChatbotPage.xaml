@@ -1,12 +1,106 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="CommuniZEN.Views.ChatbotPage"
-             Title="ChatbotPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+            xmlns:viewmodel="clr-namespace:CommuniZEN.ViewModels"
+             xmlns:converters="clr-namespace:CommuniZEN.Converters"
+            x:Class="CommuniZEN.Views.ChatbotPage"
+            Title="Mental Health Assistant">
+
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Colors -->
+            <Color x:Key="PrimaryBackgroundColor">#F5F5F5</Color>
+            <Color x:Key="UserMessageColor">#DCF8C6</Color>
+            <Color x:Key="BotMessageColor">#FFFFFF</Color>
+            <Color x:Key="PrimaryTextColor">#000000</Color>
+            <Color x:Key="SecondaryTextColor">#666666</Color>
+            <Color x:Key="AccentColor">#2196F3</Color>
+
+            <!-- Converters -->
+            <converters:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter"/>
+            <converters:BoolToBackgroundConverter x:Key="BoolToBackgroundConverter"/>
+            <converters:MessageTextColorConverter x:Key="BoolToTextColorConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*, Auto" 
+         Padding="10"
+         BackgroundColor="{StaticResource PrimaryBackgroundColor}">
+
+        <!-- Messages List -->
+        <ScrollView Grid.Row="0">
+            <CollectionView ItemsSource="{Binding ChatMessages}"
+                         ItemsUpdatingScrollMode="KeepLastItemInView"
+                         Margin="0,0,0,10">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="10">
+                            <Frame BorderColor="Transparent"
+                                  Margin="5"
+                                  Padding="15"
+                                  CornerRadius="15"
+                                  HasShadow="True"
+                                  BackgroundColor="{Binding IsUser, Converter={StaticResource BoolToBackgroundConverter}}"
+                                  HorizontalOptions="{Binding IsUser, Converter={StaticResource BoolToAlignmentConverter}}"
+                                  MaximumWidthRequest="280">
+                                <StackLayout Spacing="5">
+                                    <Label Text="{Binding Content}"
+                                          TextColor="{StaticResource PrimaryTextColor}"
+                                          FontSize="16"
+                                          LineBreakMode="WordWrap" />
+                                    <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}"
+                                          FontSize="12"
+                                          TextColor="{StaticResource SecondaryTextColor}"
+                                          HorizontalOptions="End" />
+                                </StackLayout>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </ScrollView>
+
+        <!-- Input Area -->
+        <Grid Grid.Row="1" 
+             ColumnDefinitions="*, Auto" 
+             Padding="5"
+             BackgroundColor="White"
+             VerticalOptions="End">
+
+            <Frame Grid.Column="0"
+                  Padding="5"
+                  BorderColor="LightGray"
+                  CornerRadius="20"
+                  HasShadow="True"
+                  Margin="0,0,5,0">
+                <Entry Text="{Binding UserMessage}"
+                      Placeholder="Type your message..."
+                      PlaceholderColor="{StaticResource SecondaryTextColor}"
+                      BackgroundColor="Transparent"
+                      VerticalOptions="Center"
+                      FontSize="16">
+                </Entry>
+            </Frame>
+
+            <Button Grid.Column="1"
+                   Text="Send"
+                   Command="{Binding SendMessageCommand}"
+                   BackgroundColor="{StaticResource AccentColor}"
+                   TextColor="White"
+                   CornerRadius="20"
+                   HeightRequest="40"
+                   WidthRequest="70"
+                   FontAttributes="Bold"
+                   Margin="0,0,5,0"/>
+        </Grid>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.RowSpan="2"
+                         IsRunning="{Binding IsBusy}"
+                         IsVisible="{Binding IsBusy}"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         Color="{StaticResource AccentColor}"/>
+    </Grid>
 </ContentPage>

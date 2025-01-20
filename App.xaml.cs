@@ -25,7 +25,13 @@ namespace CommuniZEN
             var services = new ServiceCollection();
 
             // Create configuration
-            var configJson = @"{""Firebase"":{""ApiKey"":""AIzaSyCjQAkyGjbTQKjI9tBvzT4JQH-ST86o7EM"",""ProjectId"":""communizen-c112"",""StorageBucket"":""communizen-c112.firebasestorage.app"",""AuthDomain"":""communizen-c112.firebaseapp.com"",""DatabaseUrl"":""https://communizen-c112.firebaseio.com"",""MessagingSenderId"":""343938337235"",""AppId"":""1:343938337235:android:5546cb5b89330781148726""}}";
+            var configJson = @"{""Firebase"":{""ApiKey"":""AIzaSyCjQAkyGjbTQKjI9tBvzT4JQH-ST86o7EM"",
+                                ""ProjectId"":""communizen-c112"",
+                                ""StorageBucket"":""communizen-c112.firebasestorage.app"",
+                                ""AuthDomain"":""communizen-c112.firebaseapp.com"",
+                                ""DatabaseUrl"":""https://communizen-c112.firebaseio.com"",
+                                ""MessagingSenderId"":""343938337235"",
+                                ""AppId"":""1:343938337235:android:5546cb5b89330781148726""}}";
 
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(configJson));
 
@@ -44,6 +50,7 @@ namespace CommuniZEN
             services.AddTransient<PractitionerProfileViewModel>();
             services.AddTransient<ChatbotintroViewModel>();
             services.AddTransient<PractitionerAppointmentsViewModel>();
+            services.AddTransient<ChatViewModel>();
 
             //Pages
             services.AddTransient<LoginPage>(); 
@@ -56,6 +63,7 @@ namespace CommuniZEN
             services.AddTransient<MapPickerPage>();
             services.AddTransient<PractitionerProfilePage>();
             services.AddTransient<PractitionerAppointmentsPage>();
+            services.AddTransient<ChatPage>();
 
             //Routing
             Routing.RegisterRoute("chatbotpage", typeof(ChatbotPage));
@@ -68,6 +76,7 @@ namespace CommuniZEN
             Routing.RegisterRoute("mapPicker", typeof(MapPickerPage));
             Routing.RegisterRoute("practitionerprofile", typeof(PractitionerProfilePage));
             Routing.RegisterRoute("practitionerappointments", typeof(PractitionerAppointmentsPage));
+            Routing.RegisterRoute("chatpage", typeof(ChatPage));
 
             ServiceProvider = services.BuildServiceProvider();
 

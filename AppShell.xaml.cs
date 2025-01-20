@@ -2,6 +2,7 @@
 using CommunityToolkit.Maui.Core;
 using Font = Microsoft.Maui.Font;
 using CommuniZEN.Views;
+using CommuniZEN.Converters;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Maps;
 using CommuniZEN.Controls;
@@ -14,6 +15,9 @@ namespace CommuniZEN
         public AppShell()
         {
             InitializeComponent();
+       
+            Resources["MessageAlignmentConverter"] = new MessageAlignmentConverter();
+            Resources["MessageTextColorConverter"] = new MessageTextColorConverter();
             RegisterRoutes();
             this.Navigated += OnNavigated;
         }
@@ -29,6 +33,7 @@ namespace CommuniZEN
             Routing.RegisterRoute("practitionerprofile", typeof(PractitionerProfilePage));
             Routing.RegisterRoute("appointments", typeof(ClientAppointmentsPage));
             Routing.RegisterRoute("practitionerappointments", typeof(PractitionerAppointmentsPage));
+            Routing.RegisterRoute("chatpage", typeof(ChatPage));
         }
 
         private void OnNavigated(object sender, ShellNavigatedEventArgs e)

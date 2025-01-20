@@ -12,8 +12,21 @@
             <Color x:Key="TabBarSelectedColor">#4B89DC</Color>
             <Color x:Key="TabBarUnselectedColor">#95A5A6</Color>
 
-            <converters:StatusToColorConverter x:Key="StatusToColorConverter"/>
-            <converters:StatusToBoolConverter x:Key="StatusToBoolConverter"/>
+            <!-- Colors -->
+            <Color x:Key="Primary">#1976D2</Color>
+            <Color x:Key="PrimaryLight">#E3F2FD</Color>
+            <Color x:Key="Gray100">#F5F5F5</Color>
+
+            <!-- Converters -->
+            <converters:MessageBackgroundConverter x:Key="MessageBackgroundConverter"/>
+            <converters:MessageAlignmentConverter x:Key="MessageAlignmentConverter"/>
+            <converters:MessageTextColorConverter x:Key="MessageTextColorConverter"/>
+            <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
+            <converters:IntToBoolConverter x:Key="IntToBoolConverter"/>
+            <converters:IsNullConverter x:Key="IsNullConverter"/>
+            <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
+            <converters:DateTimeConverter x:Key="DateTimeConverter"/>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
 
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />

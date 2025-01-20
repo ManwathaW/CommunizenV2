@@ -1,16 +1,15 @@
 ﻿using CommunityToolkit.Maui;
-using Microsoft.Extensions.Logging;
-using Syncfusion.Maui.Toolkit.Hosting;
-using CommuniZEN.ViewModels;
+using CommuniZEN.Converters;
 using CommuniZEN.Interfaces;
 using CommuniZEN.Services;
+using CommuniZEN.ViewModels;
 using CommuniZEN.Views;
-using Microsoft.Maui.Devices.Sensors;
-using Microsoft.Maui.Maps;
-using SkiaSharp.Views.Maui.Controls.Hosting;
 using Firebase.Database;
-
-
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using SkiaSharp.Views.Maui.Controls.Hosting;
+using Syncfusion.Maui.Toolkit.Hosting;
+using System.Diagnostics;
 
 namespace CommuniZEN
 {
@@ -19,15 +18,19 @@ namespace CommuniZEN
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
+
+            // Add configuration first
+            builder.Configuration
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
             builder
                 .UseMauiApp<App>()
                 .UseSkiaSharp()
                 .UseMauiMaps()
+                
                 .UseMauiCommunityToolkit()
                 .ConfigureSyncfusionToolkit()
-                .ConfigureMauiHandlers(handlers =>
-                {
-                })
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -36,57 +39,132 @@ namespace CommuniZEN
                     fonts.AddFont("FluentSystemIcons-Regular.ttf", FluentUI.FontFamily);
                 });
 
+            // Initialize Firebase Configuration
+            try
+            {
+                FirebaseConfig.Initialize(builder.Configuration);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Firebase Configuration Error: {ex.Message}");
+            }
+
+            // Register Firebase Client first
+            builder.Services.AddSingleton<FirebaseClient>(provider =>
+                new FirebaseClient(FirebaseConfig.RealtimeDatabaseUrl));
+
 #if DEBUG
-
-            builder.Services.AddSingleton<FirebaseClient>(serviceProvider =>
-          new FirebaseClient(
-              "https://communizen-c112-default-rtdb.asia-southeast1.firebasedatabase.app/",
-              new FirebaseOptions
-              {
-                  AuthTokenAsyncFactory = () => Task.FromResult(FirebaseConfig.ApiKey)
-              }));
-
-
-
+            const string openAiKey = "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";
             builder.Logging.AddDebug();
-    		builder.Services.AddLogging(configure => configure.AddDebug());
+            builder.Services.AddLogging(configure => configure.AddDebug());
+            builder.Services.AddSingleton<IChatbotService>(_ =>
+            new OpenAIChatbotService(openAiKey));
 #endif
-            // Register Services
-            builder.Services.AddSingleton<IGeolocation>(Geolocation.Default);
-            builder.Services.AddSingleton<IGeocoding>(Geocoding.Default);
-            builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
-            builder.Services.AddSingleton<IFirebaseDataService, FirebaseDataService>();
-            builder.Services.AddTransient<ClientAppointmentsPage>();
-            builder.Services.AddTransient<PractitionerAppointmentsPage>();
-            builder.Services.AddTransient<PractitionerProfilePage>();
+
+            // Register core services first
+            RegisterCoreServices(builder.Services);
+
+            // Register feature services
+            RegisterFeatureServices(builder.Services);
 
             // Register ViewModels
-            builder.Services.AddTransient<LoginViewModel>();
-            builder.Services.AddTransient<MainPageViewModel>();
-            builder.Services.AddTransient<ChatbotintroViewModel>();
-            builder.Services.AddTransient<ChatbotViewModel>();
-            builder.Services.AddTransient<PractitionerDashboardViewModel>();
-            builder.Services.AddTransient<BookingsViewModel>();
-            builder.Services.AddTransient<MapPickerViewModel>();
-            builder.Services.AddTransient<PractitionerProfileViewModel>();
-            builder.Services.AddTransient<ClientAppointmentsViewModel>();
-            builder.Services.AddTransient<PractitionerAppointmentsViewModel>();
-            builder.Services.AddTransient<PractitionerProfileViewModel>();
+            RegisterViewModels(builder.Services);
 
-            builder.Services.AddTransient<LoginPage>();
-            builder.Services.AddTransient<MainPage>();
-            builder.Services.AddTransient<ChatbotIntro>();
-            builder.Services.AddTransient<ChatbotPage>();
-            builder.Services.AddTransient<MapPage>();
-            builder.Services.AddTransient<PractitionerDashboardPage>();
-            builder.Services.AddTransient<BookingsPage>();
-            builder.Services.AddTransient<MapPage>();
-            builder.Services.AddTransient<PractitionerAppointmentsPage>();
-            builder.Services.AddTransient<PractitionerProfilePage>();
-
-
+            // Register Pages
+            RegisterPages(builder.Services);
 
             return builder.Build();
+        }
+
+        private static void RegisterCoreServices(IServiceCollection services)
+        {
+            services.AddSingleton<IGeolocation>(Geolocation.Default);
+            services.AddSingleton<IGeocoding>(Geocoding.Default);
+            services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
+            services.AddSingleton<IFirebaseDataService, FirebaseDataService>();
+        }
+
+        private static void RegisterFeatureServices(IServiceCollection services)
+        {
+
+
+            var realtimeDatabaseUrl = "https://communizen-c112-default-rtdb.asia-southeast1.firebasedatabase.app/";
+            services.AddSingleton<FirebaseClient>(provider =>
+                new FirebaseClient(realtimeDatabaseUrl));
+
+            // Then register the chat service
+            services.AddSingleton<IChatService>(sp =>
+            {
+                try
+                {
+                    var firebaseClient = sp.GetRequiredService<FirebaseClient>();
+                    var authService = sp.GetRequiredService<IFirebaseAuthService>();
+
+                    // Get the current user's ID
+                    var userId = authService.GetCurrentUserIdAsync().Result;
+
+                    if (string.IsNullOrEmpty(userId))
+                    {
+                        throw new InvalidOperationException("No user is currently signed in");
+                    }
+
+                    return new FirebaseChatService(
+                        firebaseClient,
+                        userId,
+                        "user",
+                        "User"
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Chat service initialization failed: {ex.Message}");
+                    throw;
+                }
+            });
+
+
+
+
+            // Register Converters
+            services.AddSingleton<MessageBackgroundConverter>();
+            services.AddSingleton<MessageAlignmentConverter>();
+            services.AddSingleton<MessageTextColorConverter>();
+            services.AddSingleton<StringToBoolConverter>();
+            services.AddSingleton<IntToBoolConverter>();
+            services.AddSingleton<IsNullConverter>();
+            services.AddSingleton<IsNotNullConverter>();
+            services.AddSingleton<DateTimeConverter>();
+            services.AddSingleton<InverseBoolConverter>();
+        }
+
+        private static void RegisterViewModels(IServiceCollection services)
+        {
+            services.AddTransient<LoginViewModel>();
+            services.AddTransient<MainPageViewModel>();
+            services.AddTransient<ChatbotintroViewModel>();
+            services.AddTransient<ChatbotViewModel>();
+            services.AddTransient<PractitionerDashboardViewModel>();
+            services.AddTransient<BookingsViewModel>();
+            services.AddTransient<MapPickerViewModel>();
+            services.AddTransient<PractitionerProfileViewModel>();
+            services.AddTransient<ClientAppointmentsViewModel>();
+            services.AddTransient<PractitionerAppointmentsViewModel>();
+            services.AddSingleton<ChatViewModel>();
+        }
+
+        private static void RegisterPages(IServiceCollection services)
+        {
+            services.AddTransient<LoginPage>();
+            services.AddTransient<MainPage>();
+            services.AddTransient<ChatbotIntro>();
+            services.AddTransient<ChatbotPage>();
+            services.AddTransient<MapPage>();
+            services.AddTransient<PractitionerDashboardPage>();
+            services.AddTransient<BookingsPage>();
+            services.AddTransient<PractitionerAppointmentsPage>();
+            services.AddTransient<PractitionerProfilePage>();
+            services.AddTransient<ChatPage>();
+            services.AddTransient<ClientAppointmentsPage>();
         }
     }
 }

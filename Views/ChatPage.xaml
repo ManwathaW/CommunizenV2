@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"
+             xmlns:models="clr-namespace:CommuniZEN.Models"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:behaviors="clr-namespace:CommuniZEN.Behaviors"
+             xmlns:converters="clr-namespace:CommuniZEN.Converters"
+             x:Class="CommuniZEN.Views.ChatPage"
+             x:DataType="viewmodels:ChatViewModel"
+             Title="Chat">
+
+    <Grid>
+        <!-- Main Chat Interface -->
+        <Grid ColumnDefinitions="300,*">
+            <!-- Left Panel - Chat List -->
+            <Grid Grid.Column="0" 
+                  RowDefinitions="Auto,*"
+                  BackgroundColor="#f5f5f5">
+
+                <!-- Search Bar -->
+                <SearchBar Grid.Row="0" 
+                          Text="{Binding SearchText}"
+                          Placeholder="Search conversations..."
+                          Margin="10"/>
+
+                <!-- Chat Sessions List -->
+                <CollectionView Grid.Row="1" 
+                              ItemsSource="{Binding FilteredSessions}"
+                              SelectedItem="{Binding SelectedSession}"
+                              SelectionMode="Single"
+                              SelectionChangedCommand="{Binding SelectSessionCommand}"
+                              SelectionChangedCommandParameter="{Binding SelectedSession}">
+
+                    <!-- Empty State -->
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout VerticalOptions="Center" 
+                                           HorizontalOptions="Center"
+                                           Spacing="20">
+                            <Image Source="no_chats.png" 
+                                   HeightRequest="150"
+                                   Aspect="AspectFit"/>
+                            <Label Text="No conversations yet"
+                                   HorizontalOptions="Center"
+                                   TextColor="Gray"/>
+                            <Button Text="Start New Chat"
+                                    Command="{Binding ShowNewChatDialogCommand}"
+                                    Margin="20,0"/>
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ChatSession">
+                            <Grid Padding="10">
+                                <Frame BorderColor="LightGray"
+                                     HasShadow="False"
+                                     CornerRadius="10"
+                                     BackgroundColor="White">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" 
+                                          RowDefinitions="Auto,Auto"
+                                          Padding="5">
+
+                                        <!-- Profile Image -->
+                                        <Frame Grid.RowSpan="2"
+                                               HeightRequest="50"
+                                               WidthRequest="50"
+                                               CornerRadius="25"
+                                               Padding="0"
+                                               IsClippedToBounds="True"
+                                               BorderColor="Transparent">
+                                            <Image Source="{Binding ProfileImage}"
+                                                   Aspect="AspectFill"/>
+                                        </Frame>
+
+                                        <!-- Name and Last Message -->
+                                        <VerticalStackLayout Grid.Column="1" 
+                                                           Margin="10,0">
+                                            <Label Text="{Binding PractitionerName}"
+                                                   FontAttributes="Bold"/>
+                                            <Label Text="{Binding LastMessage}"
+                                                   TextColor="Gray"
+                                                   LineBreakMode="TailTruncation"/>
+                                        </VerticalStackLayout>
+
+                                        <!-- Time and Unread Count -->
+                                        <VerticalStackLayout Grid.Column="2"
+                                                           Grid.RowSpan="2"
+                                                           Spacing="5">
+                                            <Label Text="{Binding LastMessageTimestamp, StringFormat='{0:HH:mm}'}"
+                                                   FontSize="12"
+                                                   TextColor="Gray"/>
+                                            <Frame IsVisible="{Binding UnreadCount, Converter={StaticResource IntToBoolConverter}}"
+                                                   BackgroundColor="#007AFF"
+                                                   Padding="8,4"
+                                                   CornerRadius="10"
+                                                   HorizontalOptions="End">
+                                                <Label Text="{Binding UnreadCount}"
+                                                       TextColor="White"
+                                                       FontSize="12"/>
+                                            </Frame>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Frame>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+
+            <!-- Right Panel - Chat Area -->
+            <Grid Grid.Column="1" 
+                  RowDefinitions="Auto,*,Auto"
+                  IsVisible="{Binding SelectedSession, Converter={StaticResource IsNotNullConverter}}">
+
+                <!-- Chat Header -->
+                <Grid BackgroundColor="#007AFF" 
+                      Padding="20,10">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <Frame HeightRequest="40"
+                               WidthRequest="40"
+                               CornerRadius="20"
+                               Padding="0"
+                               IsClippedToBounds="True"
+                               BorderColor="White">
+                            <Image Source="{Binding SelectedSession.ProfileImage}"
+                                   Aspect="AspectFill"/>
+                        </Frame>
+
+                        <VerticalStackLayout Grid.Column="1" 
+                                           Margin="10,0">
+                            <Label Text="{Binding SelectedSession.PractitionerName}"
+                                   TextColor="White"
+                                   FontAttributes="Bold"/>
+                            <Label Text="{Binding TypingIndicatorText}"
+                                   TextColor="White"
+                                   FontSize="12"
+                                   IsVisible="{Binding TypingIndicatorText, 
+                                             Converter={StaticResource StringToBoolConverter}}"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Grid>
+
+                <!-- Messages -->
+                <CollectionView Grid.Row="1"
+                              ItemsSource="{Binding Messages}"
+                              Margin="10">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:ChatMessage">
+                            <Grid Padding="5">
+                                <Frame BorderColor="Transparent"
+                                       Padding="15,10"
+                                       CornerRadius="15"
+                                       BackgroundColor="{Binding SenderId, 
+                                            Converter={StaticResource MessageBackgroundConverter}}"
+                                       HorizontalOptions="{Binding SenderId, 
+                                            Converter={StaticResource MessageAlignmentConverter}}"
+                                       MaximumWidthRequest="300">
+                                    <VerticalStackLayout Spacing="5">
+                                        <Label Text="{Binding Content}"
+                                               TextColor="{Binding SenderId, 
+                                                    Converter={StaticResource MessageTextColorConverter}}"/>
+                                        <HorizontalStackLayout Spacing="5"
+                                                             HorizontalOptions="End">
+                                            <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}"
+                                                   FontSize="10"
+                                                   TextColor="Gray"/>
+                                            <Label Text="✓✓"
+                                                   IsVisible="{Binding IsRead}"
+                                                   FontSize="10"
+                                                   TextColor="Gray"/>
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                </Frame>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Message Input -->
+                <Grid Grid.Row="2" 
+                      ColumnDefinitions="*,Auto"
+                      Padding="10"
+                      BackgroundColor="White">
+                    <Frame Grid.Column="0"
+                           BorderColor="LightGray"
+                           CornerRadius="20"
+                           Padding="15,0"
+                           HasShadow="False">
+                        <Entry Text="{Binding MessageToSend}"
+                               Placeholder="Type your message..."
+                               ReturnCommand="{Binding SendMessageCommand}">
+                            <Entry.Behaviors>
+                                <behaviors:TextChangedBehavior 
+                                    Command="{Binding HandleTypingCommand}"/>
+                            </Entry.Behaviors>
+                        </Entry>
+                    </Frame>
+                    <Button Grid.Column="1"
+                            Text="Send"
+                            Command="{Binding SendMessageCommand}"
+                            BackgroundColor="#007AFF"
+                            TextColor="White"
+                            CornerRadius="20"
+                            Margin="5,0,0,0"/>
+                </Grid>
+            </Grid>
+
+            <!-- Empty State when no chat selected -->
+            <Grid Grid.Column="1"
+                  IsVisible="{Binding SelectedSession, Converter={StaticResource IsNullConverter}}"
+                  BackgroundColor="White">
+                <VerticalStackLayout VerticalOptions="Center" 
+                                   HorizontalOptions="Center"
+                                   Spacing="20">
+                    <Image Source="start_chat.png"
+                           HeightRequest="200"
+                           Aspect="AspectFit"/>
+                    <Label Text="Select a conversation to start chatting"
+                           TextColor="Gray"/>
+                </VerticalStackLayout>
+            </Grid>
+        </Grid>
+
+        <!-- Practitioner Selection Dialog -->
+        <Grid IsVisible="{Binding IsNewChatDialogVisible}"
+              BackgroundColor="#80000000">
+            <Frame Margin="40"
+                   Padding="20"
+                   BackgroundColor="White"
+                   CornerRadius="10"
+                   VerticalOptions="Center">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <Label Text="Select a Practitioner"
+                           FontSize="20"
+                           FontAttributes="Bold"/>
+
+                    <SearchBar Grid.Row="1"
+                              Text="{Binding PractitionerSearchText}"
+                              Placeholder="Search practitioners..."
+                              Margin="0,10"/>
+
+                    <CollectionView Grid.Row="2"
+                                  ItemsSource="{Binding FilteredPractitioners}"
+                                  HeightRequest="400">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:PracticeProfile">
+                                <Grid Padding="10">
+                                    <Frame BorderColor="LightGray"
+                                           HasShadow="False"
+                                           CornerRadius="10">
+                                        <Grid ColumnDefinitions="Auto,*">
+                                            <Frame HeightRequest="60"
+                                                   WidthRequest="60"
+                                                   CornerRadius="30"
+                                                   Padding="0"
+                                                   IsClippedToBounds="True"
+                                                   BorderColor="Transparent">
+                                                <Image Source="{Binding ProfileImage}"
+                                                       Aspect="AspectFill"/>
+                                            </Frame>
+
+                                            <VerticalStackLayout Grid.Column="1"
+                                                               Margin="10,0"
+                                                               Spacing="5">
+                                                <Label Text="{Binding Name}"
+                                                       FontAttributes="Bold"/>
+                                                <Label Text="{Binding Specialization}"
+                                                       TextColor="Gray"/>
+                                                <Label Text="{Binding PracticeName}"
+                                                       TextColor="Gray"
+                                                       FontSize="12"/>
+                                            </VerticalStackLayout>
+                                        </Grid>
+
+                                        <Frame.GestureRecognizers>
+                                            <TapGestureRecognizer 
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:ChatViewModel}}, 
+                                                Path=SelectPractitionerCommand}"
+                                                CommandParameter="{Binding .}"/>
+                                        </Frame.GestureRecognizers>
+                                    </Frame>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Frame>
+        </Grid>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator IsVisible="{Binding IsLoading}"
+                          IsRunning="{Binding IsLoading}"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center"/>
+    </Grid>
+
+</ContentPage>

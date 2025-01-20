@@ -151,6 +151,12 @@ namespace CommuniZEN.ViewModels
         private async Task OpenChatbot()
         {
             await Shell.Current.GoToAsync("chatbotintro");
+        } 
+        
+        [RelayCommand]
+        private async Task OpenChat()
+        {
+            await Shell.Current.GoToAsync("chatpage");
         }
 
     }

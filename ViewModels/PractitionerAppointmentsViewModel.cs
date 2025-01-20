@@ -52,17 +52,15 @@ namespace CommuniZEN.ViewModels
         #endregion
 
         #region Constants
-        private List<TimeSlot> DefaultTimeSlots => new List<string>
-{
-    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-    "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-    "16:00", "16:30", "17:00", "17:30"
-}.Select(time => new TimeSlot
-{
-    Time = time,
-    IsAvailable = true,
-    IsSelected = false
-}).ToList();
+
+        private readonly List<string> DefaultTimeSlots = new()
+         {
+           "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+           "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
+           "16:00", "16:30", "17:00", "17:30"
+         };
+
+
         #endregion
 
         public PractitionerAppointmentsViewModel(IFirebaseDataService dataService, IFirebaseAuthService authService)
@@ -105,6 +103,21 @@ namespace CommuniZEN.ViewModels
         }
 
         #region Availability Management
+        private List<TimeSlot> ConvertToTimeSlots(List<string> timeStrings)
+        {
+            return timeStrings.Select(time => new TimeSlot
+            {
+                Time = time,
+                IsAvailable = true,
+                IsSelected = false
+            }).ToList();
+        }
+
+        private List<string> ConvertToStrings(List<TimeSlot> timeSlots)
+        {
+            return timeSlots.Select(ts => ts.Time).ToList();
+        }
+
 
         private async Task LoadAvailabilityAsync()
         {
@@ -130,44 +143,7 @@ namespace CommuniZEN.ViewModels
             }
         }
 
-        private void GenerateAvailableDates(Availability availability)
-        {
-            AvailableDates.Clear();
-            var today = DateTime.Today;
-
-            for (int i = 0; i < 30; i++)
-            {
-                var date = today.AddDays(i);
-                var dayName = date.ToString("ddd");
-
-                // Create default time slots
-                var newTimeSlots = DefaultTimeSlots.Select(time => new TimeSlot
-                {
-                    Time = time,
-                    IsAvailable = true,
-                    IsSelected = false
-                }).ToList();
-
-                // If we have existing availability, update the time slots
-                if (availability?.DailySchedule != null)
-                {
-                    var existingSchedule = availability.DailySchedule.FirstOrDefault(d => d.Date.Date == date.Date);
-                    if (existingSchedule != null)
-                    {
-                        newTimeSlots = existingSchedule.TimeSlots;
-                    }
-                }
-
-                AvailableDates.Add(new AppointmentDate
-                {
-                    Date = date,
-                    TimeSlots = newTimeSlots,
-                    IsAvailable = true,
-                    IsSelected = false
-                });
-            }
-        }
-
+       
 
         private async Task CheckExistingAppointments()
         {
@@ -190,6 +166,8 @@ namespace CommuniZEN.ViewModels
             }
         }
 
+
+
         [RelayCommand]
         private async Task UpdateAvailability()
         {
@@ -208,12 +186,7 @@ namespace CommuniZEN.ViewModels
                         Id = Guid.NewGuid().ToString(),
                         PractitionerId = PractitionerId,
                         AvailableDays = new List<string>(),
-                        TimeSlots = DefaultTimeSlots.Select(time => new TimeSlot
-                        {
-                            Time = time,
-                            IsAvailable = true,
-                            IsSelected = false
-                        }).ToList(),
+                        TimeSlots = DefaultTimeSlots.ToList(),
                         DailySchedule = new List<DayAvailability>()
                     };
                 }
@@ -231,24 +204,19 @@ namespace CommuniZEN.ViewModels
                     daySchedule = new DayAvailability
                     {
                         Date = SelectedDate.Date,
-                        TimeSlots = TimeSlots.ToList()  // Convert ObservableCollection to List
+                        TimeSlots = TimeSlots.ToList()
                     };
                     availability.DailySchedule.Add(daySchedule);
                 }
                 else
                 {
-                    daySchedule.TimeSlots = TimeSlots.ToList();  // Convert ObservableCollection to List
+                    daySchedule.TimeSlots = TimeSlots.ToList();
                 }
 
                 // Update default time slots if not set
                 if (!availability.TimeSlots.Any())
                 {
-                    availability.TimeSlots = DefaultTimeSlots.Select(time => new TimeSlot
-                    {
-                        Time = time,
-                        IsAvailable = true,
-                        IsSelected = false
-                    }).ToList();
+                    availability.TimeSlots = DefaultTimeSlots.ToList();
                 }
 
                 await _dataService.SaveAvailabilityAsync(PractitionerId, availability);
@@ -265,14 +233,45 @@ namespace CommuniZEN.ViewModels
             }
         }
 
+        private void GenerateAvailableDates(Availability availability)
+        {
+            AvailableDates.Clear();
+            var today = DateTime.Today;
+
+            for (int i = 0; i < 30; i++)
+            {
+                var date = today.AddDays(i);
+                var dayName = date.ToString("ddd");
+
+                // Create default time slots
+                var newTimeSlots = ConvertToTimeSlots(DefaultTimeSlots);
+
+                // If we have existing availability, update the time slots
+                if (availability?.DailySchedule != null)
+                {
+                    var existingSchedule = availability.DailySchedule.FirstOrDefault(d => d.Date.Date == date.Date);
+                    if (existingSchedule != null)
+                    {
+                        newTimeSlots = existingSchedule.TimeSlots;
+                    }
+                }
+
+                AvailableDates.Add(new AppointmentDate
+                {
+                    Date = date,
+                    TimeSlots = newTimeSlots,
+                    IsAvailable = true,
+                    IsSelected = false
+                });
+            }
+        }
+
         [RelayCommand]
         private void SelectDate(AppointmentDate date)
         {
             try
             {
                 if (date == null) return;
-
-                Debug.WriteLine($"Selecting date: {date.Date}");
 
                 // Clear previous selection
                 foreach (var d in AvailableDates)
@@ -286,30 +285,12 @@ namespace CommuniZEN.ViewModels
                 // If no time slots exist, initialize them
                 if (date.TimeSlots == null || !date.TimeSlots.Any())
                 {
-                    date.TimeSlots = DefaultTimeSlots.Select(time => new TimeSlot
-                    {
-                        Time = time,
-                        IsAvailable = true,
-                        IsSelected = false
-                    }).ToList();
+                    date.TimeSlots = ConvertToTimeSlots(DefaultTimeSlots);
                 }
 
-                Debug.WriteLine($"Number of time slots: {date.TimeSlots.Count}");
-
-                // Update the observable collection
-                TimeSlots.Clear();
-                foreach (var slot in date.TimeSlots)
-                {
-                    TimeSlots.Add(slot);
-                }
-
+                TimeSlots = new ObservableCollection<TimeSlot>(date.TimeSlots);
                 SelectedDate = date;
                 IsDateSelected = true;
-
-                // Force UI updates
-                OnPropertyChanged(nameof(TimeSlots));
-                OnPropertyChanged(nameof(IsDateSelected));
-                OnPropertyChanged(nameof(SelectedDate));
             }
             catch (Exception ex)
             {
