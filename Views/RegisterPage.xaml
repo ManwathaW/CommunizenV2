@@ -6,78 +6,238 @@
              Title="RegisterPage">
 
     <ScrollView>
-        <Grid Padding="20" RowSpacing="10">
-            <VerticalStackLayout Spacing="15">
-                <!-- Error Message -->
-                <Label Text="{Binding ErrorMessage}"
-                       TextColor="Red"
-                       IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyToBoolConverter}}"
-                       Margin="0,0,0,10"/>
+        <Grid Padding="10,0" RowSpacing="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-                <!-- Basic Information -->
-                <Entry Text="{Binding FullName}"
-                       Placeholder="Full Name"
-                       Margin="0,0,0,10"/>
+            <VerticalStackLayout Grid.Row="0" Spacing="3" Margin="0,40,0,20" >
+                <Frame CornerRadius="50" 
+                       HeightRequest="100" 
+                       WidthRequest="100" 
+                       BackgroundColor="White"
+                       BorderColor="#e8f4ff"
+                       HorizontalOptions="Center"
+                       Padding="0">
+                    <Image Source="user.png"
+                           Aspect="AspectFit"
+                           Margin="20"/>
+                </Frame>
+                <Label Text="Create Account"
+                       FontSize="26"
+                       FontAttributes="Bold"
+                       TextColor="#2B5C9B"
+                       HorizontalOptions="Center"/>
+                <Label Text="Join our wellness community"
+                       FontSize="16"
+                       TextColor="#666666"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
 
-                <Entry Text="{Binding Email}"
-                       Placeholder="Email"
-                       Keyboard="Email"
-                       Margin="0,0,0,10"/>
+            <!-- Registration Form -->
+            <Frame Grid.Row="1"
+                   BackgroundColor="White"
+                   CornerRadius="20"
+                   Margin="0,0,0,20"
+                   Padding="20"
+                   HasShadow="True">
 
-                <Entry Text="{Binding Password}"
-                       Placeholder="Password"
-                       IsPassword="True"
-                       Margin="0,0,0,10"/>
+                <VerticalStackLayout Spacing="15">
 
-                <Entry Text="{Binding ConfirmPassword}"
-                       Placeholder="Confirm Password"
-                       IsPassword="True"
-                       Margin="0,0,0,10"/>
-
-                <Entry Text="{Binding PhoneNumber}"
-                       Placeholder="Phone Number"
-                       Keyboard="Telephone"
-                       Margin="0,0,0,10"/>
-
-                <!-- Role Selection -->
-                <Frame BackgroundColor="#F8F9FA" 
-                       Padding="15,5" 
-                       CornerRadius="10"
-                       HasShadow="False"
-                       BorderColor="Transparent">
 
                     <!-- Role Selection -->
-                    <Picker Title="Select Role"
-                       ItemsSource="{Binding AvailableRoles}"
-                       SelectedItem="{Binding SelectedRoleDisplay}"
-                       Margin="0,0,0,15"/>
-                </Frame>
+                    <Frame BackgroundColor="#f8faff"
+                           BorderColor="#e1e8ff"
+                           Padding="15,0"
+                           CornerRadius="12"
+                           HasShadow="False">
 
-                <!-- Practitioner Fields -->
-                <VerticalStackLayout IsVisible="{Binding IsPractitionerFieldsVisible}">
-                    <Entry Text="{Binding LicenseNumber}"
-                           Placeholder="License Number"
-                           Margin="0,0,0,10"/>
+                        <!-- Role Selection -->
+                        <VerticalStackLayout Spacing="-8">
+                            <Label Text="User Type"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="#2B5C9B"/>
 
-                    <Entry Text="{Binding Specialization}"
-                           Placeholder="Specialization"
-                           Margin="0,0,0,10"/>
+                            <Picker Title="Select user type"
+                                    ItemsSource="{Binding AvailableRoles}"
+                                    SelectedItem="{Binding SelectedRoleDisplay}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Name Input -->
+                    <Frame BackgroundColor="#f8faff"
+                           BorderColor="#e1e8ff"
+                           Padding="15,0"
+                           CornerRadius="12"
+                           HasShadow="False">
+                        <VerticalStackLayout Spacing="-8">
+                            <Label Text="Full Name"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="#2B5C9B"/>
+                            <Entry Text="{Binding FullName}"
+                                   Placeholder="Enter your full Name"
+                                   PlaceholderColor="#cccccc"/>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Email input -->
+                    <Frame BackgroundColor="#f8faff"
+                          BorderColor="#e1e8ff"
+                          Padding="15,0"
+                          CornerRadius="12"
+                          HasShadow="False">
+                        <VerticalStackLayout Spacing="-8">
+
+                            <Label Text="Email"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="#2B5C9B"/>
+                            <Entry Text="{Binding Email}"
+                                   Placeholder="eg.manwatha@gmail.com"
+                                   Keyboard="Email"
+                                   PlaceholderColor="#cccccc" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+
+                    <!-- Password Input -->
+                    <Frame BackgroundColor="#f8faff"
+                           BorderColor="#e1e8ff"
+                           Padding="15,0"
+                           CornerRadius="12"
+                           HasShadow="False">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="-11" Grid.Column="0">
+                                <Label Text="Password"
+                                       FontSize="12"
+                                       FontAttributes="Bold"
+                                       TextColor="#2B5C9B"/>
+
+                                <Entry Text="{Binding Password}"
+                                       Placeholder="Password"
+                                       IsPassword="{Binding IsPasswordVisible}"
+                                       PlaceholderColor="#cccccc"/>
+                            </VerticalStackLayout>
+                            <ImageButton Grid.Column="1"
+                                         Source="eye.png"
+                                         HeightRequest="24"
+                                         WidthRequest="24"
+                                         Margin="0,0,5,0"
+                                         Command="{Binding TogglePasswordCommand}"/>
+
+                        </Grid>
+                    </Frame>
+
+
+                    <!-- Confirm Password -->
+
+                    <Frame BackgroundColor="#f8faff"
+                           BorderColor="#e1e8ff"
+                           Padding="15,0"
+                           CornerRadius="12"
+                           HasShadow="False">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Spacing="-11" Grid.Column="0">
+                                <Label Text="Confirm Password"
+                                       FontSize="12"
+                                       FontAttributes="Bold"
+                                       TextColor="#2B5C9B"/>
+
+                                <Entry Text="{Binding ConfirmPassword}"
+                                       Placeholder="Confirm Password"
+                                       IsPassword="{Binding IsConfirmPasswordVisible}"
+                                       PlaceholderColor="#cccccc"/>
+                            </VerticalStackLayout>
+                            <ImageButton Grid.Column="1"
+                                       Source="eye.png"
+                                       HeightRequest="24"
+                                       WidthRequest="24"
+                                       Margin="0,0,5,0"
+                                       Command="{Binding ToggleConfirmPasswordCommand}"/>
+                        </Grid>
+                    </Frame>
+
+                   
+
+                    <!-- Practitioner Fields -->
+                    <VerticalStackLayout Spacing="20" IsVisible="{Binding IsPractitionerFieldsVisible}">
+
+                        <Frame BackgroundColor="#f8faff"
+                               BorderColor="#e1e8ff"
+                               Padding="15,5"
+                               CornerRadius="12"
+                               HasShadow="False">
+                            <VerticalStackLayout Spacing="-11">
+                                <Label Text="License Number" 
+                                   FontSize="12"
+                                   TextColor="DodgerBlue"
+                                       FontAttributes="Bold"/>
+                                <Entry Text="{Binding LicenseNumber}"
+                                   Placeholder="License Number"
+                                   PlaceholderColor="#cccccc"/>
+                            </VerticalStackLayout>
+                        </Frame>
+
+                        <Frame BackgroundColor="#f8faff"
+                               BorderColor="#e1e8ff"
+                               Padding="15,5"
+                               CornerRadius="12"
+                               HasShadow="False">
+
+                            <VerticalStackLayout Spacing="-11">
+                                <Label Text="Specialization" 
+                                       FontSize="12"
+                                       TextColor="DodgerBlue"
+                                       FontAttributes="Bold"/>
+
+                                <Entry Text="{Binding Specialization}"
+                                       Placeholder="Specialization"
+                                       PlaceholderColor="#cccccc"/>
+
+                            </VerticalStackLayout>
+                        </Frame>
+                    </VerticalStackLayout>
+
+
+                    <!-- Register Button -->
+                    <Button Text="Create Account"
+                            Command="{Binding RegisterCommand}"
+                            IsEnabled="{Binding IsNotRegistering}"
+                            HeightRequest="50"
+                            CornerRadius="25"
+                            Margin="40,0"
+                            BackgroundColor="#4B89DC"
+                            TextColor="White"
+                            FontAttributes="Bold"
+                            FontSize="16">
+                        <Button.Shadow>
+                            <Shadow Brush="#4B89DC"
+                                    Offset="0,4"
+                                    Radius="8"
+                                    Opacity="0.7"/>
+                        </Button.Shadow>
+                    </Button>
+
+                    <!-- Login Link -->
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="5">
+
+                        <Label Text="Already have an account?"
+                               TextColor="#666666"/>
+                        <Label Text="Login"
+                                   TextColor="#4a90e2"
+                                   FontAttributes="Bold">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding NavigateToLoginCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+
+                    </HorizontalStackLayout>
+
                 </VerticalStackLayout>
-
-                <!-- Register Button -->
-                <Button Text="Register"
-                   Command="{Binding RegisterCommand}"
-                   IsEnabled="{Binding IsNotRegistering}"
-                   HeightRequest="50"
-                   Margin="0,20,0,0"/>
-
-                <!-- Login Link -->
-                <Button Text="Already have an account? Login here"
-                        Command="{Binding NavigateToLoginCommand}"
-                        BackgroundColor="Transparent"
-                        TextColor="#3498DB"/>
-
-            </VerticalStackLayout>
+            </Frame>
         </Grid>
     </ScrollView>
 </ContentPage>

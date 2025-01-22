@@ -184,14 +184,15 @@
                               Padding="15">
 
 
-                        <!-- Chatbot Card -->
-                        <Frame Style="{StaticResource FeatureCardStyle}" HorizontalOptions="Start" >
+
+                       <!-- In-App Chat Card -->
+                        <Frame Style="{StaticResource FeatureCardStyle}">
                             <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding OpenChatbotCommand}"/>
+                                <TapGestureRecognizer Command="{Binding OpenChatCommand}"/>
                             </Frame.GestureRecognizers>
                             <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10" Padding="5">
-                                <Label Text="AI CHATBOT"
-                                 Style="{StaticResource CardTitleStyle}"/>
+                                <Label Text="CHAT WITH PROFESSIONALS"
+                                  Style="{StaticResource CardTitleStyle}"/>
 
                                 <Grid ColumnDefinitions="*,auto,*" Margin="0,-80,0,0" >
 
@@ -213,7 +214,7 @@
                                            BackgroundColor="DarkBlue"
                                            Padding="-20">
 
-                                        <Image Source="bot.png" WidthRequest="180" HeightRequest="90" />
+                                        <Image Source="chats.png" WidthRequest="180" HeightRequest="90" />
 
 
                                     </Frame>
@@ -232,12 +233,10 @@
 
 
                                 <Label Grid.Row="2"
-                                 Text="Get instant support from our AI assistant"
-                                   Style="{StaticResource CardDescriptionStyle}"/>
+                           Text="Reach out to mental health experts directly."
+                           Style="{StaticResource CardDescriptionStyle}"/>
                             </Grid>
                         </Frame>
-
-
                         <!-- Appointment Card -->
                         <Frame Style="{StaticResource FeatureCardStyle}">
                             <Frame.GestureRecognizers>
@@ -291,14 +290,14 @@
                             </Grid>
                         </Frame>
 
-                        <!-- In-App Chat Card -->
-                        <Frame Style="{StaticResource FeatureCardStyle}">
+                        <!-- Chatbot Card -->
+                        <Frame Style="{StaticResource FeatureCardStyle}" HorizontalOptions="Start" >
                             <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding OpenChatCommand}"/>
+                                <TapGestureRecognizer Command="{Binding OpenChatbotCommand}"/>
                             </Frame.GestureRecognizers>
                             <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10" Padding="5">
-                                <Label Text="CHAT WITH PROFESSIONALS"
-                                  Style="{StaticResource CardTitleStyle}"/>
+                                <Label Text="AI CHATBOT"
+                                 Style="{StaticResource CardTitleStyle}"/>
 
                                 <Grid ColumnDefinitions="*,auto,*" Margin="0,-80,0,0" >
 
@@ -317,10 +316,10 @@
                                            Margin="0,20,0,0"
                                            HasShadow="True"
                                            BorderColor="LightGrey"
-                                           BackgroundColor="DarkBlue"
+                                           BackgroundColor="White"
                                            Padding="-20">
 
-                                        <Image Source="chats.png" WidthRequest="180" HeightRequest="90" />
+                                        <Image Source="boticon.png" WidthRequest="180" HeightRequest="90" />
 
 
                                     </Frame>
@@ -335,14 +334,12 @@
 
                                 </Grid>
 
-
-
-
                                 <Label Grid.Row="2"
-                           Text="Reach out to mental health experts directly."
-                           Style="{StaticResource CardDescriptionStyle}"/>
+                                 Text="Get instant support from our AI assistant"
+                                   Style="{StaticResource CardDescriptionStyle}"/>
                             </Grid>
                         </Frame>
+ 
 
                         <!-- Resources Card -->
                         <Frame Style="{StaticResource FeatureCardStyle}">

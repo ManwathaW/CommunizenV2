@@ -52,10 +52,14 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:ChatSession">
                             <Grid Padding="10">
-                                <Frame BorderColor="LightGray"
+ 
+                                <Frame BorderColor="LightBlue"
                                      HasShadow="False"
                                      CornerRadius="10"
-                                     BackgroundColor="White">
+                                     BackgroundColor="LightGray">
+                                    <Frame.GestureRecognizers>
+                                     
+                                    </Frame.GestureRecognizers>
                                     <Grid ColumnDefinitions="Auto,*,Auto" 
                                           RowDefinitions="Auto,Auto"
                                           Padding="5">
@@ -68,7 +72,7 @@
                                                Padding="0"
                                                IsClippedToBounds="True"
                                                BorderColor="Transparent">
-                                            <Image Source="{Binding ProfileImage}"
+                                            <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
                                                    Aspect="AspectFill"/>
                                         </Frame>
 
@@ -122,7 +126,7 @@
                                Padding="0"
                                IsClippedToBounds="True"
                                BorderColor="White">
-                            <Image Source="{Binding SelectedSession.ProfileImage}"
+                            <Image Source="{Binding SelectedSession.ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
                                    Aspect="AspectFill"/>
                         </Frame>
 
@@ -255,7 +259,7 @@
                                                    Padding="0"
                                                    IsClippedToBounds="True"
                                                    BorderColor="Transparent">
-                                                <Image Source="{Binding ProfileImage}"
+                                                <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
                                                        Aspect="AspectFill"/>
                                             </Frame>
 

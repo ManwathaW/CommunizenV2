@@ -33,8 +33,7 @@ namespace CommuniZEN.ViewModels
         [ObservableProperty]
         private string fullName = string.Empty;
 
-        [ObservableProperty]
-        private string phoneNumber = string.Empty;
+
 
         [ObservableProperty]
         private UserRole selectedRole = UserRole.User;
@@ -83,8 +82,7 @@ namespace CommuniZEN.ViewModels
             if (string.IsNullOrWhiteSpace(Email) ||
                 string.IsNullOrWhiteSpace(Password) ||
                 string.IsNullOrWhiteSpace(ConfirmPassword) ||
-                string.IsNullOrWhiteSpace(FullName) ||
-                string.IsNullOrWhiteSpace(PhoneNumber))
+                string.IsNullOrWhiteSpace(FullName))
             {
                 ErrorMessage = "Please fill in all required fields.";
                 return false;
@@ -161,7 +159,7 @@ namespace CommuniZEN.ViewModels
                 {
                     Email = Email,
                     FullName = FullName,
-                    PhoneNumber = PhoneNumber,
+                  
                     Role = SelectedRole,
                     LicenseNumber = LicenseNumber,
                     Specialization = Specialization,
@@ -190,9 +188,8 @@ namespace CommuniZEN.ViewModels
         {
             try
             {
-                await Shell.Current.GoToAsync($"//{nameof(LoginPage)}");
-                // or alternatively:
-                // await Shell.Current.GoToAsync("//login");
+                
+                await Shell.Current.GoToAsync("login");
             }
             catch (Exception ex)
             {

@@ -62,8 +62,8 @@
         <Tab Title="Chat" Icon="chat_icon.png">
             <ShellContent 
                 Title="Chat"
-                ContentTemplate="{DataTemplate views:ChatbotIntro}"
-                Route="chatbotintro"/>
+                ContentTemplate="{DataTemplate views:ChatPage}"
+                Route="chatPage"/>
         </Tab>
         
         

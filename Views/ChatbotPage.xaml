@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
             xmlns:viewmodel="clr-namespace:CommuniZEN.ViewModels"
              xmlns:converters="clr-namespace:CommuniZEN.Converters"
             x:Class="CommuniZEN.Views.ChatbotPage"
-            Title="Mental Health Assistant">
+             Shell.TabBarIsVisible="False"
+          >
 
 
     <ContentPage.Resources>
@@ -20,16 +22,67 @@
             <!-- Converters -->
             <converters:BoolToAlignmentConverter x:Key="BoolToAlignmentConverter"/>
             <converters:BoolToBackgroundConverter x:Key="BoolToBackgroundConverter"/>
-            <converters:MessageTextColorConverter x:Key="BoolToTextColorConverter"/>
+            <converters:MessageTextColorConverter x:Key="MessageTextColourConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="*, Auto" 
+    <Grid RowDefinitions="0.2*, 1.0*, 0.3*"
          Padding="10"
          BackgroundColor="{StaticResource PrimaryBackgroundColor}">
 
+
+        <!-- Header -->
+        <Grid Grid.Row="0" 
+             HeightRequest="80"
+             Padding="10,5"
+             BackgroundColor="White"
+             VerticalOptions="Start">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <VerticalStackLayout Grid.Column="0"
+                VerticalOptions="Center"
+                  HorizontalOptions="Start"  >
+                            <!-- Title -->
+                <Label 
+                  Text="ZENNY"
+                  FontSize="20"
+                  FontAttributes="Bold"
+                  TextColor="#145C9E" />
+
+                <Label 
+                  Text="Mental health assistant"
+                  FontSize="15"
+                  FontAttributes="None"
+                  TextColor="#145C9E"
+                
+                />
+            </VerticalStackLayout>
+
+
+            <!-- Optional: Add header icon or status indicator -->
+            <ImageButton Grid.Column="1"
+                        Source="boticon.png"
+                        BackgroundColor="Transparent"
+                        HeightRequest="60"
+                        WidthRequest="60"
+                        VerticalOptions="Center"
+                        HorizontalOptions="End"/>
+
+            <!-- Separator Line -->
+            <BoxView Grid.ColumnSpan="2"
+                    Color="DodgerBlue"
+                    HeightRequest="1"
+                    VerticalOptions="End"
+                    HorizontalOptions="FillAndExpand"
+                    Margin="0,10,0,0"/>
+        </Grid>
+
         <!-- Messages List -->
-        <ScrollView Grid.Row="0">
+        <ScrollView Grid.Row="1">
             <CollectionView ItemsSource="{Binding ChatMessages}"
                          ItemsUpdatingScrollMode="KeepLastItemInView"
                          Margin="0,0,0,10">
@@ -61,39 +114,63 @@
             </CollectionView>
         </ScrollView>
 
+      
         <!-- Input Area -->
-        <Grid Grid.Row="1" 
-             ColumnDefinitions="*, Auto" 
-             Padding="5"
-             BackgroundColor="White"
-             VerticalOptions="End">
+        <!-- Input Area -->
+        <Grid Grid.Row="2"
+              HeightRequest="100"
+      ColumnDefinitions="*,Auto"
+      Padding="10,5"
+      BackgroundColor="White"
+      VerticalOptions="End">
 
+            <!-- Scrollable Input Frame -->
             <Frame Grid.Column="0"
-                  Padding="5"
-                  BorderColor="LightGray"
-                  CornerRadius="20"
-                  HasShadow="True"
-                  Margin="0,0,5,0">
-                <Entry Text="{Binding UserMessage}"
-                      Placeholder="Type your message..."
-                      PlaceholderColor="{StaticResource SecondaryTextColor}"
-                      BackgroundColor="Transparent"
-                      VerticalOptions="Center"
-                      FontSize="16">
-                </Entry>
+           Padding="5,0"
+           BorderColor="{Binding Source={x:Reference MessageEntry}, Path=IsFocused}"
+           CornerRadius="25"
+           HasShadow="True"
+           VerticalOptions="FillAndExpand"
+           Margin="0,0,5,0">
+                <Frame.Shadow>
+                    <Shadow Brush="DodgerBlue"
+                    Offset="0,2"
+                    Opacity="0.1"
+                    Radius="4"/>
+                </Frame.Shadow>
+
+                <ScrollView Orientation="Both" VerticalOptions="End">
+                    <Editor x:Name="MessageEntry"
+                   Text="{Binding UserMessage}"
+                   Placeholder="Type your message..."
+                   PlaceholderColor="{StaticResource SecondaryTextColor}"
+                WidthRequest="200"
+                   FontSize="14"
+                   VerticalOptions="Center"
+                   BackgroundColor="Transparent"
+                   HeightRequest="80"
+                   HorizontalOptions="FillAndExpand"
+                 />
+                </ScrollView>
+                
+                
             </Frame>
 
-            <Button Grid.Column="1"
-                   Text="Send"
-                   Command="{Binding SendMessageCommand}"
-                   BackgroundColor="{StaticResource AccentColor}"
-                   TextColor="White"
-                   CornerRadius="20"
-                   HeightRequest="40"
-                   WidthRequest="70"
-                   FontAttributes="Bold"
-                   Margin="0,0,5,0"/>
+            <!-- Send Button -->
+            <ImageButton Grid.Column="1"
+                 Command="{Binding SendMessageCommand}"
+                 Source="send.png"
+                 BackgroundColor="Transparent"
+                 Padding="12"
+                 HeightRequest="70"
+                 WidthRequest="70"
+                 CornerRadius="25"
+                 Margin="5,0"
+                 VerticalOptions="Center"/>
+
         </Grid>
+
+
 
         <!-- Loading Indicator -->
         <ActivityIndicator Grid.RowSpan="2"
