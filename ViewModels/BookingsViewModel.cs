@@ -7,13 +7,18 @@ using System.Diagnostics;
 
 namespace CommuniZEN.ViewModels
 {
-
     public partial class BookingsViewModel : ObservableObject
     {
         private readonly IFirebaseDataService _dataService;
 
         [ObservableProperty]
         private ObservableCollection<PracticeProfile> practitioners;
+
+        [ObservableProperty]
+        private ObservableCollection<PracticeProfile> filteredPractitioners;
+
+        [ObservableProperty]
+        private string searchText;
 
         [ObservableProperty]
         private bool isRefreshing;
@@ -26,7 +31,35 @@ namespace CommuniZEN.ViewModels
             Debug.WriteLine("BookingsViewModel constructor called");
             _dataService = dataService;
             Practitioners = new ObservableCollection<PracticeProfile>();
+            FilteredPractitioners = new ObservableCollection<PracticeProfile>();
             _ = InitializeAsync();
+        }
+
+        partial void OnSearchTextChanged(string value)
+        {
+            FilterPractitioners();
+        }
+
+        private void FilterPractitioners()
+        {
+            if (Practitioners == null) return;
+
+            if (string.IsNullOrWhiteSpace(SearchText))
+            {
+                FilteredPractitioners = new ObservableCollection<PracticeProfile>(Practitioners);
+                return;
+            }
+
+            var searchTerms = SearchText.ToLower().Split(' ');
+            var filtered = Practitioners.Where(p =>
+                searchTerms.All(term =>
+                    (p.Name?.ToLower().Contains(term) ?? false) ||
+                    (p.Location?.ToLower().Contains(term) ?? false) ||
+                    (p.Specialization?.ToLower().Contains(term) ?? false)
+                )
+            );
+
+            FilteredPractitioners = new ObservableCollection<PracticeProfile>(filtered);
         }
 
         private async Task InitializeAsync()
@@ -41,16 +74,17 @@ namespace CommuniZEN.ViewModels
             {
                 IsLoading = true;
                 Debug.WriteLine("Loading practitioners...");
-
                 var allProfiles = await _dataService.GetAllPractitionersAsync();
                 Debug.WriteLine($"Retrieved {allProfiles?.Count ?? 0} practitioners");
-
                 Practitioners.Clear();
+                FilteredPractitioners.Clear();
+
                 if (allProfiles != null && allProfiles.Any())
                 {
                     foreach (var profile in allProfiles)
                     {
                         Practitioners.Add(profile);
+                        FilteredPractitioners.Add(profile);
                         Debug.WriteLine($"Added practitioner to collection: {profile.Name}");
                     }
                 }
@@ -76,16 +110,13 @@ namespace CommuniZEN.ViewModels
         private async Task ViewPractitionerProfile(PracticeProfile practitioner)
         {
             if (practitioner == null) return;
-
             var parameters = new Dictionary<string, object>
             {
-              { "PractitionerId", practitioner.Id },
-              { "PractitionerUserId", practitioner.UserId }
+                { "PractitionerId", practitioner.Id },
+                { "PractitionerUserId", practitioner.UserId }
             };
-
-            await Shell.Current.GoToAsync("practitionerprofile", parameters);
+            await Shell.Current.GoToAsync("appointments", parameters);
         }
-
 
         [RelayCommand]
         private async Task Refresh()
@@ -94,5 +125,4 @@ namespace CommuniZEN.ViewModels
             await LoadPractitioners();
         }
     }
-
 }

@@ -6,6 +6,7 @@ using CommuniZEN.Services;
 using CommuniZEN.Views;
 
 
+
 namespace CommuniZEN
 {
     public partial class App : Application
@@ -47,12 +48,13 @@ namespace CommuniZEN
             services.AddTransient<RegisterViewModel>();
             services.AddTransient<LoginViewModel>();
             services.AddTransient<MainPageViewModel>();
-            services.AddTransient<PractitionerProfileViewModel>();
+            services.AddTransient<ClientAppointmentsPage>();
             services.AddTransient<ChatbotintroViewModel>();
             services.AddTransient<PractitionerAppointmentsViewModel>();
             services.AddTransient<ChatViewModel>();
 
             //Pages
+            services.AddTransient<ClientAppointmentsPage>();
             services.AddTransient<LoginPage>(); 
             services.AddTransient<MapPage>();
             services.AddTransient<ChatbotIntro>();
@@ -61,7 +63,7 @@ namespace CommuniZEN
             services.AddTransient<MainPage>();
             services.AddTransient<PractitionerDashboardPage>();
             services.AddTransient<MapPickerPage>();
-            services.AddTransient<PractitionerProfilePage>();
+          
             services.AddTransient<PractitionerAppointmentsPage>();
             services.AddTransient<ChatPage>();
 
@@ -74,7 +76,7 @@ namespace CommuniZEN
             Routing.RegisterRoute("mainpage", typeof(MainPage));
             Routing.RegisterRoute("practitionerdashboard", typeof(PractitionerDashboardPage));
             Routing.RegisterRoute("mapPicker", typeof(MapPickerPage));
-            Routing.RegisterRoute("practitionerprofile", typeof(PractitionerProfilePage));
+            Routing.RegisterRoute("appointments", typeof(ClientAppointmentsPage));
             Routing.RegisterRoute("practitionerappointments", typeof(PractitionerAppointmentsPage));
             Routing.RegisterRoute("chatpage", typeof(ChatPage));
 

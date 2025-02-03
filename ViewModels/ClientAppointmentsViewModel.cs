@@ -1,72 +1,116 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommuniZEN.Models;
 using CommuniZEN.Interfaces;
+using CommuniZEN.Models;
 using System.Collections.ObjectModel;
-using static CommuniZEN.Models.Appointment;
+using System.Diagnostics;
 
 namespace CommuniZEN.ViewModels
 {
-    public partial class ClientAppointmentsViewModel : ObservableObject
+    public partial class ClientAppointmentsViewModel : ObservableObject, IQueryAttributable
     {
         private readonly IFirebaseDataService _dataService;
-        private readonly IFirebaseAuthService _authService;
-
-        #region Observable Properties
-        [ObservableProperty]
-        private ObservableCollection<Appointment> upcomingAppointments;
+        private string _practitionerId;
+        private string _clientId;
 
         [ObservableProperty]
-        private ObservableCollection<Appointment> pastAppointments;
-
-        [ObservableProperty]
-        private ObservableCollection<PracticeProfile> availablePractitioners;
-
-        [ObservableProperty]
-        private ObservableCollection<AppointmentDate> availableDates;
-
-        [ObservableProperty]
-        private PracticeProfile selectedPractitioner;
-
-        [ObservableProperty]
-        private AppointmentDate selectedDate;
-
-        [ObservableProperty]
-        private TimeSlot selectedTimeSlot;
+        private bool isBookingTabSelected = true;
 
         [ObservableProperty]
         private bool isLoading;
 
         [ObservableProperty]
-        private bool canBook;
-        #endregion
+        private DateTime selectedDate = DateTime.Today;
 
-        public ClientAppointmentsViewModel(IFirebaseDataService dataService, IFirebaseAuthService authService)
+        [ObservableProperty]
+        private DateTime minimumDate = DateTime.Today;
+
+        [ObservableProperty]
+        private DateTime maximumDate = DateTime.Today.AddDays(30);
+
+        [ObservableProperty]
+        private ObservableCollection<TimeSlot> availableTimeSlots;
+
+        [ObservableProperty]
+        private ObservableCollection<Appointment> myAppointments;
+
+        public ClientAppointmentsViewModel(IFirebaseDataService dataService)
         {
             _dataService = dataService;
-            _authService = authService;
-            InitializeCollections();
-            _ = LoadInitialDataAsync();
+            AvailableTimeSlots = new ObservableCollection<TimeSlot>();
+            MyAppointments = new ObservableCollection<Appointment>();
         }
 
-        private void InitializeCollections()
+        public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
-            UpcomingAppointments = new ObservableCollection<Appointment>();
-            PastAppointments = new ObservableCollection<Appointment>();
-            AvailablePractitioners = new ObservableCollection<PracticeProfile>();
-            AvailableDates = new ObservableCollection<AppointmentDate>();
+            if (query.TryGetValue("PractitionerId", out var practitionerId))
+            {
+                _practitionerId = practitionerId.ToString();
+            }
+            _ = InitializeAsync();
         }
 
-        #region Data Loading
-        private async Task LoadInitialDataAsync()
+        private async Task InitializeAsync()
         {
             try
             {
+                var authService = Application.Current.Handler.MauiContext.Services.GetService<IFirebaseAuthService>();
+                _clientId = await authService.GetCurrentUserIdAsync();
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in InitializeAsync: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Failed to initialize", "OK");
+            }
+        }
+
+        [RelayCommand]
+        private void SwitchTab(string tabIndex)
+        {
+            IsBookingTabSelected = tabIndex == "0";
+            _ = LoadDataAsync();
+        }
+
+        private async Task LoadDataAsync()
+        {
+            if (IsBookingTabSelected)
+            {
+                await LoadAvailableTimeSlotsAsync();
+            }
+            else
+            {
+                await LoadMyAppointmentsAsync();
+            }
+        }
+
+        partial void OnSelectedDateChanged(DateTime value)
+        {
+            if (IsBookingTabSelected)
+            {
+                _ = LoadAvailableTimeSlotsAsync();
+            }
+        }
+
+        private async Task LoadAvailableTimeSlotsAsync()
+        {
+            if (string.IsNullOrEmpty(_practitionerId)) return;
+
+            try
+            {
                 IsLoading = true;
-                await Task.WhenAll(
-                    LoadAppointmentsAsync(),
-                    LoadPractitionersAsync()
-                );
+                var slots = await _dataService.GetAvailableTimeSlotsAsync(_practitionerId, SelectedDate);
+
+                AvailableTimeSlots.Clear();
+                foreach (var slot in slots.Where(s => s.IsAvailable))
+                {
+                    AvailableTimeSlots.Add(slot);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading time slots: {ex}");
+                await Shell.Current.DisplayAlert("Error", "Failed to load available time slots", "OK");
             }
             finally
             {
@@ -74,214 +118,63 @@ namespace CommuniZEN.ViewModels
             }
         }
 
-        private async Task LoadAppointmentsAsync()
+        private async Task LoadMyAppointmentsAsync()
         {
+            if (string.IsNullOrEmpty(_clientId)) return;
+
             try
             {
-                var userId = await _authService.GetCurrentUserIdAsync();
-                var appointments = await _dataService.GetUserAppointmentsAsync(userId);
-                UpdateAppointmentCollections(appointments);
+                IsLoading = true;
+                var appointments = await _dataService.GetClientAppointmentsAsync(_clientId);
+
+                MyAppointments.Clear();
+                foreach (var appointment in appointments)
+                {
+                    MyAppointments.Add(appointment);
+                }
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error loading appointments: {ex}");
                 await Shell.Current.DisplayAlert("Error", "Failed to load appointments", "OK");
             }
-        }
-
-        private void UpdateAppointmentCollections(List<Appointment> appointments)
-        {
-            var now = DateTime.Now;
-            UpcomingAppointments.Clear();
-            PastAppointments.Clear();
-
-            foreach (var appointment in appointments.OrderBy(a => a.Date))
-            {
-                if (appointment.Date >= now.Date &&
-                    appointment.Status != AppointmentStatus.Cancelled &&
-                    appointment.Status != AppointmentStatus.Completed)
-                {
-                    UpcomingAppointments.Add(appointment);
-                }
-                else
-                {
-                    PastAppointments.Add(appointment);
-                }
-            }
-        }
-
-        private async Task LoadPractitionersAsync()
-        {
-            try
-            {
-                var practitioners = await _dataService.GetAllPractitionersAsync();
-                AvailablePractitioners.Clear();
-                foreach (var practitioner in practitioners)
-                {
-                    AvailablePractitioners.Add(practitioner);
-                }
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Error", "Failed to load practitioners", "OK");
-            }
-        }
-        #endregion
-
-        #region Availability Management
-        partial void OnSelectedPractitionerChanged(PracticeProfile value)
-        {
-            if (value != null)
-            {
-                _ = LoadPractitionerAvailabilityAsync(value.Id);
-            }
-        }
-
-        private async Task LoadPractitionerAvailabilityAsync(string practitionerId)
-        {
-            try
-            {
-                IsLoading = true;
-                var availability = await _dataService.GetPractitionerAvailabilityAsync(practitionerId);
-                var existingAppointments = await _dataService.GetPractitionerAppointmentsAsync(practitionerId);
-
-                GenerateAvailableDates(availability, existingAppointments);
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Error", "Failed to load availability", "OK");
-            }
             finally
             {
                 IsLoading = false;
             }
         }
 
-        private void GenerateAvailableDates(Availability availability, List<Appointment> existingAppointments)
-        {
-            AvailableDates.Clear();
-            var today = DateTime.Today;
-
-            for (int i = 0; i < 30; i++)
-            {
-                var date = today.AddDays(i);
-                var dayName = date.ToString("ddd");
-
-                if (!availability.AvailableDays.Contains(dayName))
-                    continue;
-
-                var timeSlots = availability.TimeSlots.Select(time => new TimeSlot
-                {
-                    Time = time,
-                    IsAvailable = !existingAppointments.Any(a =>
-                        a.Date.Date == date.Date &&
-                        a.TimeSlot == time &&
-                        a.Status != AppointmentStatus.Cancelled),
-                    IsSelected = false
-                }).ToList();
-
-                if (timeSlots.Any(t => t.IsAvailable))
-                {
-                    AvailableDates.Add(new AppointmentDate
-                    {
-                        Date = date,
-                        TimeSlots = timeSlots,
-                        IsAvailable = true,
-                        IsSelected = false
-                    });
-                }
-            }
-        }
-        #endregion
-
-        #region Commands
         [RelayCommand]
-        private void SelectDate(AppointmentDate date)
+        private async Task BookAppointment(TimeSlot timeSlot)
         {
-            if (date == null) return;
-
-            foreach (var d in AvailableDates)
-            {
-                d.IsSelected = false;
-            }
-
-            date.IsSelected = true;
-            SelectedDate = date;
-            SelectedTimeSlot = null;
-            UpdateCanBook();
-        }
-
-        [RelayCommand]
-        private void SelectTimeSlot(TimeSlot timeSlot)
-        {
-            if (timeSlot == null || !timeSlot.IsAvailable)
-                return;
-
-            if (SelectedDate != null)
-            {
-                foreach (var slot in SelectedDate.TimeSlots)
-                {
-                    slot.IsSelected = false;
-                }
-            }
-
-            timeSlot.IsSelected = true;
-            SelectedTimeSlot = timeSlot;
-            UpdateCanBook();
-        }
-
-        [RelayCommand]
-        private async Task BookAppointmentAsync()
-        {
-            if (!CanBook) return;
-
             try
             {
-                IsLoading = true;
-                var userId = await _authService.GetCurrentUserIdAsync();
-
-                // Verify time slot is still available
-                var isAvailable = await _dataService.IsTimeSlotAvailableAsync(
-                    SelectedPractitioner.Id,
-                    SelectedDate.Date,
-                    SelectedTimeSlot.Time);
-
-                if (!isAvailable)
+                if (string.IsNullOrEmpty(_clientId) || string.IsNullOrEmpty(_practitionerId))
                 {
-                    await Shell.Current.DisplayAlert(
-                        "Not Available",
-                        "This time slot is no longer available. Please select another time.",
-                        "OK");
-                    await LoadPractitionerAvailabilityAsync(SelectedPractitioner.Id);
+                    await Shell.Current.DisplayAlert("Error", "Unable to book appointment", "OK");
                     return;
                 }
 
                 var appointment = new Appointment
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    UserId = userId,
-                    PractitionerId = SelectedPractitioner.Id,
-                    PractitionerName = SelectedPractitioner.Name,
-                    Date = SelectedDate.Date,
-                    TimeSlot = SelectedTimeSlot.Time,
+                    PractitionerId = _practitionerId,
+                    ClientId = _clientId,
+                    Date = SelectedDate,
+                    TimeSlot = timeSlot,
                     Status = AppointmentStatus.Pending,
                     CreatedAt = DateTime.UtcNow
                 };
 
-                await _dataService.SaveAppointmentAsync(appointment);
-                await LoadInitialDataAsync();
+                IsLoading = true;
+                await _dataService.CreateAppointmentAsync(appointment);
+                await Shell.Current.DisplayAlert("Success", "Appointment booked successfully!", "OK");
 
-                // Reset selection
-                SelectedTimeSlot = null;
-                SelectedDate = null;
-                UpdateCanBook();
-
-                await Shell.Current.DisplayAlert(
-                    "Success",
-                    "Appointment request sent successfully",
-                    "OK");
+                IsBookingTabSelected = false;
+                await LoadDataAsync();
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error booking appointment: {ex}");
                 await Shell.Current.DisplayAlert("Error", "Failed to book appointment", "OK");
             }
             finally
@@ -291,10 +184,10 @@ namespace CommuniZEN.ViewModels
         }
 
         [RelayCommand]
-        private async Task CancelAppointmentAsync(Appointment appointment)
+        private async Task CancelAppointment(Appointment appointment)
         {
-            var confirm = await Shell.Current.DisplayAlert(
-                "Cancel Appointment",
+            bool confirm = await Shell.Current.DisplayAlert(
+                "Confirm Cancellation",
                 "Are you sure you want to cancel this appointment?",
                 "Yes", "No");
 
@@ -303,34 +196,19 @@ namespace CommuniZEN.ViewModels
             try
             {
                 IsLoading = true;
-                await _dataService.UpdateAppointmentStatusAsync(
-                    appointment.Id,
-                    AppointmentStatus.Cancelled);
-                await LoadAppointmentsAsync();
+                appointment.Status = AppointmentStatus.Cancelled;
+                await _dataService.UpdateAppointmentAsync(appointment);
+                await LoadMyAppointmentsAsync();
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error cancelling appointment: {ex}");
                 await Shell.Current.DisplayAlert("Error", "Failed to cancel appointment", "OK");
             }
             finally
             {
                 IsLoading = false;
             }
-        }
-
-        [RelayCommand]
-        private async Task RefreshAsync()
-        {
-            await LoadInitialDataAsync();
-        }
-        #endregion
-
-        private void UpdateCanBook()
-        {
-            CanBook = SelectedPractitioner != null &&
-                     SelectedDate != null &&
-                     SelectedTimeSlot != null &&
-                     SelectedTimeSlot.IsAvailable;
         }
     }
 }

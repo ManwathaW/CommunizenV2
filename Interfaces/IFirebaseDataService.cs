@@ -36,17 +36,39 @@ namespace CommuniZEN.Interfaces
         #endregion
 
         #region Availability Management
-        Task<Availability> GetPractitionerAvailabilityAsync(string practitionerId);
-        Task SaveAvailabilityAsync(string practitionerId, Availability availability);
+   
         #endregion
 
         #region Appointment Management
-        Task SaveAppointmentAsync(Appointment appointment);
-        Task<List<Appointment>> GetAppointmentsAsync(string practitionerId);
-        Task<List<Appointment>> GetUserAppointmentsAsync(string userId);
-        Task<List<Appointment>> GetPractitionerAppointmentsAsync(string practitionerId);
-        Task UpdateAppointmentStatusAsync(string appointmentId, AppointmentStatus status);
-        Task<bool> IsTimeSlotAvailableAsync(string practitionerId, DateTime date, string timeSlot);
+        Task<List<TimeSlot>> GetTimeSlotsAsync(DateTime date);
+        Task<List<TimeSlot>> GetAvailableTimeSlotsAsync(string practitionerId, DateTime date);
+        Task AddTimeSlotAsync(DateTime date, TimeSlot slot);
+        Task RemoveTimeSlotAsync(DateTime date, TimeSlot slot);
+        Task<List<Appointment>> GetPractitionerAppointmentsAsync();
+        Task<List<Appointment>> GetClientAppointmentsAsync(string clientId);
+        Task<string> GetFirebaseAuthToken();
+
+
+
+        Task CreateAppointmentAsync(Appointment appointment);
+        Task UpdateAppointmentAsync(Appointment appointment);
+        #endregion
+
+        #region Journal Management
+        // Creates a new journal entry in Firebase
+        Task<string> CreateJournalEntryAsync(string userId, JournalEntry entry);
+
+        // Retrieves all journal entries for a specific user
+        Task<List<JournalEntry>> GetUserJournalEntriesAsync(string userId);
+
+        // Updates an existing journal entry
+        Task UpdateJournalEntryAsync(string userId, string entryId, JournalEntry entry);
+
+        // Deletes a journal entry
+        Task DeleteJournalEntryAsync(string userId, string entryId);
+
+        // Uploads audio file for journal entry
+        Task<string> UploadJournalAudioAsync(string userId, string entryId, Stream audioStream);
         #endregion
     }
 }

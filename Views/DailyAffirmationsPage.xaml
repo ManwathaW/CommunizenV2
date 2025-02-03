@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CommuniZEN.Views.DailyAffirmationsPage"
+             NavigationPage.HasNavigationBar="False">
+
+    <Grid>
+        <!-- Background Image -->
+        <Image Source="{Binding CurrentBackground}"
+               Aspect="AspectFill"
+               HorizontalOptions="FillAndExpand"
+               VerticalOptions="FillAndExpand"/>
+
+        <!-- Dark overlay for better text readability -->
+       
+
+        <!-- Content -->
+        <Grid RowDefinitions="Auto,*" 
+              Padding="20">
+
+            <!-- Back Button -->
+            <ImageButton Grid.Row="0"
+                        Source="back.png"
+                        HeightRequest="24"
+                        WidthRequest="24"
+                        HorizontalOptions="Start"
+                        Margin="0,40,0,0"
+                        BackgroundColor="Transparent"
+                        Command="{Binding GoBackCommand}"/>
+
+            <!-- Main Content with Swipe -->
+            <Grid Grid.Row="1">
+                <SwipeView HorizontalOptions="Fill" 
+                          VerticalOptions="Center">
+                    <SwipeView.GestureRecognizers>
+                        <SwipeGestureRecognizer Direction="Left" 
+                                               Command="{Binding GetRandomContentCommand}"/>
+                        <SwipeGestureRecognizer Direction="Right" 
+                                               Command="{Binding GetRandomContentCommand}"/>
+                    </SwipeView.GestureRecognizers>
+
+                    <Label Text="{Binding CurrentAffirmation}"
+                           TextColor="White"
+                           FontSize="32"
+                           FontAttributes="Bold"
+                           HorizontalTextAlignment="Center"
+                           VerticalTextAlignment="Center"
+                           LineBreakMode="WordWrap"
+                           MaxLines="4"
+                           Margin="20">
+                        <Label.Shadow>
+                            <Shadow Brush="Black"
+                                   Offset="0,2"
+                                   Radius="4"
+                                   Opacity="0.5"/>
+                        </Label.Shadow>
+                    </Label>
+                </SwipeView>
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

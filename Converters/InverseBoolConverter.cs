@@ -12,20 +12,16 @@ namespace CommuniZEN.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool boolValue)
-            {
-                return !boolValue;
-            }
-            return true;
+            if (value is not bool boolValue)
+                return value;
+            return !boolValue;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is bool boolValue)
-            {
-                return !boolValue;
-            }
-            return true;
+            if (value is not bool boolValue)
+                return value;
+            return !boolValue;
         }
     }
 

@@ -1,263 +1,231 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:converters="clr-namespace:CommuniZEN.Converters"
+             xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"
+             xmlns:models="clr-namespace:CommuniZEN.Models"
+              xmlns:converters="clr-namespace:CommuniZEN.Converters"
              x:Class="CommuniZEN.Views.PractitionerAppointmentsPage"
-             Title="Appointments Management"
-             BackgroundColor="#F5F9FF">
+             Title="Manage Appointments"
+             BackgroundColor="#EDF2F7">
 
     <ContentPage.Resources>
         <ResourceDictionary>
+
             <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
-            <converters:BoolToOpacityConverter x:Key="BoolToOpacityConverter"/>
-            <converters:StatusToColorConverter x:Key="StatusToColorConverter"/>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <converters:StatusColorConverter x:Key="StatusColorConverter"/>
+
+            <Style x:Key="TabButtonStyle" TargetType="Button">
+                <Setter Property="HeightRequest" Value="40"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="FontSize" Value="14"/>
+            </Style>
+            <Style x:Key="CardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="White"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Margin" Value="15"/>
+                <Setter Property="Padding" Value="15"/>
+                <Setter Property="BorderColor" Value="#E2E8F0"/>
+                <Setter Property="HasShadow" Value="True"/>
+            </Style>
+            <Style x:Key="HeaderLabelStyle" TargetType="Label">
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="TextColor" Value="#2C5282"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="Margin" Value="0,0,0,10"/>
+            </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*">
-        <ActivityIndicator IsVisible="{Binding IsLoading}"
-                          IsRunning="{Binding IsLoading}"
-                          Grid.RowSpan="2"
-                          HorizontalOptions="Center"
-                          VerticalOptions="Center"/>
+        <!-- Tab Buttons -->
+        <Grid Grid.Row="0" 
+              ColumnDefinitions="*,*" 
+              Padding="10"
+              BackgroundColor="White"
+              HeightRequest="60">
+            <Button Text="Availability"
+                    Grid.Column="0"
+                    Style="{StaticResource TabButtonStyle}"
+                    BackgroundColor="{Binding IsAvailabilityTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#4299E1,#EDF2F7'}"
+                    TextColor="{Binding IsAvailabilityTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White,#2C5282'}"
+                    Command="{Binding SwitchTabCommand}"
+                    CommandParameter="0"/>
 
+            <Button Text="Appointments"
+                    Grid.Column="1"
+                    Style="{StaticResource TabButtonStyle}"
+                    BackgroundColor="{Binding IsAvailabilityTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#EDF2F7,#4299E1'}"
+                    TextColor="{Binding IsAvailabilityTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#2C5282,White'}"
+                    Command="{Binding SwitchTabCommand}"
+                    CommandParameter="1"/>
+        </Grid>
+
+        <!-- Main Content Area -->
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="20" Spacing="20">
-                <!-- Availability Management Section -->
-                <Frame BorderColor="#E8F0FE" BackgroundColor="White" Padding="15">
-                    <VerticalStackLayout Spacing="15">
-                        <Label Text="Manage Availability"
-                               FontSize="20"
-                               FontAttributes="Bold"
-                               TextColor="#2B3A67"/>
+            <Grid>
+                <!-- Availability Tab Content -->
+                <VerticalStackLayout IsVisible="{Binding IsAvailabilityTabSelected}">
+                    <!-- Date Selection -->
+                    <Frame Style="{StaticResource CardStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Select Date" 
+                                   Style="{StaticResource HeaderLabelStyle}"/>
+                            <DatePicker Date="{Binding SelectedDate}"
+                                      MinimumDate="{Binding MinimumDate}"
+                                      MaximumDate="{Binding MaximumDate}"
+                                      Format="D"/>
+                        </VerticalStackLayout>
+                    </Frame>
 
-                        <!-- Date Selection -->
-                        <ScrollView Orientation="Horizontal"
-                                  HorizontalScrollBarVisibility="Never">
-                            <CollectionView ItemsSource="{Binding AvailableDates}"
-                                          SelectionMode="Single">
-                                <CollectionView.ItemsLayout>
-                                    <LinearItemsLayout Orientation="Horizontal"
-                                                     ItemSpacing="10"/>
-                                </CollectionView.ItemsLayout>
-                                <CollectionView.ItemTemplate>
-                                    <DataTemplate>
-                                        <Frame Padding="15,10"
-                                               BorderColor="#E8F0FE"
-                                               BackgroundColor="{Binding IsSelected, Converter={StaticResource BoolToColorConverter}}"
-                                               WidthRequest="100"
-                                               Margin="5">
-                                            <Frame.GestureRecognizers>
-                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectDateCommand}"
-                                                                    CommandParameter="{Binding}"/>
-                                            </Frame.GestureRecognizers>
-                                            <VerticalStackLayout Spacing="5">
-                                                <Label Text="{Binding Date, StringFormat='{0:MMM}'}"
-                                                       FontSize="14"
-                                                       TextColor="#666666"
-                                                       HorizontalOptions="Center"/>
-                                                <Label Text="{Binding Date, StringFormat='{0:dd}'}"
-                                                       FontSize="24"
-                                                       FontAttributes="Bold"
-                                                       TextColor="#2B3A67"
-                                                       HorizontalOptions="Center"/>
-                                                <Label Text="{Binding Date, StringFormat='{0:ddd}'}"
-                                                       FontSize="12"
-                                                       TextColor="#666666"
-                                                       HorizontalOptions="Center"/>
-                                            </VerticalStackLayout>
-                                        </Frame>
-                                    </DataTemplate>
-                                </CollectionView.ItemTemplate>
-                            </CollectionView>
-                        </ScrollView>
+                    <!-- Add Time Slot -->
+                    <Frame Style="{StaticResource CardStyle}">
+                        <VerticalStackLayout Spacing="15">
+                            <Label Text="Add Time Slot" 
+                                   Style="{StaticResource HeaderLabelStyle}"/>
 
-                        <!-- Time Slots -->
-                        <VerticalStackLayout IsVisible="{Binding IsDateSelected}">
-                            <Label Text="Available Times"
-                                   FontSize="16"
-                                   FontAttributes="Bold"
-                                   TextColor="#2B3A67"
-                                   Margin="0,10"/>
+                            <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="10">
+                                <VerticalStackLayout Grid.Column="0">
+                                    <Label Text="Start Time" 
+                                           FontSize="12" 
+                                           TextColor="#4A5568"/>
+                                    <TimePicker Time="{Binding StartTime}"
+                                              Format="t"/>
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label Text="End Time" 
+                                           FontSize="12" 
+                                           TextColor="#4A5568"/>
+                                    <TimePicker Time="{Binding EndTime}"
+                                              Format="t"/>
+                                </VerticalStackLayout>
+
+                                <Button Grid.Column="2"
+                                        Text="Add Slot"
+                                        Command="{Binding AddTimeSlotCommand}"
+                                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
+                                        BackgroundColor="#4299E1"
+                                        TextColor="White"
+                                        HeightRequest="40"
+                                        VerticalOptions="End"/>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Time Slots List -->
+                    <Frame Style="{StaticResource CardStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Available Time Slots" 
+                                   Style="{StaticResource HeaderLabelStyle}"/>
+
+                            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                             IsVisible="{Binding IsLoading}"
+                                             Color="#4299E1"
+                                             HeightRequest="50"/>
 
                             <CollectionView ItemsSource="{Binding TimeSlots}"
-                                          HeightRequest="200">
-                                <CollectionView.ItemsLayout>
-                                    <GridItemsLayout Orientation="Vertical"
-                                                   Span="4"
-                                                   VerticalItemSpacing="10"
-                                                   HorizontalItemSpacing="10"/>
-                                </CollectionView.ItemsLayout>
+                                          EmptyView="No time slots available for this date"
+                                          IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
                                 <CollectionView.ItemTemplate>
+
+
                                     <DataTemplate>
-                                        <Frame Padding="10"
-                                               BorderColor="#E8F0FE"
-                                               BackgroundColor="{Binding IsAvailable, Converter={StaticResource BoolToColorConverter}}"
-                                               Margin="5">
-                                            <Frame.GestureRecognizers>
-                                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ToggleTimeSlotCommand}"
-                                                                    CommandParameter="{Binding}"/>
-                                            </Frame.GestureRecognizers>
-                                            <Label Text="{Binding Time}"
-                                                   FontSize="14"
-                                                   TextColor="#2B3A67"
-                                                   HorizontalOptions="Center"/>
+                                        <Frame Margin="0,5" 
+                                                   Padding="10" 
+                                                   BackgroundColor="White"
+                                                   BorderColor="#BEE3F8">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <Label Text="{Binding DisplayTime}"
+                                                           VerticalOptions="Center"/>
+                                                <Button Grid.Column="1"
+                                                            Text="Remove"
+                                                            Command="{Binding RemoveTimeSlotCommand}"
+                                                            CommandParameter="{Binding .}"
+                                                            BackgroundColor="#FC8181"
+                                                            TextColor="White"
+                                                            CornerRadius="5"/>
+                                            </Grid>
                                         </Frame>
                                     </DataTemplate>
                                 </CollectionView.ItemTemplate>
                             </CollectionView>
-
-                            <Button Text="Save Availability"
-                                    Command="{Binding UpdateAvailabilityCommand}"
-                                    BackgroundColor="#4B89DC"
-                                    TextColor="White"
-                                    HeightRequest="40"
-                                    Margin="0,10,0,0"/>
                         </VerticalStackLayout>
-                    </VerticalStackLayout>
-                </Frame>
+                    </Frame>
+                </VerticalStackLayout>
 
-                <!-- Pending Appointments -->
-                <Label Text="Pending Requests"
-                       FontSize="20"
-                       FontAttributes="Bold"
-                       TextColor="#2B3A67"/>
+                <!-- Appointments Tab Content -->
+                <VerticalStackLayout IsVisible="{Binding IsAvailabilityTabSelected, Converter={StaticResource InverseBoolConverter}}">
+                    <Frame Style="{StaticResource CardStyle}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Appointment Requests" 
+                                   Style="{StaticResource HeaderLabelStyle}"/>
 
-                <CollectionView ItemsSource="{Binding PendingAppointments}">
-                    <CollectionView.EmptyView>
-                        <Label Text="No pending appointment requests"
-                               TextColor="#666666"
-                               HorizontalOptions="Center"/>
-                    </CollectionView.EmptyView>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame Margin="0,5" 
-                                   Padding="15"
-                                   BorderColor="#E8F0FE"
-                                   BackgroundColor="White"
-                                   CornerRadius="10">
-                                <Grid RowDefinitions="Auto,Auto,Auto,Auto" 
-                                      ColumnDefinitions="*,Auto">
-                                    <Label Text="{Binding UserName}"
-                                           FontAttributes="Bold"
-                                           TextColor="#2B3A67"/>
+                            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                                             IsVisible="{Binding IsLoading}"
+                                             Color="#4299E1"
+                                             HeightRequest="50"/>
 
-                                    <Label Grid.Row="1" 
-                                           Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}"
-                                           TextColor="#666666"/>
+                            <CollectionView ItemsSource="{Binding Appointments}"
+                                          EmptyView="No appointments found"
+                                          IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Appointment">
+                                        <Frame Margin="0,5" 
+                                               Padding="15" 
+                                               BackgroundColor="#F7FAFC"
+                                               BorderColor="#E2E8F0"
+                                               CornerRadius="8">
+                                            <Grid RowDefinitions="Auto,Auto,Auto,Auto" 
+                                                  RowSpacing="8">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <Label Text="{Binding ClientName}"
+                                                           FontAttributes="Bold"
+                                                           TextColor="#2C5282"/>
+                                                    <Label Grid.Column="1"
+                                                           Text="{Binding Status}"
+                                                           TextColor="{Binding Status, Converter={StaticResource StatusColorConverter}}"/>
+                                                </Grid>
 
-                                    <Label Grid.Row="2"
-                                           Text="{Binding TimeSlot}"
-                                           TextColor="#666666"/>
+                                                <Label Grid.Row="1"
+                                                       Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}"
+                                                       TextColor="#4A5568"/>
 
-                                    <StackLayout Grid.Row="3" 
-                                               Grid.ColumnSpan="2" 
-                                               Orientation="Horizontal" 
-                                               Spacing="10"
-                                               Margin="0,10,0,0">
-                                        <Button Text="Approve"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ApproveAppointmentCommand}"
-                                                CommandParameter="{Binding}"
-                                                BackgroundColor="#4CAF50"
-                                                TextColor="White"
-                                                HeightRequest="35"
-                                                HorizontalOptions="FillAndExpand"/>
+                                                <Label Grid.Row="2"
+                                                       Text="{Binding TimeSlot.DisplayTime}"
+                                                       TextColor="#4A5568"/>
 
-                                        <Button Text="Reject"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RejectAppointmentCommand}"
-                                                CommandParameter="{Binding}"
-                                                BackgroundColor="#FF4B4B"
-                                                TextColor="White"
-                                                HeightRequest="35"
-                                                HorizontalOptions="FillAndExpand"/>
-                                    </StackLayout>
-                                </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                                                <HorizontalStackLayout Grid.Row="3" 
+                                                                     Spacing="10"
+                                                                     IsVisible="{Binding Status, Converter={StaticResource StatusVisibilityConverter}, ConverterParameter=Pending}">
+                                                    <Button Text="Confirm"
+                                                            Command="{Binding ConfirmAppointmentCommand}"
+                                                            CommandParameter="{Binding .}"
+                                                            BackgroundColor="#48BB78"
+                                                            TextColor="White"
+                                                            HeightRequest="35"
+                                                            CornerRadius="6"
+                                                            Padding="15,0"/>
 
-                <!-- Upcoming Appointments -->
-                <Label Text="Upcoming Appointments"
-                       FontSize="20"
-                       FontAttributes="Bold"
-                       TextColor="#2B3A67"
-                       Margin="0,20,0,0"/>
-
-                <CollectionView ItemsSource="{Binding UpcomingAppointments}">
-                    <CollectionView.EmptyView>
-                        <Label Text="No upcoming appointments"
-                               TextColor="#666666"
-                               HorizontalOptions="Center"/>
-                    </CollectionView.EmptyView>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame Margin="0,5" 
-                                   Padding="15"
-                                   BorderColor="#E8F0FE"
-                                   BackgroundColor="White"
-                                   CornerRadius="10">
-                                <Grid RowDefinitions="Auto,Auto,Auto">
-                                    <Label Text="{Binding UserName}"
-                                           FontAttributes="Bold"
-                                           TextColor="#2B3A67"/>
-
-                                    <Label Grid.Row="1" 
-                                           Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}"
-                                           TextColor="#666666"/>
-
-                                    <Label Grid.Row="2"
-                                           Text="{Binding TimeSlot}"
-                                           TextColor="#666666"/>
-                                </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-
-                <!-- Past Appointments -->
-                <Label Text="Past Appointments"
-                       FontSize="20"
-                       FontAttributes="Bold"
-                       TextColor="#2B3A67"
-                       Margin="0,20,0,0"/>
-
-                <CollectionView ItemsSource="{Binding PastAppointments}">
-                    <CollectionView.EmptyView>
-                        <Label Text="No past appointments"
-                               TextColor="#666666"
-                               HorizontalOptions="Center"/>
-                    </CollectionView.EmptyView>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame Margin="0,5" 
-                                   Padding="15"
-                                   BorderColor="#E8F0FE"
-                                   BackgroundColor="White"
-                                   Opacity="0.7"
-                                   CornerRadius="10">
-                                <Grid RowDefinitions="Auto,Auto,Auto,Auto">
-                                    <Label Text="{Binding UserName}"
-                                           FontAttributes="Bold"
-                                           TextColor="#2B3A67"/>
-
-                                    <Label Grid.Row="1" 
-                                           Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}"
-                                           TextColor="#666666"/>
-
-                                    <Label Grid.Row="2"
-                                           Text="{Binding TimeSlot}"
-                                           TextColor="#666666"/>
-
-                                    <Label Grid.Row="3"
-                                           Text="{Binding Status}"
-                                           TextColor="{Binding Status, Converter={StaticResource StatusToColorConverter}}"/>
-                                </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </VerticalStackLayout>
+                                                    <Button Text="Cancel"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:PractitionerAppointmentsViewModel}}, Path=CancelAppointmentCommand}"
+                                                            CommandParameter="{Binding .}"
+                                                            BackgroundColor="#FC8181"
+                                                            TextColor="White"
+                                                            HeightRequest="35"
+                                                            CornerRadius="6"
+                                                            Padding="15,0"/>
+                                                </HorizontalStackLayout>
+                                            </Grid>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+            </Grid>
         </ScrollView>
     </Grid>
 </ContentPage>

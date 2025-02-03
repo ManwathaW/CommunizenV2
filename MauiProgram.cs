@@ -7,6 +7,7 @@ using CommuniZEN.Views;
 using Firebase.Database;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Plugin.Maui.Audio;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 using Syncfusion.Maui.Toolkit.Hosting;
 using System.Diagnostics;
@@ -28,7 +29,7 @@ namespace CommuniZEN
                 .UseMauiApp<App>()
                 .UseSkiaSharp()
                 .UseMauiMaps()
-                
+
                 .UseMauiCommunityToolkit()
                 .ConfigureSyncfusionToolkit()
                 .ConfigureFonts(fonts =>
@@ -50,12 +51,19 @@ namespace CommuniZEN
             }
 
             // Register Firebase Client first
+            builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
             builder.Services.AddSingleton<FirebaseClient>(provider =>
                 new FirebaseClient(FirebaseConfig.RealtimeDatabaseUrl));
 
 #if DEBUG
             const string openAiKey = "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";
             builder.Logging.AddDebug();
+            builder.Services.AddTransient<JournalPage>();
+            builder.Services.AddTransient<DailyAffirmationsPage>(); 
+            builder.Services.AddTransient<DailyAffirmationsViewModel>();
+            builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
+            builder.Services.AddTransient<PractitionerAppointmentsViewModel>();
+            builder.Services.AddSingleton(AudioManager.Current);
             builder.Services.AddLogging(configure => configure.AddDebug());
             builder.Services.AddSingleton<IChatbotService>(_ =>
             new OpenAIChatbotService(openAiKey));
@@ -135,6 +143,10 @@ namespace CommuniZEN
             services.AddSingleton<IsNotNullConverter>();
             services.AddSingleton<DateTimeConverter>();
             services.AddSingleton<InverseBoolConverter>();
+            services.AddSingleton<TextTypeConverter>();
+            services.AddSingleton<AudioTypeConverter>();
+            services.AddSingleton<InvertedBoolConverter>();
+
         }
 
         private static void RegisterViewModels(IServiceCollection services)
@@ -146,7 +158,11 @@ namespace CommuniZEN
             services.AddTransient<PractitionerDashboardViewModel>();
             services.AddTransient<BookingsViewModel>();
             services.AddTransient<MapPickerViewModel>();
-            services.AddTransient<PractitionerProfileViewModel>();
+            services.AddTransient<PractitionerAppointmentsViewModel>();
+            services.AddTransient<DailyAffirmationsViewModel>();
+            services.AddTransient<JournalViewModel>();
+           
+
             services.AddTransient<ClientAppointmentsViewModel>();
             services.AddTransient<PractitionerAppointmentsViewModel>();
             services.AddSingleton<ChatViewModel>();
@@ -162,8 +178,10 @@ namespace CommuniZEN
             services.AddTransient<PractitionerDashboardPage>();
             services.AddTransient<BookingsPage>();
             services.AddTransient<PractitionerAppointmentsPage>();
-            services.AddTransient<PractitionerProfilePage>();
+    
             services.AddTransient<ChatPage>();
+            services.AddTransient<JournalPage>();
+            services.AddTransient<DailyAffirmationsPage>();
             services.AddTransient<ClientAppointmentsPage>();
         }
     }

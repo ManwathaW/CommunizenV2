@@ -2,16 +2,22 @@
 using CommuniZEN.Models;
 using Firebase.Database;
 using Firebase.Database.Query;
+using Firebase.Storage;
 using FirebaseAdmin.Auth;
-using Firebase.Auth;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Globalization;
+
 
 public class FirebaseDataService : IFirebaseDataService
 {
-    private readonly FirebaseClient _firebaseClient;
-    private readonly string _authToken;
 
+    private readonly FirebaseClient _firebaseClient;
+    private readonly string _storageBucket;
+    private const string APPOINTMENTS_PATH = "appointments";
+    private const string AVAILABILITY_PATH = "availability";
+
+    private readonly string _authToken;
     public FirebaseDataService()
     {
         _authToken = FirebaseConfig.ApiKey;
@@ -22,6 +28,7 @@ public class FirebaseDataService : IFirebaseDataService
                 AuthTokenAsyncFactory = () => Task.FromResult(_authToken)
             });
     }
+
 
     #region User Profile Management
     public async Task CreateUserProfileAsync(string userId, RegisterRequest profile)
@@ -365,6 +372,32 @@ public class FirebaseDataService : IFirebaseDataService
             return "profile_placeholder.png";
         }
     }
+
+
+    public async Task<string> UploadChatImageAsync(string chatId, Stream imageStream)
+    {
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await imageStream.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+            var base64Image = Convert.ToBase64String(imageBytes);
+
+            var imagePath = $"chat_images/{chatId}/{Guid.NewGuid()}";
+            var imageData = new { imageData = base64Image };
+
+            await _firebaseClient
+                .Child(imagePath)
+                .PutAsync(JsonConvert.SerializeObject(imageData));
+
+            return imagePath;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error uploading chat image: {ex.Message}");
+            throw;
+        }
+    }
     #endregion
 
     #region Session and Statistics
@@ -417,286 +450,479 @@ public class FirebaseDataService : IFirebaseDataService
     }
     #endregion
 
+
     #region Managing Appointments 
 
-    public async Task<Availability> GetPractitionerAvailabilityAsync(string practitionerId)
+
+    public async Task<List<TimeSlot>> GetTimeSlotsAsync(DateTime date)
     {
         try
         {
-            var availability = await _firebaseClient
-                .Child("availability")
-                .Child(practitionerId)
-                .OnceSingleAsync<Availability>();
+            Debug.WriteLine($"GetTimeSlotsAsync started for date: {date}");
+            var dateKey = date.ToString("yyyy-MM-dd");
+            var practitionerId = await GetCurrentPractitionerId();
+            Debug.WriteLine($"PractitionerId: {practitionerId}, DateKey: {dateKey}");
 
-            if (availability == null)
+            var path = $"{AVAILABILITY_PATH}/{practitionerId}/{dateKey}";
+            Debug.WriteLine($"Fetching from path: {path}");
+
+            var snapshot = await _firebaseClient
+                .Child(AVAILABILITY_PATH)
+                .Child(practitionerId)
+                .Child(dateKey)
+                .OnceAsync<dynamic>();
+
+            Debug.WriteLine($"Snapshot retrieved: {snapshot != null}");
+
+            var timeSlots = new List<TimeSlot>();
+            if (snapshot != null)
             {
-                // Return default availability if none is set
-                return new Availability
+                foreach (var item in snapshot)
                 {
-                    PractitionerId = practitionerId,
-                    AvailableDays = new List<string> { "Monday", "Tuesday", "Wednesday", "Thursday", "Friday" },
-                    TimeSlots = new List<string>
-                {
-                    "09:00 - 10:00",
-                    "10:00 - 11:00",
-                    "11:00 - 12:00",
-                    "14:00 - 15:00",
-                    "15:00 - 16:00",
-                    "16:00 - 17:00"
+                    Debug.WriteLine($"Processing item: {JsonConvert.SerializeObject(item.Object)}");
+                    var timeSlot = new TimeSlot
+                    {
+                        Id = item.Key,
+                        StartTime = TimeSpan.FromMinutes(Convert.ToDouble(item.Object.StartTime)),
+                        EndTime = TimeSpan.FromMinutes(Convert.ToDouble(item.Object.EndTime)),
+                        IsAvailable = item.Object.IsAvailable,
+                        AppointmentId = item.Object.AppointmentId
+                    };
+                    timeSlots.Add(timeSlot);
                 }
-                };
             }
 
-            return availability;
+            return timeSlots;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error getting practitioner availability: {ex.Message}");
-            throw new Exception($"Failed to get practitioner availability: {ex.Message}");
-        }
-    }
-
-    public async Task UpdateAppointmentStatusAsync(string appointmentId, AppointmentStatus status)
-    {
-        try
-        {
-            var appointment = await _firebaseClient
-                .Child("appointments")
-                .Child(appointmentId)
-                .OnceSingleAsync<Appointment>();
-
-            if (appointment != null)
-            {
-                appointment.Status = status;
-
-                // Update in practitioner's appointments
-                await _firebaseClient
-                    .Child("appointments")
-                    .Child(appointment.PractitionerId)
-                    .Child(appointmentId)
-                    .PutAsync(JsonConvert.SerializeObject(appointment));
-
-                // Update in user's appointments
-                await _firebaseClient
-                    .Child("user_appointments")
-                    .Child(appointment.UserId)
-                    .Child(appointmentId)
-                    .PutAsync(JsonConvert.SerializeObject(appointment));
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to update appointment status: {ex.Message}");
-        }
-    }
-
-    // method to get appointments
-    public async Task<List<Appointment>> GetAppointmentsAsync(string practitionerId)
-    {
-        try
-        {
-            var appointments = await _firebaseClient
-                .Child("appointments")
-                .Child(practitionerId)
-                .OnceAsync<Appointment>();
-
-            return appointments?.Select(a =>
-            {
-                a.Object.Id = a.Key;
-                return a.Object;
-            }).ToList() ?? new List<Appointment>();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error getting appointments: {ex.Message}");
-            throw new Exception($"Failed to get appointments: {ex.Message}");
-        }
-    }
-
-    public async Task SaveAvailabilityAsync(string practitionerId, Availability availability)
-    {
-        try
-        {
-            await _firebaseClient
-                .Child("availability")
-                .Child(practitionerId)
-                .PutAsync(JsonConvert.SerializeObject(availability));
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error saving availability: {ex.Message}");
-            throw new Exception($"Failed to save availability: {ex.Message}");
-        }
-    }
-
-
-    public async Task SaveAppointmentAsync(Appointment appointment)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(appointment.Id))
-            {
-                appointment.Id = Guid.NewGuid().ToString();
-            }
-
-            appointment.CreatedAt = DateTime.UtcNow;
-            await _firebaseClient
-                .Child("appointments")
-                .Child(appointment.PractitionerId)
-                .Child(appointment.Id)
-                .PutAsync(JsonConvert.SerializeObject(appointment));
-
-            // Also save to user's appointments
-            await _firebaseClient
-                .Child("user_appointments")
-                .Child(appointment.UserId)
-                .Child(appointment.Id)
-                .PutAsync(JsonConvert.SerializeObject(appointment));
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to save appointment: {ex.Message}");
-        }
-    }
-
-
-
-    public async Task<List<Appointment>> GetUserAppointmentsAsync(string userId)
-    {
-        try
-        {
-            var appointments = await _firebaseClient
-                .Child("user_appointments")
-                .Child(userId)
-                .OnceAsync<Appointment>();
-
-            return appointments?.Select(a => {
-                a.Object.Id = a.Key;
-                return a.Object;
-            }).ToList() ?? new List<Appointment>();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to get user appointments: {ex.Message}");
-        }
-    }
-
-    public async Task<List<Appointment>> GetPractitionerAppointmentsAsync(string practitionerId)
-    {
-        try
-        {
-            var appointments = await _firebaseClient
-                .Child("appointments")
-                .Child(practitionerId)
-                .OnceAsync<Appointment>();
-
-            return appointments?.Select(a => {
-                a.Object.Id = a.Key;
-                return a.Object;
-            }).ToList() ?? new List<Appointment>();
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Failed to get practitioner appointments: {ex.Message}");
-        }
-    }
-
-
-    public async Task<string> UploadChatImageAsync(string chatId, Stream imageStream)
-    {
-        try
-        {
-            using var memoryStream = new MemoryStream();
-            await imageStream.CopyToAsync(memoryStream);
-            var imageBytes = memoryStream.ToArray();
-            var base64Image = Convert.ToBase64String(imageBytes);
-
-            var imagePath = $"chat_images/{chatId}/{Guid.NewGuid()}";
-            var imageData = new { imageData = base64Image };
-
-            await _firebaseClient
-                .Child(imagePath)
-                .PutAsync(JsonConvert.SerializeObject(imageData));
-
-            return imagePath;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error uploading chat image: {ex.Message}");
+            Debug.WriteLine($"GetTimeSlotsAsync Error: {ex}");
             throw;
         }
     }
 
-    public async Task<bool> IsTimeSlotAvailableAsync(string practitionerId, DateTime date, string timeSlot)
+    private TimeSpan ConvertToTimeSpan(object value)
     {
-        try
-        {
-            var appointments = await _firebaseClient
-                .Child("appointments")
-                .Child(practitionerId)
-                .OrderBy("Date")
-                .EqualTo(date.ToString("o"))
-                .OnceAsync<Appointment>();
+        if (value == null) return TimeSpan.Zero;
 
-            var conflictingAppointment = appointments?.FirstOrDefault(a =>
-                a.Object.TimeSlot == timeSlot &&
-                a.Object.Status != AppointmentStatus.Cancelled &&
-                a.Object.Status != AppointmentStatus.Rejected);
-
-            return conflictingAppointment == null;
-        }
-        catch (Exception ex)
+        switch (value)
         {
-            throw new Exception($"Failed to check time slot availability: {ex.Message}");
+            case double d:
+                return TimeSpan.FromMinutes(d);
+            case long l:
+                return TimeSpan.FromMinutes(l);
+            case int i:
+                return TimeSpan.FromMinutes(i);
+            case string s when double.TryParse(s, NumberStyles.Any, CultureInfo.InvariantCulture, out double minutes):
+                return TimeSpan.FromMinutes(minutes);
+            default:
+                Debug.WriteLine($"Invalid time value: {value}");
+                return TimeSpan.Zero;
         }
     }
 
-    public async Task<List<Appointment>> GetAllPractitionerAppointmentsAsync(string practitionerId)
+
+
+    public async Task<List<TimeSlot>> GetAvailableTimeSlotsAsync(string practitionerId, DateTime date)
     {
         try
         {
-            var appointments = await _firebaseClient
-                .Child("appointments")
+            var dateKey = date.ToString("yyyy-MM-dd");
+            var snapshot = await _firebaseClient
+                .Child(AVAILABILITY_PATH)
                 .Child(practitionerId)
+                .Child(dateKey)
+                .OnceAsync<TimeSlot>(); // This returns TimeSlot objects
+
+            return snapshot?.Select(x =>
+            {
+                var slot = x.Object;
+                slot.Id = x.Key;
+                return slot;
+            })
+            .Where(slot => slot.IsAvailable)
+            .ToList() ?? new List<TimeSlot>();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error in GetAvailableTimeSlotsAsync: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task AddTimeSlotAsync(DateTime date, TimeSlot slot)
+    {
+        try
+        {
+
+            var authProvider = Application.Current.Handler.MauiContext.Services.GetService<IFirebaseAuthService>();
+            var practitionerId = await authProvider.GetCurrentUserIdAsync();
+            var dateKey = date.ToString("yyyy-MM-dd");
+
+            var slotData = new
+            {
+                slot.Id,
+                StartTime = slot.StartTime.TotalMinutes,
+                EndTime = slot.EndTime.TotalMinutes,
+                slot.IsAvailable,
+                slot.AppointmentId
+            };
+
+            // Force numeric serialization
+            await _firebaseClient
+                .Child(AVAILABILITY_PATH)
+                .Child(practitionerId)
+                .Child(dateKey)
+                .PostAsync(slotData);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"AddTimeSlotAsync Error: {ex}");
+            throw;
+        }
+    }
+
+
+
+    public async Task RemoveTimeSlotAsync(DateTime date, TimeSlot slot)
+    {
+        try
+        {
+            var dateKey = date.ToString("yyyy-MM-dd");
+            await _firebaseClient
+                .Child(AVAILABILITY_PATH)
+                .Child(dateKey)
+                .Child(slot.Id)
+                .DeleteAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error in RemoveTimeSlotAsync: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<List<Appointment>> GetPractitionerAppointmentsAsync()
+    {
+        try
+        {
+            var currentUserId = await GetCurrentPractitionerId();
+            var snapshot = await _firebaseClient
+                .Child(APPOINTMENTS_PATH)
+                .OrderBy("PractitionerId")
+                .EqualTo(currentUserId)
                 .OnceAsync<Appointment>();
 
-            return appointments?.Select(a =>
+            return snapshot?.Select(x =>
             {
-                a.Object.Id = a.Key;
-                return a.Object;
+                var appointment = x.Object;
+                appointment.Id = x.Key;
+                return appointment;
             }).ToList() ?? new List<Appointment>();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error getting appointments: {ex.Message}");
-            throw new Exception($"Failed to get appointments: {ex.Message}");
+            Debug.WriteLine($"Error in GetPractitionerAppointmentsAsync: {ex.Message}");
+            throw;
         }
     }
 
-    public async Task DeleteAppointmentAsync(string appointmentId, string practitionerId, string userId)
+    public async Task<List<Appointment>> GetClientAppointmentsAsync(string clientId)
     {
         try
         {
-            // Delete from practitioner's appointments
-            await _firebaseClient
-                .Child("appointments")
-                .Child(practitionerId)
-                .Child(appointmentId)
-                .DeleteAsync();
+            var snapshot = await _firebaseClient
+                .Child(APPOINTMENTS_PATH)
+                .OrderBy("ClientId")
+                .EqualTo(clientId)
+                .OnceAsync<Appointment>();
 
-            // Delete from user's appointments
-            await _firebaseClient
-                .Child("user_appointments")
-                .Child(userId)
-                .Child(appointmentId)
-                .DeleteAsync();
+            return snapshot?.Select(x =>
+            {
+                var appointment = x.Object;
+                appointment.Id = x.Key;
+                return appointment;
+            }).ToList() ?? new List<Appointment>();
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to delete appointment: {ex.Message}");
+            Debug.WriteLine($"Error in GetClientAppointmentsAsync: {ex.Message}");
+            throw;
         }
+    }
+
+    public async Task CreateAppointmentAsync(Appointment appointment)
+    {
+        try
+        {
+            // Create the appointment
+            var result = await _firebaseClient
+                .Child(APPOINTMENTS_PATH)
+                .PostAsync(appointment);
+
+            // Update the time slot availability
+            var dateKey = appointment.Date.ToString("yyyy-MM-dd");
+            await _firebaseClient
+                .Child(AVAILABILITY_PATH)
+                .Child(dateKey)
+                .Child(appointment.TimeSlot.Id)
+                .Child("IsAvailable")
+                .PutAsync(false);
+
+            // Store the appointment ID reference in the time slot
+            await _firebaseClient
+                .Child(AVAILABILITY_PATH)
+                .Child(dateKey)
+                .Child(appointment.TimeSlot.Id)
+                .Child("AppointmentId")
+                .PutAsync(result.Key);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error in CreateAppointmentAsync: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task UpdateAppointmentAsync(Appointment appointment)
+    {
+        try
+        {
+            await _firebaseClient
+                .Child(APPOINTMENTS_PATH)
+                .Child(appointment.Id)
+                .PutAsync(appointment);
+
+            // If appointment is cancelled, make the time slot available again
+            if (appointment.Status == AppointmentStatus.Cancelled)
+            {
+                var dateKey = appointment.Date.ToString("yyyy-MM-dd");
+                await _firebaseClient
+                    .Child(AVAILABILITY_PATH)
+                    .Child(dateKey)
+                    .Child(appointment.TimeSlot.Id)
+                    .Child("IsAvailable")
+                    .PutAsync(true);
+
+                await _firebaseClient
+                    .Child(AVAILABILITY_PATH)
+                    .Child(dateKey)
+                    .Child(appointment.TimeSlot.Id)
+                    .Child("AppointmentId")
+                    .DeleteAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error in UpdateAppointmentAsync: {ex.Message}");
+            throw;
+        }
+    }
+
+
+    // Additional helper methods
+
+
+    private string GenerateDateKey(DateTime date)
+    {
+        return date.ToString("yyyy-MM-dd");
+    }
+
+    private async Task<bool> IsTimeSlotAvailable(string dateKey, string timeSlotId)
+    {
+        var snapshot = await _firebaseClient
+            .Child(AVAILABILITY_PATH)
+            .Child(dateKey)
+            .Child(timeSlotId)
+            .Child("IsAvailable")
+            .OnceSingleAsync<bool>();
+
+        return snapshot;
+    }
+
+    private async Task<string> GetCurrentPractitionerId()
+    {
+        try
+        {
+            var authProvider = Application.Current.Handler.MauiContext.Services.GetService<IFirebaseAuthService>();
+            if (authProvider == null)
+                throw new InvalidOperationException("Firebase auth service not initialized");
+
+            var userId = await authProvider.GetCurrentUserIdAsync();
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("No authenticated user found");
+
+            return userId;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"GetCurrentPractitionerId Error: {ex.Message}");
+            throw;
+        }
+    }
+
+    Task<string> IFirebaseDataService.GetFirebaseAuthToken()
+    {
+        throw new NotImplementedException();
     }
 
     #endregion
 
+    #region User Profile Management
+
+
+    public async Task<string> CreateJournalEntryAsync(string userId, JournalEntry entry)
+    {
+        try
+        {
+            var journalReference = _firebaseClient
+                .Child("journal_entries")
+                .Child(userId);
+
+            var result = await journalReference.PostAsync(new
+            {
+                Type = entry.Type.ToString(),
+                Content = entry.Content,
+                Timestamp = entry.Timestamp.ToString("o"),
+                UserId = userId
+            });
+
+            return result.Key;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error creating journal entry: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<List<JournalEntry>> GetUserJournalEntriesAsync(string userId)
+    {
+        try
+        {
+            var journalReference = _firebaseClient
+                .Child("journal_entries")
+                .Child(userId);
+
+            var entries = await journalReference.OnceAsync<object>();
+
+            var journalEntries = new List<JournalEntry>();
+            foreach (var entry in entries)
+            {
+                var data = entry.Object as IDictionary<string, object>;
+                if (data != null)
+                {
+                    journalEntries.Add(new JournalEntry
+                    {
+                        Id = entry.Key,
+                        Type = Enum.Parse<JournalEntryType>(data["Type"].ToString()),
+                        Content = data["Content"].ToString(),
+                        Timestamp = DateTime.Parse(data["Timestamp"].ToString())
+                    });
+                }
+            }
+
+            return journalEntries.OrderByDescending(e => e.Timestamp).ToList();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting journal entries: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<string> UploadJournalAudioAsync(string userId, string entryId, Stream audioStream)
+    {
+        try
+        {
+            var storage = new FirebaseStorage(_storageBucket);
+            var audioReference = storage
+                .Child("journal_audio")
+                .Child(userId)
+                .Child($"{entryId}.m4a");
+
+            var audioUrl = await audioReference.PutAsync(audioStream);
+            return audioUrl;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error uploading audio: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task UpdateJournalEntryAsync(string userId, string entryId, JournalEntry entry)
+    {
+        try
+        {
+            await _firebaseClient
+                .Child("journal_entries")
+                .Child(userId)
+                .Child(entryId)
+                .PutAsync(new
+                {
+                    Type = entry.Type.ToString(),
+                    Content = entry.Content,
+                    Timestamp = entry.Timestamp.ToString("o"),
+                    UserId = userId
+                });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error updating journal entry: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task DeleteJournalEntryAsync(string userId, string entryId)
+    {
+        try
+        {
+            await _firebaseClient
+                .Child("journal_entries")
+                .Child(userId)
+                .Child(entryId)
+                .DeleteAsync();
+
+            // If it's an audio entry, also delete the audio file
+            if (await CheckIfAudioExists(userId, entryId))
+            {
+                var storage = new FirebaseStorage(_storageBucket);
+                await storage
+                    .Child("journal_audio")
+                    .Child(userId)
+                    .Child($"{entryId}.m4a")
+                    .DeleteAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error deleting journal entry: {ex.Message}");
+            throw;
+        }
+    }
+
+    private async Task<bool> CheckIfAudioExists(string userId, string entryId)
+    {
+        try
+        {
+            var entry = await _firebaseClient
+                .Child("journal_entries")
+                .Child(userId)
+                .Child(entryId)
+                .OnceSingleAsync<JournalEntry>();
+
+            return entry?.Type == JournalEntryType.Audio;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
+    
+
+
+    #endregion
 }

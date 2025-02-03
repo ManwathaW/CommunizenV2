@@ -9,10 +9,16 @@ namespace CommuniZEN.Converters
         {
             if (value is AppointmentStatus status)
             {
-                // Only show cancel button for Pending and Approved appointments
-                return status == AppointmentStatus.Pending || status == AppointmentStatus.Approved;
+                return status switch
+                {
+                    AppointmentStatus.Pending => "#F6AD55",    // Orange
+                    AppointmentStatus.Confirmed => "#48BB78",   // Green
+                    AppointmentStatus.Cancelled => "#FC8181",   // Red
+                    AppointmentStatus.Completed => "#4299E1",   // Blue
+                    _ => "#4A5568"                             // Default gray
+                };
             }
-            return false;
+            return "#4A5568";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

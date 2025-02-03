@@ -15,25 +15,7 @@ namespace CommuniZEN.ViewModels
         private readonly IFirebaseAuthService _authService;
         #endregion
 
-        #region Constants
-        private readonly List<string> DefaultTimeSlots = new()
-        {
-            "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-            "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-            "16:00", "16:30", "17:00", "17:30"
-        };
 
-        private readonly List<DayOption> DefaultWorkingDays = new()
-        {
-            new DayOption { DayName = "Mon", IsSelected = false },
-            new DayOption { DayName = "Tue", IsSelected = false },
-            new DayOption { DayName = "Wed", IsSelected = false },
-            new DayOption { DayName = "Thu", IsSelected = false },
-            new DayOption { DayName = "Fri", IsSelected = false },
-            new DayOption { DayName = "Sat", IsSelected = false },
-            new DayOption { DayName = "Sun", IsSelected = false }
-        };
-        #endregion
 
         #region Profile Properties
         [ObservableProperty]
@@ -71,30 +53,10 @@ namespace CommuniZEN.ViewModels
         private bool hasProfile;
         #endregion
 
-        #region Availability Properties
-        [ObservableProperty]
-        private ObservableCollection<DayOption> workingDays;
+      
+        
 
-        [ObservableProperty]
-        private ObservableCollection<TimeSlot> timeSlots;
-
-        [ObservableProperty]
-        private string newTimeSlot;
-        #endregion
-
-        #region Appointment Properties
-        [ObservableProperty]
-        private ObservableCollection<AppointmentDate> availableDates;
-
-        [ObservableProperty]
-        private AppointmentDate selectedDate;
-
-        [ObservableProperty]
-        private ObservableCollection<TimeSlot> availableTimeSlots;
-
-        [ObservableProperty]
-        private bool isUpdatingAvailability;
-        #endregion
+    
 
         #region Constructor
         public PractitionerDashboardViewModel(IFirebaseDataService dataService, IFirebaseAuthService authService)
@@ -102,45 +64,14 @@ namespace CommuniZEN.ViewModels
             _dataService = dataService;
             _authService = authService;
             Profile = new PracticeProfile();
-            InitializeCollections();
-            InitializeAvailableDates();
+    
+          
             _ = LoadProfileAsync();
         }
 
-        private void InitializeCollections()
-        {
-            TimeSlots = new ObservableCollection<TimeSlot>();
-            AvailableDates = new ObservableCollection<AppointmentDate>();
-            WorkingDays = new ObservableCollection<DayOption>(DefaultWorkingDays);
-        }
+      
 
-        private void InitializeAvailableDates()
-        {
-            var today = DateTime.Today;
-            AvailableDates.Clear();
-
-            for (int i = 0; i < 30; i++)
-            {
-                var date = today.AddDays(i);
-                if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
-                {
-                    var timeSlots = DefaultTimeSlots.Select(time => new TimeSlot
-                    {
-                        Time = time,
-                        IsAvailable = true,
-                        IsSelected = false
-                    }).ToList();
-
-                    AvailableDates.Add(new AppointmentDate
-                    {
-                        Date = date,
-                        TimeSlots = timeSlots,
-                        IsAvailable = true,
-                        IsSelected = false
-                    });
-                }
-            }
-        }
+   
 
         #endregion
 
@@ -190,11 +121,8 @@ namespace CommuniZEN.ViewModels
         {
             HasProfile = false;
             IsEditing = true;
-            TimeSlots.Clear();
-            foreach (var day in WorkingDays)
-            {
-                day.IsSelected = false;
-            }
+           
+           
         }
         #endregion
 

@@ -95,7 +95,7 @@ namespace CommuniZEN.Services
                     ClientId = clientId,
                     ClientName = clientName,
                     CreatedAt = DateTime.UtcNow,
-                    LastMessageTimestamp = DateTime.UtcNow.Ticks,
+                    Timestamp = DateTime.UtcNow.Ticks,
                     IsActive = true,
                     UnreadCount = 0
                 };
@@ -131,7 +131,7 @@ namespace CommuniZEN.Services
                     .Where(session =>
                         session.PractitionerId == _currentUserId ||
                         session.ClientId == _currentUserId)
-                    .OrderByDescending(x => x.LastMessageTimestamp)
+                    .OrderByDescending(x => x.Timestamp)
                     .ToList();
             }
             catch (Exception ex)

@@ -6,32 +6,32 @@
              Title="Login">
 
     <ScrollView>
-        <Grid Padding="15" RowSpacing="20">
-            <VerticalStackLayout Spacing="5">
-                <!-- Logo or Title -->
+        <Grid Padding="15" RowSpacing="25">
+            <VerticalStackLayout Spacing="0">
+                <!-- Logo -->
                 <Image Source="logo.png"
                        HorizontalOptions="Center"
                        HeightRequest="140"
                        Margin="0,0,0,0"/>
 
 
-                
+
                 <!-- Login Form -->
                 <Frame BackgroundColor="White"
-                       Padding="20,0,20,20"
+                       Padding="20,10,20,5"
                        CornerRadius="17"
                        HasShadow="True">
 
 
-                    <VerticalStackLayout Spacing="20">
-
+                    <VerticalStackLayout Spacing="16">
                         <Label Text="Account Login"
                                HorizontalOptions="Center"
                                FontAttributes="Bold"
                                TextColor="#2B5C9B"
-                               FontSize="24"
-                               Padding="0,0,0,0"
-                               Margin="0,0,0,20"/>
+                               FontSize="20"
+                               Padding="0,0,-5,0"
+                               Margin="0,0,0,0"/>
+
                         
                         <Frame BackgroundColor="#f8faff"
                                BorderColor="#e1e8ff"
@@ -39,13 +39,13 @@
                                CornerRadius="12"
                                HasShadow="False">
 
-                            <VerticalStackLayout Spacing="-11">
+                            <VerticalStackLayout Spacing="-15">
                                 <Label Text="Your email" 
                                        FontSize="12"
-                                       TextColor="black"
-                                       FontAttributes="Bold"/>
+                                       FontAttributes="Bold"
+                                       TextColor="#2B5C9B"/>
 
-                                <Entry Placeholder="e.g.manwatha@gmail.com"
+                                <Entry Placeholder="e.g.manwatha@gmail.com"                                     
                                        Text="{Binding EmailInput}"
                                        Keyboard="Email"
                                         PlaceholderColor="#cccccc" />
@@ -57,19 +57,38 @@
                                Padding="15,0"
                                CornerRadius="12"
                                HasShadow="False">
-                            <VerticalStackLayout Spacing="-10">
+                            <VerticalStackLayout Spacing="-15">
                                 <Label Text="Password" 
                                        FontSize="12"
-                                       TextColor="Black"
-                                       FontAttributes="Bold"/>
+                                       FontAttributes="Bold"
+                                       TextColor="#2B5C9B"/>
 
-                                <Entry Placeholder="Password"
-                               Text="{Binding PasswordInput}"
-                               IsPassword="True"
-                                   PlaceholderColor="#cccccc"/>
+                                <!-- Password Entry with Toggle Button -->
+                                <Grid>
+                                    <Entry x:Name="PasswordEntry"
+                                           Placeholder="Password"
+                                           Text="{Binding PasswordInput}"
+                                           VerticalOptions="End"
+                                           IsPassword="True"
+                                           PlaceholderColor="#cccccc"/>
+
+                                    <!-- Eye Toggle Button -->
+                                    <ImageButton x:Name="TogglePasswordButton"
+                                                 BackgroundColor="Transparent"
+                                                 HorizontalOptions="End"
+                                                 VerticalOptions="Center"
+                                                 WidthRequest="24"
+                                                 HeightRequest="24"
+                                                 Margin="0,0,10,0"
+                                                 Clicked="OnTogglePasswordButtonClicked">
+                                        <ImageButton.Source>
+                                            <!-- Default image for hidden password -->
+                                            <FileImageSource File="eye.png" />
+                                        </ImageButton.Source>
+                                    </ImageButton>
+                                </Grid>
                             </VerticalStackLayout>
                         </Frame>
-
 
                         <!-- Reset Password Link -->
                         <HorizontalStackLayout 
@@ -90,7 +109,19 @@
                                 Command="{Binding LoginCommand}"
                                 IsEnabled="{Binding CanLogin}"
                                 HeightRequest="50"
-                                Margin="0,0,0,0"/>
+                                CornerRadius="20"
+                                Margin="40,0"
+                                BackgroundColor="#4B89DC"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                FontSize="20">
+                            <Button.Shadow>
+                                <Shadow Brush="#4B89DC"
+                                    Offset="0,4"
+                                    Radius="8"
+                                    Opacity="0.7"/>
+                            </Button.Shadow>
+                        </Button>
 
                         <!-- Separator -->
                         <Grid ColumnDefinitions="*,Auto,*"
@@ -116,7 +147,7 @@
 
                         <!-- Sign in options -->
                         <Grid ColumnDefinitions="*,Auto,*"
-                              VerticalOptions="Center" Margin="0,-20">
+                              VerticalOptions="Center" Margin="0,-15">
                             <HorizontalStackLayout Grid.Column="1"
                            HorizontalOptions="Center"
                            Spacing="-25"
@@ -147,10 +178,12 @@
                             HorizontalOptions="Center" 
                             Spacing="5">
                             <Label Text="Dont have an account?"
+                                   FontSize="Small"
                                    TextColor="#666666"/>
                             <Label Text="Register here"
-                                   TextColor="#4a90e2"
-                                   FontAttributes="Bold">
+                                   FontSize="Subtitle"
+                                   TextColor="DodgerBlue"
+                                   FontAttributes="Italic">
                                 <Label.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding NavigateToRegisterCommand}"/>
                                 </Label.GestureRecognizers>

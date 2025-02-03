@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using Font = Microsoft.Maui.Font;
 using CommuniZEN.Views;
@@ -7,6 +7,9 @@ using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Maps;
 using CommuniZEN.Controls;
 using System.Diagnostics;
+using Firebase.Database;
+using Firebase.Storage;
+using Plugin.Maui.Audio;
 
 namespace CommuniZEN
 {
@@ -15,7 +18,15 @@ namespace CommuniZEN
         public AppShell()
         {
             InitializeComponent();
-       
+
+
+            var firebaseClient = new FirebaseClient("your-firebase-url");
+            var firebaseStorage = new FirebaseStorage("your-storage-url");
+            var audioManager = AudioManager.Current;
+
+            DependencyService.RegisterSingleton<IAudioManager>(audioManager);
+            DependencyService.RegisterSingleton(new JournalViewModel(audioManager, firebaseClient, firebaseStorage)); 
+
             Resources["MessageAlignmentConverter"] = new MessageAlignmentConverter();
             Resources["MessageTextColorConverter"] = new MessageTextColorConverter();
             RegisterRoutes();
@@ -25,14 +36,16 @@ namespace CommuniZEN
         private void RegisterRoutes()
         {
             Routing.RegisterRoute("login", typeof(LoginPage));
-            Routing.RegisterRoute("bookings", typeof(BookingsPage));   
+            Routing.RegisterRoute("bookings", typeof(BookingsPage));
             Routing.RegisterRoute("main", typeof(MainPage));
             Routing.RegisterRoute("register", typeof(RegisterPage));
             Routing.RegisterRoute("chatbotintro", typeof(ChatbotIntro));
-            Routing.RegisterRoute("practitionerdashboard", typeof(PractitionerDashboardPage)); 
-            Routing.RegisterRoute("practitionerprofile", typeof(PractitionerProfilePage));
+            Routing.RegisterRoute("practitionerdashboard", typeof(PractitionerDashboardPage));
+      
             Routing.RegisterRoute("appointments", typeof(ClientAppointmentsPage));
-            Routing.RegisterRoute("practitionerappointments", typeof(PractitionerAppointmentsPage));
+            Routing.RegisterRoute("affirmationspage", typeof(DailyAffirmationsPage));
+             Routing.RegisterRoute("appointments", typeof(ClientAppointmentsPage));
+            Routing.RegisterRoute("journalpage", typeof(JournalPage));
             Routing.RegisterRoute("chatpage", typeof(ChatPage));
         }
 

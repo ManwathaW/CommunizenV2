@@ -11,8 +11,13 @@ namespace CommuniZEN.Interfaces
     {
         Task<FirebaseAuthResult> RegisterWithEmailAndPasswordAsync(string email, string password);
         Task<FirebaseAuthResult> SignInWithEmailAndPasswordAsync(string email, string password);
+
         Task SignOutAsync();
+  
         Task<string> GetCurrentUserIdAsync();
         Task SendPasswordResetEmailAsync(string email);
+
+      
+
     }
 }

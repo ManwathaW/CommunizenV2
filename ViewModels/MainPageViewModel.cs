@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Diagnostics;
+using CommuniZEN.Views;
 using CommuniZEN.Controls;
 using CommuniZEN.Interfaces;
 using CommuniZEN.Services;
@@ -157,6 +158,20 @@ namespace CommuniZEN.ViewModels
         private async Task OpenChat()
         {
             await Shell.Current.GoToAsync("chatpage");
+        }
+
+     
+
+        [RelayCommand]
+        private async Task OpenJournal()
+        {
+            await Shell.Current.GoToAsync("journalpage");
+        }
+
+        [RelayCommand]
+        private async Task OpenAffirmations()
+        {
+            await Shell.Current.GoToAsync("affirmationspage");
         }
 
     }

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:converters="clr-namespace:CommuniZEN.Converters"
+             xmlns:models="clr-namespace:CommuniZEN.Models"
+             x:Class="CommuniZEN.Views.JournalPage"
+             Title="My Journal">
+
+    <ContentPage.Resources>
+        <!-- Converters for UI state management -->
+        <converters:TextTypeConverter x:Key="TextTypeConverter"/>
+        <converters:AudioTypeConverter x:Key="AudioTypeConverter"/>
+        <converters:InvertedBoolConverter x:Key="InvertedBoolConverter"/>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" 
+          Padding="20" 
+          RowSpacing="20">
+
+        <!-- Journal Entry Creation Section -->
+        <VerticalStackLayout Grid.Row="0" Spacing="15">
+            <!-- Audio Recording Section -->
+            <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}"
+                   BorderColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray800}}"
+                   Padding="15"
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Record Voice Note"
+                           FontSize="16"
+                           FontAttributes="Bold"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Button x:Name="RecordButton"
+                                Grid.Column="0"
+                                Text="Start Recording"
+                                BackgroundColor="{StaticResource Primary}"
+                                TextColor="White"
+                                IsVisible="{Binding IsRecording, Converter={StaticResource InvertedBoolConverter}}"
+                                Clicked="OnStartRecording"/>
+
+                        <Button x:Name="StopButton"
+                                Grid.Column="1"
+                                Text="Stop Recording"
+                                BackgroundColor="{StaticResource Error}"
+                                TextColor="White"
+                                IsVisible="{Binding IsRecording}"
+                                Clicked="OnStopRecording"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Text Note Section -->
+            <Frame BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}"
+                   BorderColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray800}}"
+                   Padding="15"
+                   CornerRadius="10">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Write Note"
+                           FontSize="16"
+                           FontAttributes="Bold"/>
+
+                    <Editor x:Name="TextEditor"
+                            Text="{Binding CurrentText}"
+                            Placeholder="Write your thoughts here..."
+                            HeightRequest="100"
+                            AutoSize="TextChanges"
+                            MaxLength="1000"/>
+
+                    <Button x:Name="SaveTextButton"
+                            Text="Save Note"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            Clicked="OnSaveNote"/>
+                </VerticalStackLayout>
+            </Frame>
+        </VerticalStackLayout>
+
+        <!-- Journal Entries List -->
+        <ScrollView Grid.Row="1">
+            <CollectionView ItemsSource="{Binding Entries}"
+                          EmptyView="No journal entries yet. Start by recording or writing a note!">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:JournalEntry">
+                        <Frame Margin="0,0,0,15"
+                               Padding="15"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray950}}"
+                               BorderColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray800}}"
+                               CornerRadius="10">
+                            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+                                <!-- Timestamp -->
+                                <Label Grid.Row="0"
+                                       Text="{Binding Timestamp, StringFormat='{0:MMM dd, yyyy hh:mm tt}'}"
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"/>
+
+                                <!-- Content -->
+                                <Label Grid.Row="1"
+                                       Text="{Binding Content}"
+                                       IsVisible="{Binding Type, Converter={StaticResource TextTypeConverter}}"
+                                       LineBreakMode="WordWrap"/>
+
+                                <HorizontalStackLayout Grid.Row="1"
+                                                      IsVisible="{Binding Type, Converter={StaticResource AudioTypeConverter}}"
+                                                      Spacing="10">
+                                    <Image Source="audio_icon.png"
+                                           HeightRequest="24"
+                                           WidthRequest="24"/>
+                                    <Label Text="Voice Note"
+                                           VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+
+                                <!-- Actions -->
+                                <Button Grid.Row="2"
+                                        Text="Share"
+                                        BackgroundColor="Transparent"
+                                        TextColor="{StaticResource Primary}"
+                                        BorderColor="{StaticResource Primary}"
+                                        BorderWidth="1"
+                                        Clicked="OnShareNote"
+                                        CornerRadius="20"
+                                        HeightRequest="36"
+                                        Padding="20,0"/>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </ScrollView>
+    </Grid>
+</ContentPage>

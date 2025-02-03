@@ -1,29 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
+using CommuniZEN.Models;
+using System.Diagnostics;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace CommuniZEN.Converters
 {
-
-    public class BoolToColorConverter : IValueConverter
+    public class AudioTypeConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is not bool boolValue || parameter is not string colors)
-                return Colors.Transparent.ToHex();
-
-            var colorOptions = colors.Split(',');
-            return boolValue ? colorOptions[0] : colorOptions[1];
+            // Return true only if the entry type is Audio
+            if (value is JournalEntryType type)
+            {
+                return type == JournalEntryType.Audio;
+            }
+            return false;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
-
     }
-
 }

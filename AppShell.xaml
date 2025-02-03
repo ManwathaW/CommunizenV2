@@ -37,24 +37,38 @@
         ContentTemplate="{DataTemplate views:RegisterPage}"
         Route="register"
         FlyoutItemIsVisible="False"/>
-    
+
     <!-- Practitioner Dashboard -->
     <ShellContent 
-        Shell.FlyoutBehavior="Flyout"
+        Shell.FlyoutBehavior="Disabled"
         Title="Dashboard"
         Route="practitionerdashboard"
         ContentTemplate="{DataTemplate views:PractitionerDashboardPage}"/>
-    
+
     <!--practitioners profile-->
     <ShellContent 
       Shell.FlyoutBehavior="Disabled"
       Route="practitionerappointments"
       ContentTemplate="{DataTemplate views:PractitionerAppointmentsPage}"/>
+    
+    <ShellContent 
+      Shell.FlyoutBehavior="Disabled"
+      Route="journalpage"
+      ContentTemplate="{DataTemplate views:JournalPage }"/> 
+    
+    <ShellContent 
+      Shell.FlyoutBehavior="Disabled"
+      Route="affirmationspage"
+      ContentTemplate="{DataTemplate views:DailyAffirmationsPage }"/>
+    
+     
 
     <!-- Main Pages -->
     <FlyoutItem Title="Main" Route="main">
         <Tab Title="Home" Icon="home_icon.png">
             <ShellContent 
+                Shell.FlyoutBehavior="Disabled"
+                
                 Title="Home"
                 ContentTemplate="{DataTemplate views:MainPage}"
                 Route="mainpage"/>
@@ -65,8 +79,8 @@
                 ContentTemplate="{DataTemplate views:ChatPage}"
                 Route="chatPage"/>
         </Tab>
-        
-        
+
+
         <Tab Title="Schedule" Icon="appointment_icon.png">
             <ShellContent 
                 Shell.FlyoutBehavior="Disabled"
@@ -74,18 +88,16 @@
                 ContentTemplate="{DataTemplate views:BookingsPage }"
                 Route="chatbotintro"/>
         </Tab>
-        
+
         <Tab Title="Profile" Icon="profile_icon.png">
             <ShellContent 
                 Title="Profile"
-                ContentTemplate="{DataTemplate views:PractitionerAppointmentsPage}"
+                ContentTemplate="{DataTemplate views:ClientAppointmentsPage}"
                 Route="practitionerprofile"/>
         </Tab>
 
 
     </FlyoutItem>
-
-
 
     <Shell.FlyoutFooter>
         <Grid Padding="15">

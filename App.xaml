@@ -18,6 +18,9 @@
             <Color x:Key="Gray100">#F5F5F5</Color>
 
             <!-- Converters -->
+            <converters:TextTypeConverter x:Key="TextTypeConverter" />
+            <converters:AudioTypeConverter x:Key="AudioTypeConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:MessageBackgroundConverter x:Key="MessageBackgroundConverter"/>
             <converters:MessageAlignmentConverter x:Key="MessageAlignmentConverter"/>
             <converters:MessageTextColorConverter x:Key="MessageTextColorConverter"/>

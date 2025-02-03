@@ -4,8 +4,8 @@ namespace CommuniZEN.Views;
 
 public partial class PractitionerAppointmentsPage : ContentPage
 {
-    private readonly PractitionerDashboardViewModel _viewModel;
-    public PractitionerAppointmentsPage(PractitionerDashboardViewModel viewModel)
+    private readonly PractitionerAppointmentsViewModel _viewModel;
+    public PractitionerAppointmentsPage(PractitionerAppointmentsViewModel viewModel)
 
     {
 		InitializeComponent();

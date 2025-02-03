@@ -27,8 +27,8 @@ namespace CommuniZEN.Models
         [JsonProperty("lastMessage")]
         public string LastMessage { get; set; }
 
-        [JsonProperty("lastMessageTimestamp")]
-        public long LastMessageTimestamp { get; set; }
+        [JsonProperty("timestamp")]
+        public long Timestamp { get; set; }
 
         [JsonProperty("unreadCount")]
         public int UnreadCount { get; set; }
@@ -41,6 +41,6 @@ namespace CommuniZEN.Models
 
         [JsonProperty("profileImage")]
         public string ProfileImage { get; set; }
-    }
 
+    }
 }

@@ -6,7 +6,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 
-
 namespace CommuniZEN.ViewModels
 {
     public partial class ChatViewModel : ObservableObject, IDisposable
@@ -67,6 +66,9 @@ namespace CommuniZEN.ViewModels
         [ObservableProperty]
         private string selectedImage;
 
+        [ObservableProperty]
+        private bool isPanelVisible = true;
+
         private IDisposable _messageSubscription;
         private IDisposable _typingSubscription;
         private IDisposable _sessionSubscription;
@@ -88,7 +90,6 @@ namespace CommuniZEN.ViewModels
 
             InitializeAsync().ConfigureAwait(false);
 
-            // Setup property changed handlers
             this.PropertyChanged += OnPropertyChanged;
         }
 
@@ -114,6 +115,12 @@ namespace CommuniZEN.ViewModels
             {
                 IsLoading = false;
             }
+        }
+
+        [RelayCommand]
+        private void TogglePanel()
+        {
+            IsPanelVisible = !IsPanelVisible;
         }
 
         private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -184,7 +191,7 @@ namespace CommuniZEN.ViewModels
                 {
                     Sessions.Clear();
                     FilteredSessions.Clear();
-                    foreach (var session in chatSessions.OrderByDescending(s => s.LastMessageTimestamp))
+                    foreach (var session in chatSessions.OrderByDescending(s => s.Timestamp))
                     {
                         Sessions.Add(session);
                         FilteredSessions.Add(session);

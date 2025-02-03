@@ -42,6 +42,9 @@ namespace CommuniZEN.Models
         [JsonProperty("createdAt")]
         public DateTime CreatedAt { get; set; }
 
+        [JsonProperty("Timestand")]
+        
+
         [JsonIgnore]
         public bool IsTextMessage => !string.IsNullOrEmpty(Content);
 

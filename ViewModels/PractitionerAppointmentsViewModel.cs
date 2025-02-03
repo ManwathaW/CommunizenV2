@@ -2,384 +2,246 @@
 using CommunityToolkit.Mvvm.Input;
 using CommuniZEN.Interfaces;
 using CommuniZEN.Models;
+using Firebase.Database;
+using Firebase.Database.Query;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
 namespace CommuniZEN.ViewModels
 {
+
     public partial class PractitionerAppointmentsViewModel : ObservableObject
     {
+        private const string AVAILABILITY_PATH = "availability";
+        private const string APPOINTMENTS_PATH = "appointments";
         private readonly IFirebaseDataService _dataService;
-        private readonly IFirebaseAuthService _authService;
-
-        #region Observable Properties
-
-        [ObservableProperty]
-        private ObservableCollection<TimeSlot> timeSlots;
-
-
-
+        private readonly FirebaseClient _firebaseClient;
+        private string _practitionerId;
 
         [ObservableProperty]
-        private ObservableCollection<Appointment> pendingAppointments;
-
-        [ObservableProperty]
-        private ObservableCollection<Appointment> upcomingAppointments;
-
-        [ObservableProperty]
-        private ObservableCollection<Appointment> pastAppointments;
-
-        [ObservableProperty]
-        private ObservableCollection<AppointmentDate> availableDates;
-
-        [ObservableProperty]
-        private AppointmentDate selectedDate;
-
-        [ObservableProperty]
-        private TimeSlot selectedTimeSlot;
+        private bool isAvailabilityTabSelected = true;
 
         [ObservableProperty]
         private bool isLoading;
 
         [ObservableProperty]
-        private string statusMessage;
+        private DateTime selectedDate = DateTime.Today;
 
         [ObservableProperty]
-        private bool isDateSelected;
+        private DateTime minimumDate = DateTime.Today;
 
         [ObservableProperty]
-        private string practitionerId;
-        #endregion
+        private DateTime maximumDate = DateTime.Today.AddDays(30);
 
-        #region Constants
+        [ObservableProperty]
+        private TimeSpan startTime = new(9, 0, 0);
 
-        private readonly List<string> DefaultTimeSlots = new()
-         {
-           "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-           "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-           "16:00", "16:30", "17:00", "17:30"
-         };
+        [ObservableProperty]
+        private TimeSpan endTime = new(10, 0, 0);
 
+        [ObservableProperty]
+        private ObservableCollection<TimeSlot> timeSlots = new();
 
-        #endregion
+        [ObservableProperty]
+        private ObservableCollection<Appointment> appointments = new();
 
-        public PractitionerAppointmentsViewModel(IFirebaseDataService dataService, IFirebaseAuthService authService)
+        [ObservableProperty]
+        private TimeSlot selectedTimeSlot;
+
+        public PractitionerAppointmentsViewModel(IFirebaseDataService dataService)
         {
-            _dataService = dataService;
-            _authService = authService;
-            InitializeCollections();
-            IsDateSelected = false;
-            _ = LoadInitialDataAsync();
+            try
+            {
+                if (dataService == null) throw new ArgumentNullException(nameof(dataService));
+                _dataService = dataService;
+                TimeSlots = new ObservableCollection<TimeSlot>();
+                Appointments = new ObservableCollection<Appointment>();
+                _firebaseClient = new FirebaseClient("https://communizen-c112-default-rtdb.asia-southeast1.firebasedatabase.app/");
+                Task.Run(async () => await InitializeAsync());
+            }
+           
+           catch (Exception ex)
+            {
+              Debug.WriteLine($"INNER EXCEPTION: {ex.InnerException?.Message}"); // Log the actual error
+            }
         }
 
-        private void InitializeCollections()
+
+
+        private async Task InitializeAsync()
         {
-            PendingAppointments = new ObservableCollection<Appointment>();
-            UpcomingAppointments = new ObservableCollection<Appointment>();
-            PastAppointments = new ObservableCollection<Appointment>();
-            AvailableDates = new ObservableCollection<AppointmentDate>();
+            try
+            {
+                var authService = Application.Current.Handler.MauiContext.Services.GetService<IFirebaseAuthService>();
+                _practitionerId = await authService.GetCurrentUserIdAsync();
+                await LoadDataAsync();
+            }
+            catch (System.Reflection.TargetInvocationException ex)
+            {
+                Debug.WriteLine($"TargetInvocationException: {ex.InnerException?.Message}");
+                Debug.WriteLine($"Stack Trace: {ex.InnerException?.StackTrace}");
+                await Shell.Current.DisplayAlert("Error", "Failed to initialize", "OK");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in InitializeAsync: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Failed to initialize", "OK");
+            }
         }
 
-        private async Task LoadInitialDataAsync()
+        [RelayCommand]
+        private void SwitchTab(string tabIndex)
+        {
+            IsAvailabilityTabSelected = tabIndex == "0";
+            _ = LoadDataAsync();
+        }
+
+        private async Task LoadDataAsync()
+        {
+            if (IsAvailabilityTabSelected)
+            {
+                await LoadTimeSlotsAsync();
+            }
+            else
+            {
+                await LoadAppointmentsAsync();
+            }
+        }
+
+        partial void OnSelectedDateChanged(DateTime value)
+        {
+            if (IsAvailabilityTabSelected)
+            {
+                _ = LoadTimeSlotsAsync();
+            }
+        }
+
+        [RelayCommand]
+        private async Task AddTimeSlot()
+        {
+            if (_dataService == null)
+            {
+                Debug.WriteLine("Data service is null");
+                return;
+            }
+
+            if (EndTime <= StartTime)
+            {
+                await Shell.Current.DisplayAlert("Error", "End time must be after start time", "OK");
+                return;
+            }
+
+            try
+            {
+                var newSlot = new TimeSlot
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    StartTime = StartTime,
+                    EndTime = EndTime,
+                    IsAvailable = true
+                };
+
+                await _dataService.AddTimeSlotAsync(SelectedDate, newSlot);
+                await LoadTimeSlotsAsync();
+
+                StartTime = new TimeSpan(9, 0, 0);
+                EndTime = new TimeSpan(10, 0, 0);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"AddTimeSlot Error: {ex}");
+                await Shell.Current.DisplayAlert("Error", "Failed to add time slot", "OK");
+            }
+        }
+
+        [RelayCommand]
+        private async Task RemoveTimeSlot(TimeSlot slot)
+        {
+            if (slot == null) return;
+
+            bool confirm = await Shell.Current.DisplayAlert(
+                "Confirm Removal",
+                "Are you sure you want to remove this time slot?",
+                "Yes", "No");
+
+            if (!confirm) return;
+
+            try
+            {
+                await _dataService.RemoveTimeSlotAsync(SelectedDate, slot);
+                await LoadTimeSlotsAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"RemoveTimeSlot Error: {ex}");
+                await Shell.Current.DisplayAlert("Error", "Failed to remove time slot", "OK");
+            }
+        }
+
+        private async Task LoadTimeSlotsAsync()
         {
             try
             {
                 IsLoading = true;
-                StatusMessage = "Loading data...";
+                var slots = await _dataService.GetTimeSlotsAsync(SelectedDate);
 
-                var userId = await _authService.GetCurrentUserIdAsync();
-                PractitionerId = userId;
-
-                await Task.WhenAll(
-                    LoadAppointmentsAsync(),
-                    LoadAvailabilityAsync()
-                );
+                TimeSlots.Clear();
+                foreach (var slot in slots)
+                {
+                    Debug.WriteLine($"Adding slot: {slot.StartTime} - {slot.EndTime}");
+                    TimeSlots.Add(slot);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading time slots: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Failed to load time slots", "OK");
             }
             finally
             {
                 IsLoading = false;
-                StatusMessage = string.Empty;
             }
         }
 
-        #region Availability Management
-        private List<TimeSlot> ConvertToTimeSlots(List<string> timeStrings)
-        {
-            return timeStrings.Select(time => new TimeSlot
-            {
-                Time = time,
-                IsAvailable = true,
-                IsSelected = false
-            }).ToList();
-        }
-
-        private List<string> ConvertToStrings(List<TimeSlot> timeSlots)
-        {
-            return timeSlots.Select(ts => ts.Time).ToList();
-        }
-
-
-        private async Task LoadAvailabilityAsync()
-        {
-            try
-            {
-                Debug.WriteLine("Starting LoadAvailabilityAsync");
-                var availability = await _dataService.GetPractitionerAvailabilityAsync(PractitionerId);
-                Debug.WriteLine($"Loaded availability for practitioner: {PractitionerId}");
-
-                GenerateAvailableDates(availability);
-                Debug.WriteLine($"Generated {AvailableDates.Count} available dates");
-
-                await CheckExistingAppointments();
-                Debug.WriteLine("Finished checking existing appointments");
-
-                // Force UI update after loading
-                OnPropertyChanged(nameof(AvailableDates));
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error loading availability: {ex.Message}");
-                await Shell.Current.DisplayAlert("Error", "Failed to load availability", "OK");
-            }
-        }
-
-       
-
-        private async Task CheckExistingAppointments()
-        {
-            var appointments = await _dataService.GetPractitionerAppointmentsAsync(PractitionerId);
-
-            foreach (var date in AvailableDates)
-            {
-                var dateAppointments = appointments.Where(a =>
-                    a.Date.Date == date.Date.Date &&
-                    (a.Status == AppointmentStatus.Approved || a.Status == AppointmentStatus.Pending));
-
-                foreach (var appointment in dateAppointments)
-                {
-                    var timeSlot = date.TimeSlots.FirstOrDefault(t => t.Time == appointment.TimeSlot);
-                    if (timeSlot != null)
-                    {
-                        timeSlot.IsAvailable = false;
-                    }
-                }
-            }
-        }
-
-
-
-        [RelayCommand]
-        private async Task UpdateAvailability()
-        {
-            if (SelectedDate == null) return;
-
-            try
-            {
-                IsLoading = true;
-                StatusMessage = "Updating availability...";
-
-                var availability = await _dataService.GetPractitionerAvailabilityAsync(PractitionerId);
-                if (availability == null)
-                {
-                    availability = new Availability
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        PractitionerId = PractitionerId,
-                        AvailableDays = new List<string>(),
-                        TimeSlots = DefaultTimeSlots.ToList(),
-                        DailySchedule = new List<DayAvailability>()
-                    };
-                }
-
-                var dayName = SelectedDate.Date.ToString("ddd");
-                if (!availability.AvailableDays.Contains(dayName))
-                {
-                    availability.AvailableDays.Add(dayName);
-                }
-
-                // Update or add daily schedule
-                var daySchedule = availability.DailySchedule.FirstOrDefault(d => d.Date.Date == SelectedDate.Date.Date);
-                if (daySchedule == null)
-                {
-                    daySchedule = new DayAvailability
-                    {
-                        Date = SelectedDate.Date,
-                        TimeSlots = TimeSlots.ToList()
-                    };
-                    availability.DailySchedule.Add(daySchedule);
-                }
-                else
-                {
-                    daySchedule.TimeSlots = TimeSlots.ToList();
-                }
-
-                // Update default time slots if not set
-                if (!availability.TimeSlots.Any())
-                {
-                    availability.TimeSlots = DefaultTimeSlots.ToList();
-                }
-
-                await _dataService.SaveAvailabilityAsync(PractitionerId, availability);
-                await LoadAvailabilityAsync();
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Error", "Failed to update availability", "OK");
-            }
-            finally
-            {
-                IsLoading = false;
-                StatusMessage = string.Empty;
-            }
-        }
-
-        private void GenerateAvailableDates(Availability availability)
-        {
-            AvailableDates.Clear();
-            var today = DateTime.Today;
-
-            for (int i = 0; i < 30; i++)
-            {
-                var date = today.AddDays(i);
-                var dayName = date.ToString("ddd");
-
-                // Create default time slots
-                var newTimeSlots = ConvertToTimeSlots(DefaultTimeSlots);
-
-                // If we have existing availability, update the time slots
-                if (availability?.DailySchedule != null)
-                {
-                    var existingSchedule = availability.DailySchedule.FirstOrDefault(d => d.Date.Date == date.Date);
-                    if (existingSchedule != null)
-                    {
-                        newTimeSlots = existingSchedule.TimeSlots;
-                    }
-                }
-
-                AvailableDates.Add(new AppointmentDate
-                {
-                    Date = date,
-                    TimeSlots = newTimeSlots,
-                    IsAvailable = true,
-                    IsSelected = false
-                });
-            }
-        }
-
-        [RelayCommand]
-        private void SelectDate(AppointmentDate date)
-        {
-            try
-            {
-                if (date == null) return;
-
-                // Clear previous selection
-                foreach (var d in AvailableDates)
-                {
-                    d.IsSelected = false;
-                }
-
-                // Set new selection
-                date.IsSelected = true;
-
-                // If no time slots exist, initialize them
-                if (date.TimeSlots == null || !date.TimeSlots.Any())
-                {
-                    date.TimeSlots = ConvertToTimeSlots(DefaultTimeSlots);
-                }
-
-                TimeSlots = new ObservableCollection<TimeSlot>(date.TimeSlots);
-                SelectedDate = date;
-                IsDateSelected = true;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in SelectDate: {ex.Message}");
-            }
-        }
-
-        partial void OnSelectedDateChanged(AppointmentDate value)
-        {
-            if (value?.TimeSlots != null)
-            {
-                TimeSlots = new ObservableCollection<TimeSlot>(value.TimeSlots);
-            }
-            IsDateSelected = value != null;
-        }
-
-        [RelayCommand]
-        private void ToggleTimeSlot(TimeSlot timeSlot)
-        {
-            if (timeSlot == null) return;
-
-            timeSlot.IsAvailable = !timeSlot.IsAvailable;
-
-            // Update both collections
-            var index = SelectedDate.TimeSlots.IndexOf(
-                SelectedDate.TimeSlots.First(t => t.Time == timeSlot.Time));
-            SelectedDate.TimeSlots[index] = timeSlot;
-
-            // Force UI updates
-            OnPropertyChanged(nameof(TimeSlots));
-            OnPropertyChanged(nameof(SelectedDate));
-        }
-
-
-        #endregion
-
-        #region Appointment Management
         private async Task LoadAppointmentsAsync()
         {
             try
             {
-                var appointments = await _dataService.GetPractitionerAppointmentsAsync(PractitionerId);
-                UpdateAppointmentCollections(appointments);
+                IsLoading = true;
+                var apps = await _dataService.GetPractitionerAppointmentsAsync();
+
+                Appointments.Clear();
+                foreach (var app in apps)
+                {
+                    Appointments.Add(app);
+                }
             }
             catch (Exception ex)
             {
+                Debug.WriteLine($"Error loading appointments: {ex}");
                 await Shell.Current.DisplayAlert("Error", "Failed to load appointments", "OK");
             }
-        }
-
-        private void UpdateAppointmentCollections(List<Appointment> appointments)
-        {
-            PendingAppointments.Clear();
-            UpcomingAppointments.Clear();
-            PastAppointments.Clear();
-
-            var now = DateTime.Now;
-
-            foreach (var appointment in appointments.OrderBy(a => a.Date))
+            finally
             {
-                if (appointment.Status == AppointmentStatus.Pending)
-                {
-                    PendingAppointments.Add(appointment);
-                }
-                else if (appointment.Date >= now &&
-                        appointment.Status != AppointmentStatus.Cancelled)
-                {
-                    UpcomingAppointments.Add(appointment);
-                }
-                else
-                {
-                    PastAppointments.Add(appointment);
-                }
+                IsLoading = false;
             }
         }
 
         [RelayCommand]
-        private async Task ApproveAppointment(Appointment appointment)
+        private async Task ConfirmAppointment(Appointment appointment)
         {
             try
             {
                 IsLoading = true;
-                await _dataService.UpdateAppointmentStatusAsync(appointment.Id, AppointmentStatus.Approved);
-                await LoadInitialDataAsync();
-                await Shell.Current.DisplayAlert("Success", "Appointment approved", "OK");
+                appointment.Status = AppointmentStatus.Confirmed;
+                await _dataService.UpdateAppointmentAsync(appointment);
+                await LoadAppointmentsAsync();
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Error", "Failed to approve appointment", "OK");
+                Debug.WriteLine($"Error confirming appointment: {ex}");
+                await Shell.Current.DisplayAlert("Error", "Failed to confirm appointment", "OK");
             }
             finally
             {
@@ -388,38 +250,34 @@ namespace CommuniZEN.ViewModels
         }
 
         [RelayCommand]
-        private async Task RejectAppointment(Appointment appointment)
+        private async Task CancelAppointment(Appointment appointment)
         {
+            if (appointment == null) return;
+
+            bool confirm = await Shell.Current.DisplayAlert(
+                "Confirm Cancellation",
+                "Are you sure you want to cancel this appointment?",
+                "Yes", "No");
+
+            if (!confirm) return;
+
             try
             {
-                var reason = await Shell.Current.DisplayPromptAsync(
-                    "Reject Appointment",
-                    "Please provide a reason for rejection:",
-                    "Submit",
-                    "Cancel");
-
-                if (string.IsNullOrEmpty(reason)) return;
-
                 IsLoading = true;
-                appointment.Notes = reason;
-                await _dataService.UpdateAppointmentStatusAsync(appointment.Id, AppointmentStatus.Rejected);
-                await LoadInitialDataAsync();
+                appointment.Status = AppointmentStatus.Cancelled;
+                await _dataService.UpdateAppointmentAsync(appointment);
+                await LoadAppointmentsAsync();
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Error", "Failed to reject appointment", "OK");
+                Debug.WriteLine($"Error cancelling appointment: {ex}");
+                await Shell.Current.DisplayAlert("Error", "Failed to cancel appointment", "OK");
             }
             finally
             {
                 IsLoading = false;
             }
         }
-
-        [RelayCommand]
-        private async Task Refresh()
-        {
-            await LoadInitialDataAsync();
-        }
-        #endregion
     }
 }
+
