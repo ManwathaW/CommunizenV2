@@ -3,6 +3,9 @@ using CommunityToolkit.Maui.Core;
 using Font = Microsoft.Maui.Font;
 using CommuniZEN.Views;
 using CommuniZEN.Converters;
+using CommuniZEN.ViewModels;
+using CommuniZEN.Interfaces;
+using CommuniZEN.Services;
 using Microsoft.Maui.Devices.Sensors;
 using Microsoft.Maui.Maps;
 using CommuniZEN.Controls;
@@ -19,13 +22,17 @@ namespace CommuniZEN
         {
             InitializeComponent();
 
+            Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping(nameof(BorderlessEntry), (handler, view) =>
+            {
+#if _ANDROID_
+    handler.PlatformView.SetBackgroundColor(Android.Graphics.Color.Red);
+#endif
+            });
 
-            var firebaseClient = new FirebaseClient("your-firebase-url");
-            var firebaseStorage = new FirebaseStorage("your-storage-url");
             var audioManager = AudioManager.Current;
 
             DependencyService.RegisterSingleton<IAudioManager>(audioManager);
-            DependencyService.RegisterSingleton(new JournalViewModel(audioManager, firebaseClient, firebaseStorage)); 
+           
 
             Resources["MessageAlignmentConverter"] = new MessageAlignmentConverter();
             Resources["MessageTextColorConverter"] = new MessageTextColorConverter();

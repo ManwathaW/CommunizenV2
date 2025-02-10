@@ -2,204 +2,199 @@
 using CommunityToolkit.Mvvm.Input;
 using CommuniZEN.Interfaces;
 using CommuniZEN.Models;
-using System.Collections.ObjectModel;
-using CommuniZEN.Interfaces;
-using Plugin.Maui.Audio;
-using Microsoft.Maui.ApplicationModel.DataTransfer;
-using CommunityToolkit.Maui.Alerts;
 
 namespace CommuniZEN.ViewModels
 {
-    public class JournalViewModel : ObservableObject
+    public partial class LoginViewModel : ObservableObject
     {
-        private readonly IAudioManager _audioManager;
-        private readonly IFirebaseDataService _firebaseService;
         private readonly IFirebaseAuthService _authService;
-        private IAudioRecorder _audioRecorder;
-        private ObservableCollection<JournalEntry> _entries;
-        private bool _isRecording;
-        private string _currentText;
+        private readonly IFirebaseDataService _dataService;
 
-        public JournalViewModel(
-            IAudioManager audioManager,
-            IFirebaseDataService firebaseService,
-            IFirebaseAuthService authService)
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanLogin))]
+        private string emailInput = string.Empty;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanLogin))]
+        private string passwordInput = string.Empty;
+
+        [ObservableProperty]
+        private string? errorMessage;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanLogin))]
+        private bool isLoading;
+
+        public bool CanLogin => !IsLoading &&
+                              !string.IsNullOrWhiteSpace(EmailInput) &&
+                              !string.IsNullOrWhiteSpace(PasswordInput);
+
+        public LoginViewModel(IFirebaseAuthService authService, IFirebaseDataService dataService)
         {
-            _audioManager = audioManager;
-            _firebaseService = firebaseService;
             _authService = authService;
-            _audioRecorder = _audioManager.CreateRecorder();
-            _entries = new ObservableCollection<JournalEntry>();
-
-            StartRecordingCommand = new Command(async () => await StartRecording());
-            StopRecordingCommand = new Command(async () => await StopRecording());
-            SaveTextNoteCommand = new Command(async () => await SaveTextNote());
-            ShareNoteCommand = new Command<JournalEntry>(async (entry) => await ShareNote(entry));
+            _dataService = dataService;
         }
 
-        public ObservableCollection<JournalEntry> Entries
+        [RelayCommand(CanExecute = nameof(CanLogin))]
+        private async Task LoginAsync()
         {
-            get => _entries;
-            set => SetProperty(ref _entries, value);
-        }
+            if (IsLoading) return;
 
-        public string CurrentText
-        {
-            get => _currentText;
-            set => SetProperty(ref _currentText, value);
-        }
-
-        public bool IsRecording
-        {
-            get => _isRecording;
-            set => SetProperty(ref _isRecording, value);
-        }
-
-        public Command StartRecordingCommand { get; }
-        public Command StopRecordingCommand { get; }
-        public Command SaveTextNoteCommand { get; }
-        public Command<JournalEntry> ShareNoteCommand { get; }
-
-        private async Task StartRecording()
-        {
             try
             {
-                IsRecording = true;
-                await _audioRecorder.StartAsync();
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Error", "Failed to start recording: " + ex.Message, "OK");
-            }
-        }
+                IsLoading = true;
+                ErrorMessage = null;
 
-        private async Task StopRecording()
-        {
-            try
-            {
-                if (!IsRecording) return;
+                var authResult = await _authService.SignInWithEmailAndPasswordAsync(EmailInput, PasswordInput);
+                
+                // Get or create user profile
+                var userProfile = await _dataService.GetUserProfileAsync(authResult.User.Uid);
 
-                IsRecording = false;
-                var audioFile = await _audioRecorder.StopAsync();
-                await SaveAudioNote(audioFile);
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Error", "Failed to stop recording: " + ex.Message, "OK");
-            }
-        }
-
-        private async Task SaveAudioNote(IAudioSource audioSource)
-        {
-            try
-            {
-                var userId = await _authService.GetCurrentUserIdAsync();
-
-                // Create a temporary entry to get an ID
-                var entry = new JournalEntry
+                if (userProfile == null)
                 {
-                    Type = JournalEntryType.Audio,
-                    Timestamp = DateTime.Now,
-                    Content = "Uploading..." // Temporary content
-                };
-
-                var entryId = await _firebaseService.CreateJournalEntryAsync(userId, entry);
-
-                // Upload the audio file
-                using (var memoryStream = new MemoryStream())
-                {
-                    await audioSource.GetAudioStream().CopyToAsync(memoryStream);
-                    memoryStream.Position = 0;
-
-                    var audioUrl = await _firebaseService.UploadJournalAudioAsync(userId, entryId, memoryStream);
-
-                    // Update the entry with the audio URL
-                    entry.Id = entryId;
-                    entry.Content = audioUrl;
-                    await _firebaseService.UpdateJournalEntryAsync(userId, entryId, entry);
-
-                    // Update the local collection
-                    Entries.Insert(0, entry);
-                }
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Error", "Failed to save audio note: " + ex.Message, "OK");
-            }
-        }
-
-        private async Task SaveTextNote()
-        {
-            if (string.IsNullOrWhiteSpace(CurrentText))
-                return;
-
-            try
-            {
-                var userId = await _authService.GetCurrentUserIdAsync();
-
-                var entry = new JournalEntry
-                {
-                    Type = JournalEntryType.Text,
-                    Content = CurrentText,
-                    Timestamp = DateTime.Now
-                };
-
-                var entryId = await _firebaseService.CreateJournalEntryAsync(userId, entry);
-                entry.Id = entryId;
-
-                Entries.Insert(0, entry);
-                CurrentText = string.Empty;
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Error", "Failed to save text note: " + ex.Message, "OK");
-            }
-        }
-
-        private async Task ShareNote(JournalEntry entry)
-        {
-            try
-            {
-                if (entry.Type == JournalEntryType.Text)
-                {
-                    await Share.RequestAsync(new ShareTextRequest
+                    // Create default profile
+                    userProfile = new UserProfile
                     {
-                        Text = entry.Content,
-                        Title = $"Journal Entry - {entry.Timestamp:g}"
+                        Email = EmailInput,
+                        CreatedAt = DateTime.UtcNow,
+                        IsActive = true,
+                        Role = UserRole.User // Default role
+                    };
+
+                    await _dataService.CreateUserProfileAsync(authResult.User.Uid, new RegisterRequest
+                    {
+                        Email = EmailInput,
+                        Role = UserRole.User
                     });
+                }
+
+                // Navigate based on role and show custom TabBar
+                if (userProfile.Role == UserRole.Practitioner)
+                {
+                    await Shell.Current.GoToAsync("//practitionerdashboard");
                 }
                 else
                 {
-                    await Share.RequestAsync(new ShareFileRequest
-                    {
-                        File = new ShareFile(entry.Content),
-                        Title = $"Audio Note - {entry.Timestamp:g}"
-                    });
+                    await Shell.Current.GoToAsync("//mainpage");
+                   
                 }
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Error", "Failed to share note: " + ex.Message, "OK");
+                string errorMessage = ex.Message.ToLower();
+                if (errorMessage.Contains("password") || errorMessage.Contains("user"))
+                {
+                    ErrorMessage = "Invalid email or password.";
+                }
+                else if (errorMessage.Contains("network"))
+                {
+                    ErrorMessage = "Network error. Please check your connection.";
+                }
+                else
+                {
+                    ErrorMessage = "Login failed. Please try again.";
+                }
+
+                await Application.Current.MainPage.DisplayAlert("Login Error", ErrorMessage, "OK");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
-        public async Task LoadEntries()
+
+
+
+
+        [RelayCommand]
+        private async Task LoginWithGoogleAsync()
         {
+            if (IsLoading) return;
+
             try
             {
-                var userId = await _authService.GetCurrentUserIdAsync();
-                var entries = await _firebaseService.GetUserJournalEntriesAsync(userId);
+                IsLoading = true;
+                ErrorMessage = null;
 
-                Entries.Clear();
-                foreach (var entry in entries)
-                {
-                    Entries.Add(entry);
-                }
+                await Application.Current.MainPage.DisplayAlert(
+                    "Coming Soon",
+                    "Google sign-in will be available in the next update!",
+                    "OK");
             }
             catch (Exception ex)
             {
-                await Shell.Current.DisplayAlert("Error", "Failed to load entries: " + ex.Message, "OK");
+                ErrorMessage = "Google sign-in is currently unavailable.";
+                await Application.Current.MainPage.DisplayAlert(
+                    "Sign In Error",
+                    ErrorMessage,
+                    "OK");
             }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task NavigateToRegisterAsync()
+        {
+            try
+            {
+                await Shell.Current.GoToAsync("//register");
+            }
+            catch (Exception)
+            {
+                await Application.Current.MainPage.DisplayAlert(
+                    "Navigation Error",
+                    "Unable to navigate to registration. Please try again.",
+                    "OK");
+            }
+        }
+
+        [RelayCommand]
+        private async Task ForgotPasswordAsync()
+        {
+            if (string.IsNullOrWhiteSpace(EmailInput))
+            {
+                await Application.Current.MainPage.DisplayAlert(
+                    "Password Reset",
+                    "Please enter your email address to receive reset instructions.",
+                    "OK");
+                return;
+            }
+
+            try
+            {
+                IsLoading = true;
+                ErrorMessage = null;
+
+                await _authService.SendPasswordResetEmailAsync(EmailInput);
+
+                await Application.Current.MainPage.DisplayAlert(
+                    "Password Reset",
+                    "Reset instructions have been sent to your email.",
+                    "OK");
+            }
+            catch (Exception)
+            {
+                await Application.Current.MainPage.DisplayAlert(
+                    "Reset Error",
+                    "Unable to send reset email. Please verify your email address.",
+                    "OK");
+            }
+            finally
+            {
+                IsLoading = false;
+            }
+        }
+
+       
+        public void ClearInputs()
+        {
+            EmailInput = string.Empty;
+            PasswordInput = string.Empty;
+            ErrorMessage = null;
         }
     }
 }

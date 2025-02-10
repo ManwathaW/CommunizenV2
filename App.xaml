@@ -9,6 +9,38 @@
     <Application.Resources>
         <ResourceDictionary>
 
+
+
+            <Style x:Key="CardFrame" TargetType="Frame">
+              
+                <Setter Property="CornerRadius" Value="15"/>
+                <Setter Property="Padding" Value="20"/>
+                <Setter Property="HasShadow" Value="{OnPlatform iOS=false, Android=true}"/>
+            </Style>
+
+            <Style x:Key="CircleButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource Primary}"/>
+                <Setter Property="CornerRadius" Value="25"/>
+                <Setter Property="HeightRequest" Value="50"/>
+                <Setter Property="WidthRequest" Value="50"/>
+                <Setter Property="Padding" Value="0"/>
+            </Style>
+
+            <Style x:Key="IconButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="Transparent"/>
+                <Setter Property="Padding" Value="5"/>
+                <Setter Property="HeightRequest" Value="40"/>
+                <Setter Property="WidthRequest" Value="40"/>
+            </Style>
+
+            <Style x:Key="JournalEditor" TargetType="Editor">
+                <Setter Property="BackgroundColor" Value="Transparent"/>
+           
+            </Style>
+
+
+
+
             <Color x:Key="TabBarSelectedColor">#4B89DC</Color>
             <Color x:Key="TabBarUnselectedColor">#95A5A6</Color>
 
@@ -30,6 +62,7 @@
             <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
             <converters:DateTimeConverter x:Key="DateTimeConverter"/>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
 
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />

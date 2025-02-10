@@ -4,6 +4,7 @@ using CommuniZEN.ViewModels;
 using CommuniZEN.Interfaces;
 using CommuniZEN.Services;
 using CommuniZEN.Views;
+using CommuniZEN.Controls;
 
 
 
@@ -63,6 +64,7 @@ namespace CommuniZEN
             services.AddTransient<MainPage>();
             services.AddTransient<PractitionerDashboardPage>();
             services.AddTransient<MapPickerPage>();
+            services.AddTransient<AudioVisualizer>();
           
             services.AddTransient<PractitionerAppointmentsPage>();
             services.AddTransient<ChatPage>();

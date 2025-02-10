@@ -12,8 +12,9 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <converters:ImageSourceConverter x:Key="ImageSourceConverter"/>
+            <!--  <converters:ImageSourceConverter x:Key="ImageSourceConverter"/> -->
             <converters:StringToBoolConverter x:Key="StringToBoolConverter"/>
+            <converters:Base64ToImageSourceConverter x:Key="ImageSourceConverter"/>
             <converters:IntToBoolConverter x:Key="IntToBoolConverter"/>
             <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
             <converters:IsNullConverter x:Key="IsNullConverter"/>
@@ -54,7 +55,7 @@
                 <SearchBar Grid.Row="1" 
                           Text="{Binding SearchText}"
                           Placeholder="Search conversations..."
-                          Margin="10"/>
+                          Margin="30,25"/>
 
                 <!-- Chat Sessions List -->
                 <CollectionView Grid.Row="2" 
@@ -84,13 +85,14 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:ChatSession">
                             <Grid Padding="10">
-                                <Frame BorderColor="LightBlue"
-                                     HasShadow="False"
+                                <Frame 
+                                    BorderColor="Transparent"
+                                     HasShadow="True"
                                      CornerRadius="10"
-                                     BackgroundColor="LightGray">
+                                     BackgroundColor="White">
                                     <Grid ColumnDefinitions="Auto,*,Auto" 
                                           RowDefinitions="Auto,Auto"
-                                          Padding="5">
+                                          Padding="0">
 
                                         <!-- Profile Image -->
                                         <Frame Grid.RowSpan="2"
@@ -184,7 +186,7 @@
                               Margin="10">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:ChatMessage">
-                            <Grid Padding="5">
+                            <Grid Padding="0,0,10,-5">
                                 <Frame BorderColor="Transparent"
                                        Padding="15,10"
                                        CornerRadius="15"
@@ -197,7 +199,7 @@
                                         <Label Text="{Binding Content}"
                                                TextColor="{Binding SenderId, 
                                                     Converter={StaticResource MessageTextColorConverter}}"/>
-                                        <HorizontalStackLayout Spacing="5"
+                                        <HorizontalStackLayout Spacing="20"
                                                              HorizontalOptions="End">
                                             <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}"
                                                    FontSize="10"
@@ -205,7 +207,7 @@
                                             <Label Text="✓✓"
                                                    IsVisible="{Binding IsRead}"
                                                    FontSize="10"
-                                                   TextColor="Gray"/>
+                                                   TextColor="DodgerBlue"/>
                                         </HorizontalStackLayout>
                                     </VerticalStackLayout>
                                 </Frame>
@@ -263,14 +265,13 @@
         <Grid IsVisible="{Binding IsNewChatDialogVisible}"
               BackgroundColor="#80000000">
             <Frame Margin="40"
-                   Padding="20"
+                   Padding="5"
+                   HorizontalOptions="CenterAndExpand"
                    BackgroundColor="White"
                    CornerRadius="10"
                    VerticalOptions="Center">
                 <Grid RowDefinitions="Auto,Auto,*">
-                    <Label Text="Select a Practitioner"
-                           FontSize="20"
-                           FontAttributes="Bold"/>
+                    
 
                     <SearchBar Grid.Row="1"
                               Text="{Binding PractitionerSearchText}"
@@ -282,8 +283,9 @@
                                   HeightRequest="400">
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:PracticeProfile">
-                                <Grid Padding="10">
+                                <Grid Padding="5,8,5,5">
                                     <Frame BorderColor="LightGray"
+                                           Padding="5"
                                            HasShadow="False"
                                            CornerRadius="10">
                                         <Grid ColumnDefinitions="Auto,*">
@@ -292,7 +294,7 @@
                                                    CornerRadius="30"
                                                    Padding="0"
                                                    IsClippedToBounds="True"
-                                                   BorderColor="Transparent">
+                                                   BorderColor="DodgerBlue">
                                                 <Image Source="{Binding ProfileImage, Converter={StaticResource ImageSourceConverter}}"
                                                        Aspect="AspectFill"
                                                        WidthRequest="60"
@@ -306,7 +308,7 @@
                                                        FontAttributes="Bold"/>
                                                 <Label Text="{Binding Specialization}"
                                                        TextColor="Gray"/>
-                                                <Label Text="{Binding PracticeName}"
+                                                <Label Text="{Binding Location}"
                                                        TextColor="Gray"
                                                        FontSize="12"/>
                                             </VerticalStackLayout>

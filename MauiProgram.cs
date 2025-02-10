@@ -58,8 +58,9 @@ namespace CommuniZEN
 #if DEBUG
             const string openAiKey = "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";
             builder.Logging.AddDebug();
+            builder.Services.AddTransient<Controls.AudioVisualizer>();
             builder.Services.AddTransient<JournalPage>();
-            builder.Services.AddTransient<DailyAffirmationsPage>(); 
+            builder.Services.AddTransient<DailyAffirmationsPage>();
             builder.Services.AddTransient<DailyAffirmationsViewModel>();
             builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
             builder.Services.AddTransient<PractitionerAppointmentsViewModel>();
@@ -88,27 +89,24 @@ namespace CommuniZEN
         {
             services.AddSingleton<IGeolocation>(Geolocation.Default);
             services.AddSingleton<IGeocoding>(Geocoding.Default);
+            services.AddSingleton(AudioManager.Current);
             services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
             services.AddSingleton<IFirebaseDataService, FirebaseDataService>();
         }
 
         private static void RegisterFeatureServices(IServiceCollection services)
         {
-
-
             var realtimeDatabaseUrl = "https://communizen-c112-default-rtdb.asia-southeast1.firebasedatabase.app/";
             services.AddSingleton<FirebaseClient>(provider =>
                 new FirebaseClient(realtimeDatabaseUrl));
 
-            // Then register the chat service
+            // Chat service registration
             services.AddSingleton<IChatService>(sp =>
             {
                 try
                 {
                     var firebaseClient = sp.GetRequiredService<FirebaseClient>();
                     var authService = sp.GetRequiredService<IFirebaseAuthService>();
-
-                    // Get the current user's ID
                     var userId = authService.GetCurrentUserIdAsync().Result;
 
                     if (string.IsNullOrEmpty(userId))
@@ -130,9 +128,6 @@ namespace CommuniZEN
                 }
             });
 
-
-
-
             // Register Converters
             services.AddSingleton<MessageBackgroundConverter>();
             services.AddSingleton<MessageAlignmentConverter>();
@@ -146,6 +141,8 @@ namespace CommuniZEN
             services.AddSingleton<TextTypeConverter>();
             services.AddSingleton<AudioTypeConverter>();
             services.AddSingleton<InvertedBoolConverter>();
+            services.AddSingleton<AudioPlayButtonConverter>();
+            services.AddSingleton<TimeSpanToStringConverter>();
 
         }
 
@@ -160,12 +157,22 @@ namespace CommuniZEN
             services.AddTransient<MapPickerViewModel>();
             services.AddTransient<PractitionerAppointmentsViewModel>();
             services.AddTransient<DailyAffirmationsViewModel>();
-            services.AddTransient<JournalViewModel>();
-           
-
             services.AddTransient<ClientAppointmentsViewModel>();
-            services.AddTransient<PractitionerAppointmentsViewModel>();
             services.AddSingleton<ChatViewModel>();
+
+            // Journal ViewModel registration with proper dependencies
+            services.AddTransient<JournalViewModel>(sp =>
+            {
+                var audioManager = sp.GetRequiredService<IAudioManager>();
+                var firebaseService = sp.GetRequiredService<IFirebaseDataService>();
+                var authService = sp.GetRequiredService<IFirebaseAuthService>();
+
+                return new JournalViewModel(
+                    audioManager,
+                    firebaseService,
+                    authService
+                );
+            });
         }
 
         private static void RegisterPages(IServiceCollection services)
@@ -178,7 +185,6 @@ namespace CommuniZEN
             services.AddTransient<PractitionerDashboardPage>();
             services.AddTransient<BookingsPage>();
             services.AddTransient<PractitionerAppointmentsPage>();
-    
             services.AddTransient<ChatPage>();
             services.AddTransient<JournalPage>();
             services.AddTransient<DailyAffirmationsPage>();

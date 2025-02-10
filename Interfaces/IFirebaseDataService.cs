@@ -54,21 +54,12 @@ namespace CommuniZEN.Interfaces
         Task UpdateAppointmentAsync(Appointment appointment);
         #endregion
 
-        #region Journal Management
-        // Creates a new journal entry in Firebase
+        #region Journal Operations
+        Task<Stream> GetAudioStreamAsync(string audioUrl);
         Task<string> CreateJournalEntryAsync(string userId, JournalEntry entry);
-
-        // Retrieves all journal entries for a specific user
         Task<List<JournalEntry>> GetUserJournalEntriesAsync(string userId);
-
-        // Updates an existing journal entry
-        Task UpdateJournalEntryAsync(string userId, string entryId, JournalEntry entry);
-
-        // Deletes a journal entry
-        Task DeleteJournalEntryAsync(string userId, string entryId);
-
-        // Uploads audio file for journal entry
         Task<string> UploadJournalAudioAsync(string userId, string entryId, Stream audioStream);
+        Task UpdateJournalEntryAsync(string userId, string entryId, JournalEntry entry);
         #endregion
     }
 }

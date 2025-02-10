@@ -16,7 +16,7 @@ public class FirebaseDataService : IFirebaseDataService
     private readonly string _storageBucket;
     private const string APPOINTMENTS_PATH = "appointments";
     private const string AVAILABILITY_PATH = "availability";
-
+    private readonly IFirebaseAuthService _authService;
     private readonly string _authToken;
     public FirebaseDataService()
     {
@@ -775,23 +775,21 @@ public class FirebaseDataService : IFirebaseDataService
     {
         try
         {
-            var journalReference = _firebaseClient
+            var response = await _firebaseClient
                 .Child("journal_entries")
-                .Child(userId);
+                .Child(userId)
+                .PostAsync(new
+                {
+                    type = entry.Type.ToString(),
+                    content = entry.Content,
+                    timestamp = entry.Timestamp.ToString("o")
+                });
 
-            var result = await journalReference.PostAsync(new
-            {
-                Type = entry.Type.ToString(),
-                Content = entry.Content,
-                Timestamp = entry.Timestamp.ToString("o"),
-                UserId = userId
-            });
-
-            return result.Key;
+            return response.Key;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error creating journal entry: {ex.Message}");
+            Debug.WriteLine($"Firebase save error: {ex}");
             throw;
         }
     }
@@ -831,22 +829,33 @@ public class FirebaseDataService : IFirebaseDataService
         }
     }
 
-    public async Task<string> UploadJournalAudioAsync(string userId, string entryId, Stream audioStream)
+    public async Task<string> UploadJournalAudioAsync(string userId, string fileName, Stream audioStream)
     {
         try
         {
-            var storage = new FirebaseStorage(_storageBucket);
-            var audioReference = storage
+            // Convert audio stream to base64 string
+            using var memoryStream = new MemoryStream();
+            await audioStream.CopyToAsync(memoryStream);
+            var audioBase64 = Convert.ToBase64String(memoryStream.ToArray());
+
+            // Save to Firebase Realtime Database
+            var audioData = new
+            {
+                fileName = fileName,
+                audioData = audioBase64,
+                uploadTime = DateTime.UtcNow.ToString("o")
+            };
+
+            var response = await _firebaseClient
                 .Child("journal_audio")
                 .Child(userId)
-                .Child($"{entryId}.m4a");
+                .PostAsync(audioData);
 
-            var audioUrl = await audioReference.PutAsync(audioStream);
-            return audioUrl;
+            return response.Key;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error uploading audio: {ex.Message}");
+            Debug.WriteLine($"Upload audio error: {ex}");
             throw;
         }
     }
@@ -919,10 +928,24 @@ public class FirebaseDataService : IFirebaseDataService
             return false;
         }
     }
+
+    public async Task<Stream> GetAudioStreamAsync(string audioUrl)
+    {
+        try
+        {
+            var httpClient = new HttpClient();
+            return await httpClient.GetStreamAsync(audioUrl);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting audio stream: {ex.Message}");
+            throw;
+        }
+    }
 }
 
-    
 
 
-    #endregion
-}
+
+
+#endregion

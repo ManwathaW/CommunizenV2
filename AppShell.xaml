@@ -65,16 +65,19 @@
 
     <!-- Main Pages -->
     <FlyoutItem Title="Main" Route="main">
-        <Tab Title="Home" Icon="home_icon.png">
+        <Tab Title="Home" 
+             
+             Icon="home_icon.png">
             <ShellContent 
                 Shell.FlyoutBehavior="Disabled"
-                
-                Title="Home"
+                Shell.NavBarIsVisible="True"
+                Title=""
                 ContentTemplate="{DataTemplate views:MainPage}"
                 Route="mainpage"/>
         </Tab>
         <Tab Title="Chat" Icon="chat_icon.png">
             <ShellContent 
+                Shell.NavBarIsVisible="False"
                 Title="Chat"
                 ContentTemplate="{DataTemplate views:ChatPage}"
                 Route="chatPage"/>
@@ -83,6 +86,7 @@
 
         <Tab Title="Schedule" Icon="appointment_icon.png">
             <ShellContent 
+                Shell.NavBarIsVisible="False"
                 Shell.FlyoutBehavior="Disabled"
                 Title="Profile"
                 ContentTemplate="{DataTemplate views:BookingsPage }"

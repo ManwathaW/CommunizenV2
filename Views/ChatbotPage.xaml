@@ -116,7 +116,6 @@
 
       
         <!-- Input Area -->
-        <!-- Input Area -->
         <Grid Grid.Row="2"
               HeightRequest="100"
       ColumnDefinitions="*,Auto"
@@ -144,7 +143,8 @@
                    Text="{Binding UserMessage}"
                    Placeholder="Type your message..."
                    PlaceholderColor="{StaticResource SecondaryTextColor}"
-                WidthRequest="200"
+                   WidthRequest="260"
+                            Margin="0,17,0,0"
                    FontSize="14"
                    VerticalOptions="Center"
                    BackgroundColor="Transparent"

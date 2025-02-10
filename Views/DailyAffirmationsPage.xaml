@@ -2,7 +2,9 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CommuniZEN.Views.DailyAffirmationsPage"
-             NavigationPage.HasNavigationBar="False">
+             NavigationPage.HasNavigationBar="False"
+             Shell.TabBarIsVisible="False" 
+              Shell.NavBarIsVisible="False" >
 
     <Grid>
         <!-- Background Image -->
@@ -12,7 +14,7 @@
                VerticalOptions="FillAndExpand"/>
 
         <!-- Dark overlay for better text readability -->
-       
+
 
         <!-- Content -->
         <Grid RowDefinitions="Auto,*" 
@@ -21,10 +23,10 @@
             <!-- Back Button -->
             <ImageButton Grid.Row="0"
                         Source="back.png"
-                        HeightRequest="24"
-                        WidthRequest="24"
+                        HeightRequest="40"
+                        WidthRequest="40"
                         HorizontalOptions="Start"
-                        Margin="0,40,0,0"
+                        Margin="0,25,0,0"
                         BackgroundColor="Transparent"
                         Command="{Binding GoBackCommand}"/>
 
@@ -55,8 +57,26 @@
                                    Opacity="0.5"/>
                         </Label.Shadow>
                     </Label>
+                    
+                    
                 </SwipeView>
-            </Grid>
+          
+            </Grid> 
+         
         </Grid>
+        <Label Text="swipe left or right for more☺️"
+               Margin="0,20"
+            VerticalOptions="End"
+               HorizontalOptions="Center"
+               TextColor="DodgerBlue" 
+                FontAttributes="Italic">
+            
+              <Label.Shadow>
+      <Shadow Brush="Black"
+             Offset="0,2"
+             Radius="4"
+             Opacity="0.5"/>
+              </Label.Shadow>
+        </Label>
     </Grid>
 </ContentPage>
