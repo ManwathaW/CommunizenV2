@@ -1,18 +1,7 @@
-using CommunityToolkit.Maui.Alerts;
-using CommunityToolkit.Maui.Core;
-using Font = Microsoft.Maui.Font;
-using CommuniZEN.Views;
 using CommuniZEN.Converters;
-using CommuniZEN.ViewModels;
-using CommuniZEN.Interfaces;
-using CommuniZEN.Services;
-using Microsoft.Maui.Devices.Sensors;
-using Microsoft.Maui.Maps;
-using CommuniZEN.Controls;
-using System.Diagnostics;
-using Firebase.Database;
-using Firebase.Storage;
+using CommuniZEN.Views;
 using Plugin.Maui.Audio;
+
 
 namespace CommuniZEN
 {
@@ -24,15 +13,21 @@ namespace CommuniZEN
 
             Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping(nameof(BorderlessEntry), (handler, view) =>
             {
-#if _ANDROID_
-    handler.PlatformView.SetBackgroundColor(Android.Graphics.Color.Red);
+#if ANDROID
+                handler.PlatformView.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Android.Graphics.Color.Transparent);
+                handler.PlatformView.Background = null;
+#elif IOS || MACCATALYST
+                handler.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
+                handler.PlatformView.BackgroundColor = UIKit.UIColor.Clear;
+#elif WINDOWS
+                handler.PlatformView.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
 #endif
-            });
+            });
 
             var audioManager = AudioManager.Current;
 
             DependencyService.RegisterSingleton<IAudioManager>(audioManager);
-           
+
 
             Resources["MessageAlignmentConverter"] = new MessageAlignmentConverter();
             Resources["MessageTextColorConverter"] = new MessageTextColorConverter();
@@ -48,10 +43,10 @@ namespace CommuniZEN
             Routing.RegisterRoute("register", typeof(RegisterPage));
             Routing.RegisterRoute("chatbotintro", typeof(ChatbotIntro));
             Routing.RegisterRoute("practitionerdashboard", typeof(PractitionerDashboardPage));
-      
+
             Routing.RegisterRoute("appointments", typeof(ClientAppointmentsPage));
             Routing.RegisterRoute("affirmationspage", typeof(DailyAffirmationsPage));
-             Routing.RegisterRoute("appointments", typeof(ClientAppointmentsPage));
+            Routing.RegisterRoute("appointments", typeof(ClientAppointmentsPage));
             Routing.RegisterRoute("journalpage", typeof(JournalPage));
             Routing.RegisterRoute("chatpage", typeof(ChatPage));
         }

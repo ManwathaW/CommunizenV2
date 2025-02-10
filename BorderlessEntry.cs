@@ -8,5 +8,9 @@ namespace CommuniZEN
 {
     public class BorderlessEntry :Entry
     {
+        public BorderlessEntry()
+        {
+            Background = Colors.Transparent;
+        }
     }
 }
