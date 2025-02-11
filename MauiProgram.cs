@@ -51,6 +51,7 @@ namespace CommuniZEN
             }
 
             // Register Firebase Client first
+            builder.Services.AddSingleton<INavigationService, NavigationService>();
             builder.Services.AddSingleton<IFirebaseAuthService, FirebaseAuthService>();
             builder.Services.AddSingleton<FirebaseClient>(provider =>
                 new FirebaseClient(FirebaseConfig.RealtimeDatabaseUrl));

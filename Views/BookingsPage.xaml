@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="CommuniZEN.Views.BookingsPage"
-             xmlns:entry="clr-namespace:CommuniZEN"
-             xmlns:converters="clr-namespace:CommuniZEN.Converters"   
-             xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"            
-             BackgroundColor="#F7FAFC">
+            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+            xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
+            x:Class="CommuniZEN.Views.BookingsPage"
+            xmlns:entry="clr-namespace:CommuniZEN"
+            xmlns:converters="clr-namespace:CommuniZEN.Converters"   
+            xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"            
+            BackgroundColor="#F7FAFC">
 
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:Base64ToImageSourceConverter x:Key="Base64ToImageSourceConverter"/>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <converters:NotNullConverter x:Key="NotNullConverter"/>
 
             <!-- Typography Styles -->
             <Style x:Key="HeaderLabelStyle" TargetType="Label">
@@ -47,6 +50,15 @@
                 <Setter Property="HasShadow" Value="True"/>
                 <Setter Property="BorderColor" Value="#EDF2F7"/>
             </Style>
+
+            <!-- Primary Button Style -->
+            <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#4299E1"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Opacity" Value="0.9"/>
+            </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -54,143 +66,206 @@
         <!-- Header Section -->
         <VerticalStackLayout Grid.Row="0" Margin="0,10,0,0">
             <Label Text="Find a Practitioner"
-                   Style="{StaticResource HeaderLabelStyle}"/>
+                  Style="{StaticResource HeaderLabelStyle}"/>
             <Label Text="Book sessions with our qualified practitioners"
-                   Style="{StaticResource SubheaderLabelStyle}"/>
+                  Style="{StaticResource SubheaderLabelStyle}"/>
         </VerticalStackLayout>
 
         <!-- Search Section -->
         <Frame Grid.Row="1" Style="{StaticResource SearchFrameStyle}">
-            <Grid ColumnDefinitions="*,Auto"
-          Padding="15,0,10,0"
-          ColumnSpacing="8">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                 <entry:BorderlessEntry Grid.Column="0"
-                        Placeholder="Search by name, location, or specialization"
-                        FontSize="13"
-                        Text="{Binding SearchText}"
-                        TextColor="#2D3748"
-                        PlaceholderColor="#A0AEC0"
-                        VerticalOptions="Center"
-                        Margin="0"/>
+                       Placeholder="Search by name, location, or specialization"
+                       FontSize="13"
+                       Text="{Binding SearchText}"
+                       TextColor="#2D3748"
+                       PlaceholderColor="#A0AEC0"
+                       VerticalOptions="Center"
+                       Margin="0"/>
 
                 <Image Grid.Column="1"
-               Source="search1.png"
-               HeightRequest="38"
-               WidthRequest="38"
-               VerticalOptions="Center"/>
+                      Source="search1.png"
+                      HeightRequest="20"
+                      WidthRequest="20"
+                      VerticalOptions="Center"/>
+
+                <ImageButton Grid.Column="2"
+                           Source="{Binding IsMapView, Converter={StaticResource ViewToggleIconConverter}}"
+                           Command="{Binding ToggleViewCommand}"
+                           HeightRequest="24"
+                           WidthRequest="24"
+                           Opacity="0.8"
+                           Padding="2"/>
             </Grid>
         </Frame>
 
         <!-- Content Section -->
-        <Grid Grid.Row="2" RowDefinitions="Auto,*">
-            <!-- Loading Indicator -->
-            <ActivityIndicator Grid.RowSpan="2"
-                             IsVisible="{Binding IsLoading}"
-                             IsRunning="{Binding IsLoading}"
-                             HorizontalOptions="Center"
-                             VerticalOptions="Center"
-                             Color="#4299E1"/>
+        <Grid Grid.Row="2">
+            <!-- List View -->
+            <Grid IsVisible="{Binding IsMapView, Converter={StaticResource InverseBoolConverter}}"
+                 RowDefinitions="Auto,*">
 
-            <!-- Practitioners List -->
-            <RefreshView Grid.Row="1" 
-                        Command="{Binding RefreshCommand}"
-                        IsRefreshing="{Binding IsRefreshing}">
-                <CollectionView ItemsSource="{Binding FilteredPractitioners}"
-                              EmptyView="No practitioners found matching your search."
-                              ItemsLayout="VerticalGrid, 2"
-                              Margin="10,0"
-                              IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
-                    <CollectionView.EmptyViewTemplate>
-                        <DataTemplate>
-                            <VerticalStackLayout VerticalOptions="Center" 
-                                               HorizontalOptions="Center" 
-                                               Spacing="15"
-                                               Margin="0,40,0,0">
-                                <Image Source="noresults.png" 
-                                       HeightRequest="100" 
-                                       Opacity="0.7"/>
-                                <Label Text="No practitioners found"
-                                       TextColor="#4A5568"
-                                       FontSize="16"
-                                       HorizontalOptions="Center"/>
-                                <Label Text="Try adjusting your search criteria"
-                                       TextColor="#718096"
-                                       FontSize="14"
-                                       HorizontalOptions="Center"/>
-                            </VerticalStackLayout>
-                        </DataTemplate>
-                    </CollectionView.EmptyViewTemplate>
+                <!-- Loading Indicator -->
+                <ActivityIndicator Grid.RowSpan="2"
+                                IsVisible="{Binding IsLoading}"
+                                IsRunning="{Binding IsLoading}"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                Color="#4299E1"/>
 
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
-                            <Frame Style="{StaticResource PractitionerCardStyle}">
-                                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                                    <!-- Profile Image -->
-                                    <Frame Grid.Row="0"
-                                           HeightRequest="100"
-                                           WidthRequest="100"
-                                           CornerRadius="50"
-                                           IsClippedToBounds="True"
-                                           Padding="0"
-                                           BorderColor="#4299E1"
-                                           Opacity="0.95"
-                                           HorizontalOptions="Center">
-                                        <Frame.GestureRecognizers>
-                                            <TapGestureRecognizer 
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:BookingsViewModel}}, Path=ViewPractitionerProfileCommand}"
-                                                CommandParameter="{Binding .}"/>
-                                        </Frame.GestureRecognizers>
-                                        <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
-                                               Aspect="AspectFill"/>
-                                    </Frame>
+                <!-- Practitioners List -->
+                <RefreshView Grid.Row="1" 
+                           Command="{Binding RefreshCommand}"
+                           IsRefreshing="{Binding IsRefreshing}">
+                    <CollectionView ItemsSource="{Binding FilteredPractitioners}"
+                                 EmptyView="No practitioners found matching your search."
+                                 ItemsLayout="VerticalGrid, 2"
+                                 Margin="10,0"
+                                 IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
 
-                                    <!-- Practitioner Info -->
-                                    <VerticalStackLayout Grid.Row="1" 
-                                                       Spacing="4"
-                                                       HorizontalOptions="Center">
-                                        <Label Text="{Binding Name}"
-                                               TextColor="#2D3748"
-                                               FontAttributes="Bold"
-                                               FontSize="15"
-                                               HorizontalOptions="Center"/>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame Style="{StaticResource PractitionerCardStyle}">
+                                    <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                                        <!-- Profile Image -->
+                                        <Frame Grid.Row="0"
+                                              HeightRequest="100"
+                                              WidthRequest="100"
+                                              CornerRadius="50"
+                                              IsClippedToBounds="True"
+                                              Padding="0"
+                                              BorderColor="#4299E1"
+                                              Opacity="0.95"
+                                              HorizontalOptions="Center">
+                                            <Frame.GestureRecognizers>
+                                                <TapGestureRecognizer 
+                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:BookingsViewModel}}, Path=ViewPractitionerProfileCommand}"
+                                                   CommandParameter="{Binding .}"/>
+                                            </Frame.GestureRecognizers>
+                                            <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
+                                                  Aspect="AspectFill"/>
+                                        </Frame>
 
-                                        <Label Text="{Binding Specialization}"
-                                               TextColor="#4A5568"
-                                               FontSize="13"
-                                               HorizontalOptions="Center"/>
+                                        <!-- Practitioner Info -->
+                                        <VerticalStackLayout Grid.Row="1" 
+                                                      Spacing="4"
+                                                      HorizontalOptions="Center">
+                                            <Label Text="{Binding Name}"
+                                                  TextColor="#2D3748"
+                                                  FontAttributes="Bold"
+                                                  FontSize="15"
+                                                  HorizontalOptions="Center"/>
 
-                                        <HorizontalStackLayout Spacing="4" 
-                                                             HorizontalOptions="Center">
-                                            <Image Source="location.png"
-                                                   HeightRequest="14"
-                                                   WidthRequest="14"
-                                                   VerticalOptions="Center"/>
-                                            <Label Text="{Binding Location}"
-                                                   TextColor="#718096"
-                                                   FontSize="12"
-                                                   VerticalOptions="Center"
-                                                   MaxLines="1"
-                                                   LineBreakMode="TailTruncation"/>
-                                        </HorizontalStackLayout>
-                                    </VerticalStackLayout>
+                                            <Label Text="{Binding Specialization}"
+                                                  TextColor="#4A5568"
+                                                  FontSize="13"
+                                                  HorizontalOptions="Center"/>
 
-                                    <!-- Book Button -->
-                                    <Button Grid.Row="2"
-                                            Text="Book Session"
-                                            BackgroundColor="#4299E1"
-                                            TextColor="White"
-                                            CornerRadius="8"
-                                            HeightRequest="35"
-                                            FontSize="13"
-                                            Opacity="0.9"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:BookingsViewModel}}, Path=ViewPractitionerProfileCommand}"
-                                            CommandParameter="{Binding .}"/>
-                                </Grid>
-                            </Frame>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-            </RefreshView>
+                                            <HorizontalStackLayout Spacing="4" 
+                                                            HorizontalOptions="Center">
+                                                <Image Source="location.png"
+                                                      HeightRequest="14"
+                                                      WidthRequest="14"
+                                                      VerticalOptions="Center"/>
+                                                <Label Text="{Binding Location}"
+                                                      TextColor="#718096"
+                                                      FontSize="12"
+                                                      VerticalOptions="Center"
+                                                      MaxLines="1"
+                                                      LineBreakMode="TailTruncation"/>
+                                            </HorizontalStackLayout>
+                                        </VerticalStackLayout>
+
+                                        <!-- Book Button -->
+                                        <Button Grid.Row="2"
+                                               Text="Book Session"
+                                               Style="{StaticResource PrimaryButtonStyle}"
+                                               HeightRequest="35"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:BookingsViewModel}}, Path=ViewPractitionerProfileCommand}"
+                                               CommandParameter="{Binding .}"/>
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+            </Grid>
+
+            <!-- Map View -->
+            <Grid IsVisible="{Binding IsMapView}"
+                  Padding="5"
+                 RowDefinitions="*,Auto">
+               
+                      <Frame  Padding="0,0,0,0" HasShadow="True">
+                    
+                             <maps:Map Grid.Row="0"
+                                   x:Name="mapControl"
+                                   IsShowingUser="True"
+                                   ItemsSource="{Binding FilteredPractitioners}"
+                                   MapType="Street">
+                                <maps:Map.ItemTemplate>
+                                  <DataTemplate>
+                                    <maps:Pin Location="{Binding Coordinates}"
+                                      Label="{Binding Name}"
+                                      Address="{Binding Location}"
+                                      Type="Place"
+                                      MarkerClicked="OnPinClicked"/>
+                                  </DataTemplate>
+                                </maps:Map.ItemTemplate>
+                             </maps:Map>
+
+                </Frame>
+                    
+                
+              
+             
+                <!-- Selected Practitioner Card -->
+                <Frame Grid.Row="0"
+                       Padding="0,0,0,0"
+                      IsVisible="{Binding SelectedPractitioner, Converter={StaticResource NotNullConverter}}"
+                      Style="{StaticResource PractitionerCardStyle}"
+                       
+                       VerticalOptions="End"
+                      Margin="0,0,90,0"
+                      HeightRequest="100">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Frame Grid.Column="0"
+                              HeightRequest="80"
+                              WidthRequest="80"
+                              CornerRadius="40"
+                              IsClippedToBounds="True"
+                              Padding="0">
+                            <Image Source="{Binding SelectedPractitioner.ProfileImage, 
+                                  Converter={StaticResource Base64ToImageSourceConverter}}"
+                                  Aspect="AspectFill"/>
+                        </Frame>
+
+                        <VerticalStackLayout Grid.Column="1" 
+                                          Spacing="4"
+                                          VerticalOptions="Center">
+                            <Label Text="{Binding SelectedPractitioner.Name}"
+                                  TextColor="#2D3748"
+                                  FontAttributes="Bold"
+                                  FontSize="13"/>
+                            <Label Text="{Binding SelectedPractitioner.Specialization}"
+                                  TextColor="#4A5568"
+                                  FontSize="12"/>
+                            <Label Text="{Binding SelectedPractitioner.Location}"
+                                  TextColor="#718096"
+                                  FontSize="8"/>
+                        </VerticalStackLayout>
+
+                        <Button Grid.Column="2"
+                               Text="Book"
+                               Command="{Binding ViewPractitionerProfileCommand}"
+                               CommandParameter="{Binding SelectedPractitioner}"
+                               Style="{StaticResource PrimaryButtonStyle}"
+                               HeightRequest="40"
+                               WidthRequest="80"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Frame>
+            </Grid>
         </Grid>
     </Grid>
 </ContentPage>

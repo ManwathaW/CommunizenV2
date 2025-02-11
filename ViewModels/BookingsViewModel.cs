@@ -1,102 +1,123 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using IMap = Microsoft.Maui.Maps.IMap;
 using CommuniZEN.Interfaces;
 using CommuniZEN.Models;
+using Microsoft.Maui.Maps;
 using System.Collections.ObjectModel;
+using Microsoft.Maui.Devices.Sensors;
 using System.Diagnostics;
 
 namespace CommuniZEN.ViewModels
 {
+
     public partial class BookingsViewModel : ObservableObject
     {
-        private readonly IFirebaseDataService _dataService;
+        private readonly IFirebaseDataService _firebaseService;
+        private readonly INavigationService _navigationService;
+        private readonly IGeolocation _geolocation;
 
         [ObservableProperty]
-        private ObservableCollection<PracticeProfile> practitioners;
-
-        [ObservableProperty]
-        private ObservableCollection<PracticeProfile> filteredPractitioners;
-
-        [ObservableProperty]
-        private string searchText;
+        private bool isLoading;
 
         [ObservableProperty]
         private bool isRefreshing;
 
         [ObservableProperty]
-        private bool isLoading;
+        private bool isMapView;
 
-        public BookingsViewModel(IFirebaseDataService dataService)
+        [ObservableProperty]
+        private string searchText;
+
+        [ObservableProperty]
+        private PracticeProfile selectedPractitioner;
+
+        [ObservableProperty]
+        private MapSpan mapSpan;
+
+        [ObservableProperty]
+        private Location currentLocation;
+
+        public ObservableCollection<PracticeProfile> Practitioners { get; } = new();
+        public ObservableCollection<PracticeProfile> FilteredPractitioners { get; } = new();
+
+        public BookingsViewModel(
+            IFirebaseDataService firebaseService,
+            INavigationService navigationService,
+            IGeolocation geolocation)
         {
-            Debug.WriteLine("BookingsViewModel constructor called");
-            _dataService = dataService;
-            Practitioners = new ObservableCollection<PracticeProfile>();
-            FilteredPractitioners = new ObservableCollection<PracticeProfile>();
-            _ = InitializeAsync();
-        }
+            _firebaseService = firebaseService;
+            _navigationService = navigationService;
+            _geolocation = geolocation;
 
-        partial void OnSearchTextChanged(string value)
-        {
-            FilterPractitioners();
-        }
-
-        private void FilterPractitioners()
-        {
-            if (Practitioners == null) return;
-
-            if (string.IsNullOrWhiteSpace(SearchText))
+            PropertyChanged += (s, e) =>
             {
-                FilteredPractitioners = new ObservableCollection<PracticeProfile>(Practitioners);
-                return;
-            }
+                if (e.PropertyName == nameof(SearchText))
+                {
+                    FilterPractitioners();
+                }
+            };
 
-            var searchTerms = SearchText.ToLower().Split(' ');
-            var filtered = Practitioners.Where(p =>
-                searchTerms.All(term =>
-                    (p.Name?.ToLower().Contains(term) ?? false) ||
-                    (p.Location?.ToLower().Contains(term) ?? false) ||
-                    (p.Specialization?.ToLower().Contains(term) ?? false)
-                )
-            );
-
-            FilteredPractitioners = new ObservableCollection<PracticeProfile>(filtered);
+            Task.Run(GetCurrentLocationAsync);
         }
 
-        private async Task InitializeAsync()
-        {
-            Debug.WriteLine("InitializeAsync called");
-            await LoadPractitioners();
-        }
-
-        private async Task LoadPractitioners()
+        private async Task GetCurrentLocationAsync()
         {
             try
             {
-                IsLoading = true;
-                Debug.WriteLine("Loading practitioners...");
-                var allProfiles = await _dataService.GetAllPractitionersAsync();
-                Debug.WriteLine($"Retrieved {allProfiles?.Count ?? 0} practitioners");
-                Practitioners.Clear();
-                FilteredPractitioners.Clear();
-
-                if (allProfiles != null && allProfiles.Any())
+                var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+                if (status != PermissionStatus.Granted)
                 {
-                    foreach (var profile in allProfiles)
-                    {
-                        Practitioners.Add(profile);
-                        FilteredPractitioners.Add(profile);
-                        Debug.WriteLine($"Added practitioner to collection: {profile.Name}");
-                    }
+                    status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
                 }
-                else
+
+                if (status == PermissionStatus.Granted)
                 {
-                    Debug.WriteLine("No practitioners found");
+                    var location = await _geolocation.GetLocationAsync(new GeolocationRequest
+                    {
+                        DesiredAccuracy = GeolocationAccuracy.Medium,
+                        Timeout = TimeSpan.FromSeconds(5)
+                    });
+
+                    if (location != null)
+                    {
+                        CurrentLocation = new Location(location.Latitude, location.Longitude);
+                        MapSpan = MapSpan.FromCenterAndRadius(
+                            CurrentLocation,
+                            Distance.FromKilometers(5));
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading practitioners: {ex.Message}");
-                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                Debug.WriteLine($"Location error: {ex}");
+            }
+        }
+
+        [RelayCommand]
+        private async Task LoadPractitioners()
+        {
+            if (IsLoading) return;
+
+            try
+            {
+                IsLoading = true;
+                var practitioners = await _firebaseService.GetAllPractitionersAsync();
+
+                Practitioners.Clear();
+                foreach (var practitioner in practitioners)
+                {
+                    if (practitioner != null)
+                    {
+                        Practitioners.Add(practitioner);
+                        Debug.WriteLine($"Added practitioner: {practitioner.Name}, ID: {practitioner.Id}");
+                    }
+                }
+                FilterPractitioners();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading practitioners: {ex}");
                 await Shell.Current.DisplayAlert("Error", "Failed to load practitioners", "OK");
             }
             finally
@@ -107,15 +128,19 @@ namespace CommuniZEN.ViewModels
         }
 
         [RelayCommand]
-        private async Task ViewPractitionerProfile(PracticeProfile practitioner)
+        private void ToggleView()
         {
-            if (practitioner == null) return;
-            var parameters = new Dictionary<string, object>
+            IsMapView = !IsMapView;
+            if (IsMapView)
             {
-                { "PractitionerId", practitioner.Id },
-                { "PractitionerUserId", practitioner.UserId }
-            };
-            await Shell.Current.GoToAsync("appointments", parameters);
+                SelectedPractitioner = null;
+                if (CurrentLocation != null)
+                {
+                    MapSpan = MapSpan.FromCenterAndRadius(
+                        CurrentLocation,
+                        Distance.FromKilometers(5));
+                }
+            }
         }
 
         [RelayCommand]
@@ -123,6 +148,78 @@ namespace CommuniZEN.ViewModels
         {
             IsRefreshing = true;
             await LoadPractitioners();
+            IsRefreshing = false;
+        }
+
+        [RelayCommand]
+        private void SelectPractitioner(PracticeProfile practitioner)
+        {
+            if (practitioner != null)
+            {
+                SelectedPractitioner = practitioner;
+                if (practitioner.Latitude != 0 && practitioner.Longitude != 0)
+                {
+                    var location = new Location(practitioner.Latitude, practitioner.Longitude);
+                    MapSpan = MapSpan.FromCenterAndRadius(
+                        location,
+                        Distance.FromKilometers(1));
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task ViewPractitionerProfile(PracticeProfile practitioner)
+        {
+            if (practitioner == null) return;
+            await _navigationService.NavigateToAsync($"appointments?PractitionerId={practitioner.Id}&UserId={practitioner.UserId}");
+        }
+
+        private void FilterPractitioners()
+        {
+            try
+            {
+                FilteredPractitioners.Clear();
+
+                var filtered = string.IsNullOrWhiteSpace(SearchText)
+                    ? Practitioners
+                    : Practitioners.Where(p =>
+                        (p.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (p.Specialization?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (p.Location?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false));
+
+                foreach (var practitioner in filtered)
+                {
+                    if (practitioner.Latitude != 0 && practitioner.Longitude != 0)
+                    {
+                        FilteredPractitioners.Add(practitioner);
+                    }
+                }
+
+                // Zoom to single search result
+                if (IsMapView && filtered.Count() == 1)
+                {
+                    var practitioner = filtered.First();
+                    if (practitioner.Latitude != 0 && practitioner.Longitude != 0)
+                    {
+                        MapSpan = MapSpan.FromCenterAndRadius(
+                            new Location(practitioner.Latitude, practitioner.Longitude),
+                            Distance.FromKilometers(1));
+                    }
+                }
+
+                Debug.WriteLine($"Filtered practitioners count: {FilteredPractitioners.Count}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error in FilterPractitioners: {ex}");
+            }
+        }
+
+        public async Task Initialize()
+        {
+            await LoadPractitioners();
         }
     }
 }
+
+    
