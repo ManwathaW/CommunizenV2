@@ -6,6 +6,7 @@
              xmlns:behaviors="clr-namespace:CommuniZEN.Behaviors"
              xmlns:converters="clr-namespace:CommuniZEN.Converters"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+              xmlns:entry="clr-namespace:CommuniZEN"
              x:Class="CommuniZEN.Views.ChatPage"
              x:DataType="viewmodels:ChatViewModel"
              Title="Chat">
@@ -23,6 +24,17 @@
             <converters:MessageTextColorConverter x:Key="MessageTextColorConverter"/>
             <converters:BoolToGridLengthConverter x:Key="BoolToGridLengthConverter"/>
         </ResourceDictionary>
+
+        <Style x:Key="SearchFrameStyle" TargetType="Frame">
+            <Setter Property="BackgroundColor" Value="White"/>
+            <Setter Property="Opacity" Value="0.95"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Margin" Value="20,0,20,15"/>
+            <Setter Property="HeightRequest" Value="45"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="BorderColor" Value="#E2E8F0"/>
+            <Setter Property="HasShadow" Value="True"/>
+        </Style>
     </ContentPage.Resources>
 
     <Grid>
@@ -34,13 +46,12 @@
             </Grid.ColumnDefinitions>
 
             <!-- Toggle Panel Button -->
-            <Button Text="☰"
+            <ImageButton Source="menu1"
+     
                     Command="{Binding TogglePanelCommand}"
-                    HeightRequest="40"
-                    WidthRequest="40"
-                    Margin="10,5"
-                    BackgroundColor="#007AFF"
-                    TextColor="White"
+                    HeightRequest="35"
+                    WidthRequest="35"
+                    Margin="10,0"
                     CornerRadius="20"
                     HorizontalOptions="Start"
                     VerticalOptions="Start"
@@ -51,11 +62,29 @@
                   BackgroundColor="#f5f5f5"
                   RowDefinitions="Auto,Auto,*">
 
-                <!-- Search Bar -->
-                <SearchBar Grid.Row="1" 
-                          Text="{Binding SearchText}"
-                          Placeholder="Search conversations..."
-                          Margin="30,25"/>
+
+                <!-- Search Section -->
+                <Frame Grid.Row="1"
+                       Padding="0"
+                       Margin="10,40"
+                       Style="{StaticResource SearchFrameStyle}">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                        <entry:BorderlessEntry Grid.Column="0"
+                       Placeholder="Search for conversations"
+                       FontSize="13"
+                       Text="{Binding SearchText}"
+                       TextColor="#2D3748"
+                       PlaceholderColor="#A0AEC0"
+                       VerticalOptions="Center"
+                       Margin="0"/>
+
+                        <Image Grid.Column="1"
+                      Source="search1.png"
+                      HeightRequest="30"
+                      WidthRequest="30"
+                      VerticalOptions="Center"/>
+                    </Grid>
+                </Frame>
 
                 <!-- Chat Sessions List -->
                 <CollectionView Grid.Row="2" 
@@ -71,14 +100,19 @@
                                            HorizontalOptions="Center"
                                            Spacing="20">
                             <Image Source="no_chats.png" 
+                                   BackgroundColor="Transparent"
                                    HeightRequest="150"
                                    Aspect="AspectFit"/>
                             <Label Text="No conversations yet"
                                    HorizontalOptions="Center"
                                    TextColor="Gray"/>
-                            <Button Text="Start New Chat"
+                            <ImageButton Source="add.png"
+                                         WidthRequest="50"
+                                         HeightRequest="50"
+                                         BackgroundColor="White"
+                                         CornerRadius="50"
                                     Command="{Binding ShowNewChatDialogCommand}"
-                                    Margin="20,0"/>
+                                    Margin="20,40"/>
                         </VerticalStackLayout>
                     </CollectionView.EmptyView>
 
@@ -263,6 +297,7 @@
 
         <!-- Practitioner Selection Dialog -->
         <Grid IsVisible="{Binding IsNewChatDialogVisible}"
+           
               BackgroundColor="#80000000">
             <Frame Margin="40"
                    Padding="5"
@@ -271,12 +306,33 @@
                    CornerRadius="10"
                    VerticalOptions="Center">
                 <Grid RowDefinitions="Auto,Auto,*">
-                    
 
-                    <SearchBar Grid.Row="1"
-                              Text="{Binding PractitionerSearchText}"
-                              Placeholder="Search practitioners..."
-                              Margin="0,10"/>
+
+                    <!-- Search Section -->
+                    <Frame Grid.Row="1"
+                           Padding="0"
+                           Margin="10,40"
+                           Style="{StaticResource SearchFrameStyle}">
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                            <entry:BorderlessEntry Grid.Column="0"
+                                                   Placeholder="Search for available practitioners"
+                                                   FontSize="13"
+                                                   Text="{Binding PractitionerSearchText}"
+                                                   TextColor="#2D3748"
+                                                   PlaceholderColor="#A0AEC0"
+                                                   VerticalOptions="Center"
+                                                   Margin="0"/>
+
+                            <Image Grid.Column="1"
+                                   Source="search1.png"
+                                   HeightRequest="30"
+                                   WidthRequest="30"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                    </Frame>
+
+
+                   
 
                     <CollectionView Grid.Row="2"
                                   ItemsSource="{Binding FilteredPractitioners}"

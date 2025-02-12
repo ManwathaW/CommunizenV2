@@ -24,6 +24,7 @@
             <Setter Property="CornerRadius" Value="15"/>
             <Setter Property="HasShadow" Value="True"/>
             <Setter Property="BorderColor" Value="#E8F0FE"/>
+           
         </Style>
         
         <Style x:Key="ActionButtonStyle" TargetType="Button">
@@ -67,8 +68,8 @@
             
             <Setter Property="HasShadow" Value="True"/>
             <Setter Property="BorderColor" Value="#E8F0FE"/>
-            <Setter Property="HeightRequest" Value="170"/>
-            <Setter Property="WidthRequest" Value="330"/>
+            <Setter Property="HeightRequest" Value="200"/>
+            <Setter Property="WidthRequest" Value="385"/>
 
             <Setter Property="Background">
                 <Setter.Value>
@@ -107,7 +108,7 @@
 
         <!-- Header -->
         <Frame Padding="5" 
-               HeightRequest="75"
+               HeightRequest="85"
                BackgroundColor="White"
                HasShadow="True"
                BorderColor="#E8F0FE"
@@ -116,32 +117,33 @@
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <Button Grid.Column="0"
                ImageSource="logo.png"
-               HeightRequest="60"
-               WidthRequest="60"
+               HeightRequest="85"
+               WidthRequest="85"
                Padding="10,0,0,0"
                BackgroundColor="Transparent"
                Command="{Binding OpenMenuCommand}"/>
 
                 <VerticalStackLayout Grid.Column="1" 
+                                     VerticalOptions="Center"
                           HorizontalOptions="Center"
                           Spacing="2">
                     <Label Text="Welcome back"
                   Style="{StaticResource HeaderLabelStyle}"
                   HorizontalOptions="Center"
-                  FontSize="12"
+                  FontSize="16"
                   TextColor="#7F98C3"/>
                     <Label Text="{Binding UserName}"
                   Style="{StaticResource HeaderLabelStyle}"
                            HorizontalOptions="Center"
-                  FontSize="16"
+                  FontSize="18"
                   FontAttributes="Bold"/>
                 </VerticalStackLayout>
 
                 <!-- profile pic-->
                 <Frame Grid.Column="2"
                        HorizontalOptions="End"
-                        HeightRequest="50"
-                        WidthRequest="50"
+                        HeightRequest="70"
+                        WidthRequest="70"
                         CornerRadius="50"
                         HasShadow="True"
                         Padding="0"
@@ -150,8 +152,8 @@
 
                     <Image Source="{Binding UserProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
                            Aspect="AspectFill"
-                           HeightRequest="50"
-                           WidthRequest="50">
+                           HeightRequest="68"
+                           WidthRequest="68">
                         <Image.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding ChangeProfilePictureCommand}"/>
                         </Image.GestureRecognizers>
@@ -162,7 +164,7 @@
             </Grid>
         </Frame>
         <!-- Main Content -->
-        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*" Padding="5,10,5,0">
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*" Padding="5,15,5,0">
 
             <Label Grid.Row="1" 
                    Margin="0,-5,0,0" 
@@ -170,11 +172,12 @@
                    HorizontalOptions="Start"
                    Text="Dashboard" 
                    TextColor="DarkBlue" 
-                   FontSize="14" 
+                   FontSize="20" 
                    FontAttributes="Bold"/>
 
             <!-- App featuures -->
             <Grid Grid.Row="1"
+                  Margin="3,8"
                   RowDefinitions="Auto,Auto" >
 
                 <ScrollView  x:Name="horizontalScroll"
@@ -206,16 +209,18 @@
                                        HeightRequest="300"
                                        WidthRequest="200"/>
 
-                                    <Frame HeightRequest="115" Grid.Row="1" Grid.Column="1"
-                                           WidthRequest="210"
+                                    <Frame HeightRequest="145" Grid.Row="1" Grid.Column="1"
+                                           WidthRequest="245"
                                            CornerRadius="20"
-                                           Margin="0,35,0,0"
+                                           Margin="0,65,0,0"
                                            HasShadow="True"
                                            BorderColor="LightGrey"
                                            BackgroundColor="DarkBlue"
                                            Padding="-20">
 
-                                        <Image Source="chats.png" WidthRequest="220" HeightRequest="130" />
+                                        <Image Source="chats.png" 
+                                               WidthRequest="250" 
+                                               HeightRequest="160" />
 
 
                                     </Frame>
@@ -230,14 +235,12 @@
 
                                 </Grid>
 
-
-
-
                                 <Label Grid.Row="2"
                            Text="Reach out to mental health experts directly."
                            Style="{StaticResource CardDescriptionStyle}"/>
                             </Grid>
                         </Frame>
+                        
                         <!-- Appointment Card -->
                         <Frame Style="{StaticResource FeatureCardStyle}">
                             <Frame.GestureRecognizers>
@@ -259,18 +262,18 @@
                                        HeightRequest="300"
                                        WidthRequest="200"/>
 
-                                    <Frame HeightRequest="85" Grid.Row="1" Grid.Column="1"
-                                           
-                                           WidthRequest="150"
+                                    <Frame HeightRequest="145" Grid.Row="1" Grid.Column="1"
+                                           WidthRequest="245"
                                            CornerRadius="20"
-                                           Margin="0,20,0,0"
+                                           Margin="0,65,0,0"
                                            HasShadow="True"
                                            BorderColor="LightGrey"
                                            BackgroundColor="DarkBlue"
                                            Padding="-20">
 
-                                        <Image Source="appointments.png" WidthRequest="190" HeightRequest="95" />
-
+                                        <Image Source="appointments.png" 
+                                               WidthRequest="250" 
+                                               HeightRequest="160" />
 
                                     </Frame>
 
@@ -286,8 +289,8 @@
 
 
                                 <Label Grid.Row="2"
-                           Text="Schedule a session with professionals"
-                           Style="{StaticResource CardDescriptionStyle}"/>
+                                       Text="Schedule a session with professionals"
+                                       Style="{StaticResource CardDescriptionStyle}"/>
                             </Grid>
                         </Frame>
 
@@ -311,17 +314,18 @@
                                        HeightRequest="300"
                                        WidthRequest="200"/>
 
-                                    <Frame HeightRequest="85" Grid.Row="1" Grid.Column="1"
-                                           WidthRequest="150"
+                                    <Frame HeightRequest="145" Grid.Row="1" Grid.Column="1"
+                                           WidthRequest="245"
                                            CornerRadius="20"
-                                           Margin="0,20,0,0"
+                                           Margin="0,65,0,0"
                                            HasShadow="True"
                                            BorderColor="LightGrey"
-                                           BackgroundColor="White"
+                                           BackgroundColor="DarkBlue"
                                            Padding="-20">
 
-                                        <Image Source="boticon.png" WidthRequest="180" HeightRequest="90" />
-
+                                        <Image Source="bot.png" 
+                                               WidthRequest="250" 
+                                               HeightRequest="160" />
 
                                     </Frame>
 
@@ -363,17 +367,18 @@
                                        HeightRequest="300"
                                        WidthRequest="200"/>
 
-                                    <Frame HeightRequest="85" Grid.Row="1" Grid.Column="1"
-                                           WidthRequest="150"
+                                    <Frame HeightRequest="145" Grid.Row="1" Grid.Column="1"
+                                           WidthRequest="245"
                                            CornerRadius="20"
-                                           Margin="0,20,0,0"
+                                           Margin="0,65,0,0"
                                            HasShadow="True"
                                            BorderColor="LightGrey"
                                            BackgroundColor="DarkBlue"
                                            Padding="-20">
 
-                                        <Image Source="awareness.png" WidthRequest="180" HeightRequest="90" />
-
+                                        <Image Source="awareness.png" 
+                                               WidthRequest="250" 
+                                               HeightRequest="160" />
 
                                     </Frame>
 
@@ -409,7 +414,7 @@
             </Grid>
 
             <!-- SelfHelp tools-->
-            <Grid Grid.Row="2" RowDefinitions="*,*" Padding="2,0,2,0" Margin="0,-10,0,0">
+            <Grid Grid.Row="2" RowDefinitions="*,*" Padding="5,0,5,0" Margin="0,-10,0,0">
 
 
                 <Grid >
@@ -419,13 +424,18 @@
                             HorizontalOptions="Start"
                             Text="Self-Discovery" 
                             TextColor="DarkBlue" 
-                            FontSize="14" 
+                            FontSize="20" 
                             FontAttributes="Bold"/>
 
                 </Grid>
                 
                 <!--cards for self help tools -->
-                <Grid Margin="0,20,0,0">
+                <ScrollView Orientation="Vertical" >
+                    
+                    
+                    
+                </ScrollView>
+                <Grid Margin="0,25,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
@@ -434,13 +444,13 @@
 
                     <!-- Gratitude Journal Frame -->
                     <Frame Grid.Column="0"
-               BackgroundColor="#E6F3FF"
-               Opacity="0.9"
-               CornerRadius="15"
-               HasShadow="True"
-               BorderColor="#E8F0FE"
-               HeightRequest="220"
-               MinimumWidthRequest="160">
+                           BackgroundColor="#E6F3FF"
+                           Opacity="0.9"
+                           CornerRadius="15"
+                           HasShadow="True"
+                           BorderColor="#E8F0FE"
+                           HeightRequest="220"
+                           MinimumWidthRequest="160">
 
                         <Frame.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding OpenJournalCommand}"/>
@@ -456,29 +466,29 @@
                                     Aspect="AspectFit"/>
 
                             <Label Text="Gratitude Journal"
-                       TextColor="DarkBlue"
-                       FontAttributes="Bold"
-                       FontSize="16"
-                       HorizontalOptions="Center"/>
+                                   TextColor="DarkBlue"
+                                   FontAttributes="Bold"
+                                   FontSize="16"
+                                   HorizontalOptions="Center"/>
 
                             <Label Text="Daily gratitude entries"
-                       TextColor="#2B5C9B"
-                       FontSize="12"
-                       Opacity="0.8"
-                       HorizontalOptions="Center"
-                       HorizontalTextAlignment="Center"/>
+                                   TextColor="#2B5C9B"
+                                   FontSize="12"
+                                   Opacity="0.8"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
                         </VerticalStackLayout>
                     </Frame>
 
                     <!-- Daily Affirmations Frame -->
                     <Frame Grid.Column="2"
-               BackgroundColor="#E6F3FF"
-               Opacity="0.9"
-               CornerRadius="15"
-               HasShadow="True"
-               BorderColor="#E8F0FE"
-               HeightRequest="220"
-               MinimumWidthRequest="170">
+                           BackgroundColor="#E6F3FF"
+                           Opacity="0.9"
+                           CornerRadius="15"
+                           HasShadow="True"
+                           BorderColor="#E8F0FE"
+                           HeightRequest="220"
+                           MinimumWidthRequest="170">
 
                         <Frame.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding OpenAffirmationsCommand}"/>
@@ -488,33 +498,45 @@
                                VerticalOptions="Center"
                                HorizontalOptions="Center">
                             <Image Source="affirmation.png"
-                       HeightRequest="90"
-                       WidthRequest="100"
-                       HorizontalOptions="Center"
-                       Aspect="AspectFit"/>
+                                   HeightRequest="90"
+                                   WidthRequest="100"
+                                   HorizontalOptions="Center"
+                                   Aspect="AspectFit"/>
 
                             <Label Text="Daily Affirmations"
-                       TextColor="DarkBlue"
-                       FontAttributes="Bold"
-                       FontSize="16"
-                       HorizontalOptions="Center"/>
+                                   TextColor="DarkBlue"
+                                   FontAttributes="Bold"
+                                   FontSize="16"
+                                   HorizontalOptions="Center"/>
 
                             <Label Text="Positive affirmations"
-                       TextColor="#2B5C9B"
-                       FontSize="12"
-                       Opacity="0.8"
-                       HorizontalOptions="Center"
-                       HorizontalTextAlignment="Center"/>
+                                   TextColor="#2B5C9B"
+                                   FontSize="12"
+                                   Opacity="0.8"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
                         </VerticalStackLayout>
                     </Frame>
                 </Grid>
-
-
-
-
-
+                 <Frame Grid.Row="3" 
+                   Margin="0,10,0,0"
+                     BackgroundColor="#E6F3FF"
+                     Opacity="0.9"
+                     CornerRadius="15"
+                     HasShadow="True"
+                     BorderColor="#E8F0FE"
+                     HeightRequest="220"
+                     MinimumWidthRequest="390"
+                      MaximumWidthRequest="390" >
+                
+            </Frame>
+                
+                
             </Grid>
 
+           
+            
+            
 
 
         </Grid>

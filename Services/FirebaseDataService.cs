@@ -453,50 +453,73 @@ public class FirebaseDataService : IFirebaseDataService
 
     #region Managing Appointments 
 
-
     public async Task<List<TimeSlot>> GetTimeSlotsAsync(DateTime date)
     {
         try
         {
-            Debug.WriteLine($"GetTimeSlotsAsync started for date: {date}");
+            Debug.WriteLine($"=== GetTimeSlotsAsync START ===");
+            Debug.WriteLine($"Requesting time slots for date: {date:yyyy-MM-dd}");
+
             var dateKey = date.ToString("yyyy-MM-dd");
             var practitionerId = await GetCurrentPractitionerId();
-            Debug.WriteLine($"PractitionerId: {practitionerId}, DateKey: {dateKey}");
+            Debug.WriteLine($"Using practitionerId: {practitionerId}");
 
             var path = $"{AVAILABILITY_PATH}/{practitionerId}/{dateKey}";
-            Debug.WriteLine($"Fetching from path: {path}");
+            Debug.WriteLine($"Attempting to fetch from path: {path}");
 
             var snapshot = await _firebaseClient
                 .Child(AVAILABILITY_PATH)
                 .Child(practitionerId)
                 .Child(dateKey)
-                .OnceAsync<dynamic>();
+                .OnceAsync<object>();
 
-            Debug.WriteLine($"Snapshot retrieved: {snapshot != null}");
+            if (snapshot == null)
+            {
+                Debug.WriteLine("No data found in Firebase");
+                return new List<TimeSlot>();
+            }
 
             var timeSlots = new List<TimeSlot>();
-            if (snapshot != null)
+            foreach (var item in snapshot)
             {
-                foreach (var item in snapshot)
+                Debug.WriteLine($"Processing item with key: {item.Key}");
+                Debug.WriteLine($"Raw data: {JsonConvert.SerializeObject(item.Object)}");
+
+                try
                 {
-                    Debug.WriteLine($"Processing item: {JsonConvert.SerializeObject(item.Object)}");
+                    var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(
+                        JsonConvert.SerializeObject(item.Object));
+
+                    var startMinutes = Convert.ToDouble(data["StartTime"]);
+                    var endMinutes = Convert.ToDouble(data["EndTime"]);
+                    var isAvailable = data.ContainsKey("IsAvailable") ? Convert.ToBoolean(data["IsAvailable"]) : true;
+
                     var timeSlot = new TimeSlot
                     {
                         Id = item.Key,
-                        StartTime = TimeSpan.FromMinutes(Convert.ToDouble(item.Object.StartTime)),
-                        EndTime = TimeSpan.FromMinutes(Convert.ToDouble(item.Object.EndTime)),
-                        IsAvailable = item.Object.IsAvailable,
-                        AppointmentId = item.Object.AppointmentId
+                        StartTime = TimeSpan.FromMinutes(startMinutes),
+                        EndTime = TimeSpan.FromMinutes(endMinutes),
+                        IsAvailable = isAvailable,
+                        AppointmentId = data.ContainsKey("AppointmentId") ? data["AppointmentId"]?.ToString() : null
                     };
+
+                    Debug.WriteLine($"Created TimeSlot: {timeSlot.DisplayTime}, Available: {timeSlot.IsAvailable}");
                     timeSlots.Add(timeSlot);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error processing time slot: {ex.Message}");
                 }
             }
 
+            Debug.WriteLine($"Returning {timeSlots.Count} time slots");
+            Debug.WriteLine("=== GetTimeSlotsAsync END ===");
             return timeSlots;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"GetTimeSlotsAsync Error: {ex}");
+            Debug.WriteLine($"GetTimeSlotsAsync ERROR: {ex.Message}");
+            Debug.WriteLine($"Stack trace: {ex.StackTrace}");
             throw;
         }
     }
@@ -522,26 +545,43 @@ public class FirebaseDataService : IFirebaseDataService
     }
 
 
-
     public async Task<List<TimeSlot>> GetAvailableTimeSlotsAsync(string practitionerId, DateTime date)
     {
         try
         {
+            Debug.WriteLine($"Getting available time slots for practitioner: {practitionerId}, date: {date}");
             var dateKey = date.ToString("yyyy-MM-dd");
+
             var snapshot = await _firebaseClient
                 .Child(AVAILABILITY_PATH)
-                .Child(practitionerId)
+                .Child(practitionerId)  // Use practitionerId in the path
                 .Child(dateKey)
-                .OnceAsync<TimeSlot>(); // This returns TimeSlot objects
+                .OnceAsync<dynamic>();
 
-            return snapshot?.Select(x =>
+            var timeSlots = new List<TimeSlot>();
+
+            if (snapshot != null)
             {
-                var slot = x.Object;
-                slot.Id = x.Key;
-                return slot;
-            })
-            .Where(slot => slot.IsAvailable)
-            .ToList() ?? new List<TimeSlot>();
+                foreach (var item in snapshot)
+                {
+                    var timeSlot = new TimeSlot
+                    {
+                        Id = item.Key,
+                        StartTime = TimeSpan.FromMinutes(Convert.ToDouble(item.Object.StartTime)),
+                        EndTime = TimeSpan.FromMinutes(Convert.ToDouble(item.Object.EndTime)),
+                        IsAvailable = item.Object.IsAvailable ?? true,
+                        AppointmentId = item.Object.AppointmentId
+                    };
+
+                    if (timeSlot.IsAvailable)
+                    {
+                        timeSlots.Add(timeSlot);
+                    }
+                }
+            }
+
+            Debug.WriteLine($"Found {timeSlots.Count} available time slots");
+            return timeSlots;
         }
         catch (Exception ex)
         {
@@ -554,30 +594,38 @@ public class FirebaseDataService : IFirebaseDataService
     {
         try
         {
-
-            var authProvider = Application.Current.Handler.MauiContext.Services.GetService<IFirebaseAuthService>();
-            var practitionerId = await authProvider.GetCurrentUserIdAsync();
+            Debug.WriteLine("=== AddTimeSlotAsync START ===");
+            var practitionerId = await GetCurrentPractitionerId();
             var dateKey = date.ToString("yyyy-MM-dd");
+
+            Debug.WriteLine($"Adding slot for date: {dateKey}");
+            Debug.WriteLine($"PractitionerId: {practitionerId}");
+            Debug.WriteLine($"Time slot: {slot.StartTime} - {slot.EndTime}");
 
             var slotData = new
             {
-                slot.Id,
                 StartTime = slot.StartTime.TotalMinutes,
                 EndTime = slot.EndTime.TotalMinutes,
-                slot.IsAvailable,
-                slot.AppointmentId
+                IsAvailable = true,
+                AppointmentId = (string)null
             };
 
-            // Force numeric serialization
+            var path = $"{AVAILABILITY_PATH}/{practitionerId}/{dateKey}";
+            Debug.WriteLine($"Writing to path: {path}");
+            Debug.WriteLine($"Data to write: {JsonConvert.SerializeObject(slotData)}");
+
             await _firebaseClient
                 .Child(AVAILABILITY_PATH)
                 .Child(practitionerId)
                 .Child(dateKey)
-                .PostAsync(slotData);
+                .PostAsync(JsonConvert.SerializeObject(slotData));
+
+            Debug.WriteLine("=== AddTimeSlotAsync END ===");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"AddTimeSlotAsync Error: {ex}");
+            Debug.WriteLine($"AddTimeSlotAsync ERROR: {ex.Message}");
+            Debug.WriteLine($"Stack trace: {ex.StackTrace}");
             throw;
         }
     }
@@ -651,6 +699,7 @@ public class FirebaseDataService : IFirebaseDataService
         }
     }
 
+
     public async Task CreateAppointmentAsync(Appointment appointment)
     {
         try
@@ -658,24 +707,24 @@ public class FirebaseDataService : IFirebaseDataService
             // Create the appointment
             var result = await _firebaseClient
                 .Child(APPOINTMENTS_PATH)
-                .PostAsync(appointment);
+                .PostAsync(JsonConvert.SerializeObject(appointment));
 
             // Update the time slot availability
             var dateKey = appointment.Date.ToString("yyyy-MM-dd");
             await _firebaseClient
                 .Child(AVAILABILITY_PATH)
+                .Child(appointment.PractitionerId)  // Use PractitionerId in the path
                 .Child(dateKey)
                 .Child(appointment.TimeSlot.Id)
-                .Child("IsAvailable")
-                .PutAsync(false);
+                .PutAsync(new
+                {
+                    StartTime = appointment.TimeSlot.StartTime.TotalMinutes,
+                    EndTime = appointment.TimeSlot.EndTime.TotalMinutes,
+                    IsAvailable = false,
+                    AppointmentId = result.Key
+                });
 
-            // Store the appointment ID reference in the time slot
-            await _firebaseClient
-                .Child(AVAILABILITY_PATH)
-                .Child(dateKey)
-                .Child(appointment.TimeSlot.Id)
-                .Child("AppointmentId")
-                .PutAsync(result.Key);
+            Debug.WriteLine($"Appointment created successfully with ID: {result.Key}");
         }
         catch (Exception ex)
         {

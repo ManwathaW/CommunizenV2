@@ -99,17 +99,20 @@ namespace CommuniZEN.ViewModels
             try
             {
                 IsLoading = true;
+                Debug.WriteLine($"Loading time slots for practitioner: {_practitionerId}, date: {SelectedDate}");
+
                 var slots = await _dataService.GetAvailableTimeSlotsAsync(_practitionerId, SelectedDate);
 
                 AvailableTimeSlots.Clear();
-                foreach (var slot in slots.Where(s => s.IsAvailable))
+                foreach (var slot in slots)
                 {
+                    Debug.WriteLine($"Adding slot: {slot.DisplayTime}, Available: {slot.IsAvailable}");
                     AvailableTimeSlots.Add(slot);
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading time slots: {ex}");
+                Debug.WriteLine($"Error loading time slots: {ex.Message}");
                 await Shell.Current.DisplayAlert("Error", "Failed to load available time slots", "OK");
             }
             finally
@@ -155,8 +158,16 @@ namespace CommuniZEN.ViewModels
                     return;
                 }
 
+                bool confirm = await Shell.Current.DisplayAlert(
+                    "Confirm Booking",
+                    $"Would you like to book an appointment for {SelectedDate.ToShortDateString()} at {timeSlot.DisplayTime}?",
+                    "Yes", "No");
+
+                if (!confirm) return;
+
                 var appointment = new Appointment
                 {
+                    Id = Guid.NewGuid().ToString(),
                     PractitionerId = _practitionerId,
                     ClientId = _clientId,
                     Date = SelectedDate,
@@ -174,7 +185,7 @@ namespace CommuniZEN.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error booking appointment: {ex}");
+                Debug.WriteLine($"Error booking appointment: {ex.Message}");
                 await Shell.Current.DisplayAlert("Error", "Failed to book appointment", "OK");
             }
             finally
@@ -182,6 +193,7 @@ namespace CommuniZEN.ViewModels
                 IsLoading = false;
             }
         }
+
 
         [RelayCommand]
         private async Task CancelAppointment(Appointment appointment)
