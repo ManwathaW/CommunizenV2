@@ -120,25 +120,22 @@ namespace CommuniZEN.ViewModels
         [RelayCommand]
         private async Task AddTimeSlot()
         {
-            Debug.WriteLine("=== AddTimeSlot START ===");
-
-            if (_dataService == null)
-            {
-                Debug.WriteLine("ERROR: _dataService is null");
-                return;
-            }
-
-            if (EndTime <= StartTime)
-            {
-                Debug.WriteLine("ERROR: End time must be after start time");
-                await Shell.Current.DisplayAlert("Error", "End time must be after start time", "OK");
-                return;
-            }
-
             try
             {
+                if (_dataService == null)
+                {
+                    Debug.WriteLine("ERROR: _dataService is null");
+                    return;
+                }
+
+                if (EndTime <= StartTime)
+                {
+                    await Shell.Current.DisplayAlert("Error", "End time must be after start time", "OK");
+                    return;
+                }
+
                 IsLoading = true;
-                Debug.WriteLine($"Creating new slot: {StartTime} - {EndTime}");
+                Debug.WriteLine($"=== AddTimeSlot START ===");
 
                 var newSlot = new TimeSlot
                 {
@@ -148,30 +145,20 @@ namespace CommuniZEN.ViewModels
                 };
 
                 await _dataService.AddTimeSlotAsync(SelectedDate, newSlot);
-                Debug.WriteLine("Time slot added successfully");
-
-                // Add a delay to ensure Firebase has processed the update
-                await Task.Delay(1000);
-                Debug.WriteLine("Reloading time slots...");
+                await Task.Delay(500); // Short delay for Firebase
                 await LoadTimeSlotsAsync();
 
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    StartTime = new TimeSpan(9, 0, 0);
-                    EndTime = new TimeSpan(10, 0, 0);
-                    Debug.WriteLine("Reset time inputs");
-                });
+                StartTime = new TimeSpan(9, 0, 0);
+                EndTime = new TimeSpan(10, 0, 0);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"AddTimeSlot ERROR: {ex.Message}");
-                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                Debug.WriteLine($"AddTimeSlot Error: {ex.Message}");
                 await Shell.Current.DisplayAlert("Error", "Failed to add time slot", "OK");
             }
             finally
             {
                 IsLoading = false;
-                Debug.WriteLine("=== AddTimeSlot END ===");
             }
         }
 
@@ -199,50 +186,34 @@ namespace CommuniZEN.ViewModels
             }
         }
 
+
+
         private async Task LoadTimeSlotsAsync()
         {
-            if (_dataService == null)
-            {
-                Debug.WriteLine("ERROR: _dataService is null in LoadTimeSlotsAsync");
-                return;
-            }
-
             try
             {
-                Debug.WriteLine("=== LoadTimeSlotsAsync START ===");
                 IsLoading = true;
+                Debug.WriteLine("=== LoadTimeSlotsAsync START ===");
 
                 var slots = await _dataService.GetTimeSlotsAsync(SelectedDate);
-                Debug.WriteLine($"Retrieved {slots.Count} slots from service");
 
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     TimeSlots.Clear();
-                    Debug.WriteLine("Cleared existing time slots");
-
                     foreach (var slot in slots.OrderBy(s => s.StartTime))
                     {
                         TimeSlots.Add(slot);
-                        Debug.WriteLine($"Added slot to UI: {slot.DisplayTime}");
                     }
-
-                    Debug.WriteLine($"Total slots in UI collection: {TimeSlots.Count}");
                 });
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"LoadTimeSlotsAsync ERROR: {ex.Message}");
-                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-
-                await MainThread.InvokeOnMainThreadAsync(async () =>
-                {
-                    await Shell.Current.DisplayAlert("Error", "Failed to load time slots", "OK");
-                });
+                Debug.WriteLine($"LoadTimeSlotsAsync Error: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Failed to load time slots", "OK");
             }
             finally
             {
                 IsLoading = false;
-                Debug.WriteLine("=== LoadTimeSlotsAsync END ===");
             }
         }
 
