@@ -6,9 +6,8 @@
             xmlns:models="clr-namespace:CommuniZEN.Models"
             xmlns:converters="clr-namespace:CommuniZEN.Converters"
             x:Class="CommuniZEN.Views.MainPage"
-             Shell.NavBarIsVisible="False"
-            BackgroundColor="#F5F9FF"
-             >
+            Shell.NavBarIsVisible="False" 
+            BackgroundColor="#F5F9FF" >
 
     <ContentPage.Resources>
         <converters:ViewTypeConverter x:Key="ViewTypeConverter"/>
@@ -60,16 +59,14 @@
             </Setter>
         </Style>
 
-
         <Style x:Key="FeatureCardStyle" TargetType="Frame">
             <Setter Property="BackgroundColor" Value="Transparent"/>
             <Setter Property="CornerRadius" Value="15"/>
             <Setter Property="Padding" Value="0,2,0,0"/>
-            
             <Setter Property="HasShadow" Value="True"/>
             <Setter Property="BorderColor" Value="#E8F0FE"/>
             <Setter Property="HeightRequest" Value="200"/>
-            <Setter Property="WidthRequest" Value="385"/>
+            <Setter Property="WidthRequest" Value="365"/>
 
             <Setter Property="Background">
                 <Setter.Value>
@@ -96,16 +93,14 @@
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="HorizontalTextAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,-10,0,0"/>
-            
             <Setter Property="LineBreakMode" Value="TailTruncation"/>
             <Setter Property="MaxLines" Value="2"/>
         </Style>
 
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*" Margin="0,20,0,0">
-        
-
+    <Grid RowDefinitions="Auto,*"
+          Margin="0,20,0,0">
         <!-- Header -->
         <Frame Padding="5" 
                HeightRequest="85"
@@ -116,80 +111,79 @@
             
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <Button Grid.Column="0"
-               ImageSource="logo.png"
-               HeightRequest="85"
-               WidthRequest="85"
-               Padding="10,0,0,0"
-               BackgroundColor="Transparent"
-               Command="{Binding OpenMenuCommand}"/>
+                         ImageSource="logo.png"
+                         HeightRequest="85"
+                         WidthRequest="85"
+                         Padding="10,0,0,0"
+                         BackgroundColor="Transparent"
+                         Command="{Binding OpenMenuCommand}"/>
 
                 <VerticalStackLayout Grid.Column="1" 
                                      VerticalOptions="Center"
-                          HorizontalOptions="Center"
-                          Spacing="2">
+                                     HorizontalOptions="Center"
+                                     Spacing="2">
                     <Label Text="Welcome back"
-                  Style="{StaticResource HeaderLabelStyle}"
-                  HorizontalOptions="Center"
-                  FontSize="16"
-                  TextColor="#7F98C3"/>
-                    <Label Text="{Binding UserName}"
-                  Style="{StaticResource HeaderLabelStyle}"
+                           Style="{StaticResource HeaderLabelStyle}"
                            HorizontalOptions="Center"
-                  FontSize="18"
-                  FontAttributes="Bold"/>
+                           FontSize="16"
+                           TextColor="#7F98C3"/>
+                    <Label Text="{Binding UserName}"
+                           Style="{StaticResource HeaderLabelStyle}"
+                           HorizontalOptions="Center"
+                           FontSize="18"
+                           FontAttributes="Bold"/>
                 </VerticalStackLayout>
 
                 <!-- profile pic-->
-                <Frame Grid.Column="2"
-                       HorizontalOptions="End"
-                        HeightRequest="70"
-                        WidthRequest="70"
-                        CornerRadius="50"
-                        HasShadow="True"
-                        Padding="0"
-                        BorderColor="#E8F0FE"
-                        IsClippedToBounds="True">
+                <Border Grid.Column="2"
+                        HorizontalOptions="End"
+                        HeightRequest="66"
+                        WidthRequest="66"
+                        Stroke="Green"
+                        StrokeThickness="2"
+                        StrokeShape="RoundRectangle 50"
+                        Padding="0">
 
                     <Image Source="{Binding UserProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
                            Aspect="AspectFill"
-                           HeightRequest="68"
-                           WidthRequest="68">
+                           HeightRequest="62"
+                           WidthRequest="62">
                         <Image.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding ChangeProfilePictureCommand}"/>
                         </Image.GestureRecognizers>
                     </Image>
-
-
-                </Frame>
+                </Border>
             </Grid>
         </Frame>
-        <!-- Main Content -->
-        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*" Padding="5,15,5,0">
 
-            <Label Grid.Row="1" 
-                   Margin="0,-5,0,0" 
+        <!-- Main Content -->
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never" >
+            <VerticalStackLayout 
+                Spacing="15" 
+                Padding="5,10,10,20">
+
+                <Label Grid.Row="1" 
+                   Margin="0,0,0,0" 
                    VerticalOptions="Start" 
                    HorizontalOptions="Start"
                    Text="Dashboard" 
                    TextColor="DarkBlue" 
-                   FontSize="20" 
+                   FontSize="17" 
                    FontAttributes="Bold"/>
 
             <!-- App featuures -->
             <Grid Grid.Row="1"
-                  Margin="3,8"
+                  Margin="3,-30"
                   RowDefinitions="Auto,Auto" >
 
                 <ScrollView  x:Name="horizontalScroll"
                              Orientation="Horizontal" 
                              HorizontalScrollBarVisibility="Never">
-                    
+
                     <HorizontalStackLayout Spacing="10" 
-                              Padding="5,25">
+                                           Padding="5,25">
 
-
-
-                       <!-- In-App Chat Card -->
+                        <!-- In-App Chat Card -->
                         <Frame Style="{StaticResource FeatureCardStyle}">
                             <Frame.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding OpenChatCommand}"/>
@@ -199,7 +193,6 @@
                                   Style="{StaticResource CardTitleStyle}"/>
 
                                 <Grid ColumnDefinitions="*,auto,*" Margin="0,-80,0,0" >
-
 
                                     <skia:SKLottieView Grid.Row="1" Grid.Column="0"
                                        Margin="0,-15,0,0"
@@ -225,7 +218,9 @@
 
                                     </Frame>
 
-                                    <skia:SKLottieView Grid.Row="1" Grid.Column="2"
+                                    <skia:SKLottieView 
+                                           Grid.Row="1" 
+                                           Grid.Column="2"
                                            Margin="0,-15,0,0"
                                            Source="wave.json"
                                            RepeatCount="-1"
@@ -236,25 +231,28 @@
                                 </Grid>
 
                                 <Label Grid.Row="2"
-                           Text="Reach out to mental health experts directly."
-                           Style="{StaticResource CardDescriptionStyle}"/>
+                                       Text="Reach out to mental health experts directly."
+                                       Style="{StaticResource CardDescriptionStyle}"/>
                             </Grid>
                         </Frame>
-                        
+
                         <!-- Appointment Card -->
                         <Frame Style="{StaticResource FeatureCardStyle}">
                             <Frame.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding BookAppointmentCommand}"/>
                             </Frame.GestureRecognizers>
-                            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10" Padding="5">
+                            <Grid RowDefinitions="Auto,*,Auto" 
+                                  RowSpacing="10"
+                                  Padding="5">
                                 <Label Text="BOOK APPOINTMENT"
-                           Style="{StaticResource CardTitleStyle}"/>
+                                       Style="{StaticResource CardTitleStyle}"/>
 
 
-                                <Grid ColumnDefinitions="*,auto,*" Margin="0,-80,0,0" >
-
-
-                                    <skia:SKLottieView Grid.Row="1" Grid.Column="0"
+                                <Grid ColumnDefinitions="*,auto,*"
+                                      Margin="0,-80,0,0" >
+                                    <skia:SKLottieView
+                                       Grid.Row="1"
+                                       Grid.Column="0"
                                        Margin="0,-15,0,0"
                                        Source="wave.json"
                                        RepeatCount="-1"
@@ -262,7 +260,9 @@
                                        HeightRequest="300"
                                        WidthRequest="200"/>
 
-                                    <Frame HeightRequest="145" Grid.Row="1" Grid.Column="1"
+                                    <Frame HeightRequest="145" 
+                                           Grid.Row="1"
+                                           Grid.Column="1"
                                            WidthRequest="245"
                                            CornerRadius="20"
                                            Margin="0,65,0,0"
@@ -287,7 +287,6 @@
 
                                 </Grid>
 
-
                                 <Label Grid.Row="2"
                                        Text="Schedule a session with professionals"
                                        Style="{StaticResource CardDescriptionStyle}"/>
@@ -303,10 +302,12 @@
                                 <Label Text="AI CHATBOT"
                                  Style="{StaticResource CardTitleStyle}"/>
 
-                                <Grid ColumnDefinitions="*,auto,*" Margin="0,-80,0,0" >
+                                <Grid ColumnDefinitions="*,auto,*" 
+                                      Margin="0,-80,0,0" >
 
-
-                                    <skia:SKLottieView Grid.Row="1" Grid.Column="0"
+                                    <skia:SKLottieView 
+                                       Grid.Row="1" 
+                                       Grid.Column="0"
                                        Margin="0,-15,0,0"
                                        Source="wave.json"
                                        RepeatCount="-1"
@@ -344,22 +345,24 @@
                                    Style="{StaticResource CardDescriptionStyle}"/>
                             </Grid>
                         </Frame>
- 
 
                         <!-- Resources Card -->
                         <Frame Style="{StaticResource FeatureCardStyle}">
                             <Frame.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding OpenResourcesCommand}"/>
                             </Frame.GestureRecognizers>
-                            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10" Padding="5">
+                            <Grid RowDefinitions="Auto,*,Auto" 
+                                  RowSpacing="10" 
+                                  Padding="5">
                                 <Label Text="AWARENESS RESOURCES"
-                           Style="{StaticResource CardTitleStyle}"/>
+                                       Style="{StaticResource CardTitleStyle}"/>
 
+                                <Grid ColumnDefinitions="*,auto,*" 
+                                      Margin="0,-80,0,0" >
 
-                                <Grid ColumnDefinitions="*,auto,*" Margin="0,-80,0,0" >
-
-
-                                    <skia:SKLottieView Grid.Row="1" Grid.Column="0"
+                                    <skia:SKLottieView
+                                       Grid.Row="1" 
+                                       Grid.Column="0"
                                        Margin="0,-15,0,0"
                                        Source="wave.json"
                                        RepeatCount="-1"
@@ -392,8 +395,6 @@
 
                                 </Grid>
 
-
-
                                 <Label Grid.Row="2"
                                   Text="Access mental health and self-help materials"
                                   Style="{StaticResource CardDescriptionStyle}"/>
@@ -414,28 +415,28 @@
             </Grid>
 
             <!-- SelfHelp tools-->
-            <Grid Grid.Row="2" RowDefinitions="*,*" Padding="5,0,5,0" Margin="0,-10,0,0">
+         
+                <Grid Grid.Row="2"
+                  RowDefinitions="*,*"
+                  Padding="5,0,5,0"
+                  Margin="0,-10,0,0">
 
 
-                <Grid >
-                      <Label Grid.Row="1" 
+                    <Grid >
+                        <Label Grid.Row="1" 
                             Margin="5,-10,0,0" 
                             VerticalOptions="Start" 
                             HorizontalOptions="Start"
                             Text="Self-Discovery" 
                             TextColor="DarkBlue" 
-                            FontSize="20" 
+                            FontSize="17" 
                             FontAttributes="Bold"/>
 
-                </Grid>
-                
-                <!--cards for self help tools -->
-                <ScrollView Orientation="Vertical" >
+                    </Grid>
+
+                    <!--cards for self help tools -->
                     
-                    
-                    
-                </ScrollView>
-                <Grid Margin="0,25,0,0">
+                  <Grid Margin="0,25,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="10"/>
@@ -518,7 +519,8 @@
                         </VerticalStackLayout>
                     </Frame>
                 </Grid>
-                 <Frame Grid.Row="3" 
+
+                <Frame Grid.Row="3" 
                    Margin="0,10,0,0"
                      BackgroundColor="#E6F3FF"
                      Opacity="0.9"
@@ -527,19 +529,13 @@
                      BorderColor="#E8F0FE"
                      HeightRequest="220"
                      MinimumWidthRequest="390"
-                      MaximumWidthRequest="390" >
-                
-            </Frame>
-                
-                
+                     MaximumWidthRequest="390" >
+                </Frame>
             </Grid>
 
-           
-            
-            
+            </VerticalStackLayout>
+        </ScrollView>
 
 
-        </Grid>
-    
     </Grid>
 </ContentPage>

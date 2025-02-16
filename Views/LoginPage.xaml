@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CommuniZEN.Views.LoginPage"
-             
+             BackgroundImageSource="bg5"
              Title="Login">
 
     <ScrollView>
@@ -13,7 +13,6 @@
                        HorizontalOptions="Center"
                        HeightRequest="160"
                        Margin="0,0,0,0"/>
-
 
 
                 <!-- Login Form -->
@@ -77,8 +76,8 @@
                                                  BackgroundColor="Transparent"
                                                  HorizontalOptions="End"
                                                  VerticalOptions="Center"
-                                                 WidthRequest="20"
-                                                 HeightRequest="20"
+                                                 WidthRequest="5"
+                                                 HeightRequest="5"
                                                  Margin="0,0,0,0"
                                                  Clicked="OnTogglePasswordButtonClicked">
                                         <ImageButton.Source>

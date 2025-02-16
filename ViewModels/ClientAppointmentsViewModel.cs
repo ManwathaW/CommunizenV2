@@ -10,7 +10,8 @@ namespace CommuniZEN.ViewModels
     public partial class ClientAppointmentsViewModel : ObservableObject, IQueryAttributable
     {
         private readonly IFirebaseDataService _dataService;
-        private string _practitionerId;
+        private string _practitionerUserId; 
+        private string _practitionerId;      
         private string _clientId;
 
         [ObservableProperty]
@@ -43,24 +44,46 @@ namespace CommuniZEN.ViewModels
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
+            Debug.WriteLine("=== ApplyQueryAttributes ===");
+
+            if (query.TryGetValue("UserId", out var userId))
+            {
+                _practitionerUserId = userId.ToString();
+                Debug.WriteLine($"Got practitioner UserId: {_practitionerUserId}");
+            }
+
             if (query.TryGetValue("PractitionerId", out var practitionerId))
             {
                 _practitionerId = practitionerId.ToString();
+                Debug.WriteLine($"Got practitioner ID: {_practitionerId}");
             }
+
+            if (string.IsNullOrEmpty(_practitionerUserId))
+            {
+                Debug.WriteLine("ERROR: No practitioner UserId found in query parameters");
+                return;
+            }
+
             _ = InitializeAsync();
         }
+
 
         private async Task InitializeAsync()
         {
             try
             {
+                Debug.WriteLine("=== InitializeAsync ===");
                 var authService = Application.Current.Handler.MauiContext.Services.GetService<IFirebaseAuthService>();
                 _clientId = await authService.GetCurrentUserIdAsync();
+                Debug.WriteLine($"Initialized with ClientId: {_clientId}");
+                Debug.WriteLine($"Current PractitionerId: {_practitionerId}");
+
                 await LoadDataAsync();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error in InitializeAsync: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 await Shell.Current.DisplayAlert("Error", "Failed to initialize", "OK");
             }
         }
@@ -94,25 +117,45 @@ namespace CommuniZEN.ViewModels
 
         private async Task LoadAvailableTimeSlotsAsync()
         {
-            if (string.IsNullOrEmpty(_practitionerId)) return;
+            if (string.IsNullOrEmpty(_practitionerUserId))
+            {
+                Debug.WriteLine("ERROR: Cannot load time slots - practitioner UserId is null or empty");
+                return;
+            }
 
             try
             {
                 IsLoading = true;
-                Debug.WriteLine($"Loading time slots for practitioner: {_practitionerId}, date: {SelectedDate}");
+                Debug.WriteLine($"=== LoadAvailableTimeSlotsAsync ===");
+                Debug.WriteLine($"Loading slots using practitioner UserId: {_practitionerUserId}");
+                Debug.WriteLine($"Selected date: {SelectedDate:yyyy-MM-dd}");
 
-                var slots = await _dataService.GetAvailableTimeSlotsAsync(_practitionerId, SelectedDate);
+                var slots = await _dataService.GetAvailableTimeSlotsAsync(_practitionerUserId, SelectedDate);
 
-                AvailableTimeSlots.Clear();
-                foreach (var slot in slots)
+                Debug.WriteLine($"Retrieved {slots?.Count ?? 0} slots from service");
+
+                await MainThread.InvokeOnMainThreadAsync(() =>
                 {
-                    Debug.WriteLine($"Adding slot: {slot.DisplayTime}, Available: {slot.IsAvailable}");
-                    AvailableTimeSlots.Add(slot);
-                }
+                    AvailableTimeSlots.Clear();
+
+                    if (slots != null && slots.Any())
+                    {
+                        foreach (var slot in slots.OrderBy(s => s.StartTime))
+                        {
+                            Debug.WriteLine($"Adding slot to UI: {slot.DisplayTime}");
+                            AvailableTimeSlots.Add(slot);
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine("No available time slots found for the selected date");
+                    }
+                });
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading time slots: {ex.Message}");
+                Debug.WriteLine($"ERROR loading time slots: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 await Shell.Current.DisplayAlert("Error", "Failed to load available time slots", "OK");
             }
             finally
@@ -152,7 +195,7 @@ namespace CommuniZEN.ViewModels
         {
             try
             {
-                if (string.IsNullOrEmpty(_clientId) || string.IsNullOrEmpty(_practitionerId))
+                if (string.IsNullOrEmpty(_clientId) || string.IsNullOrEmpty(_practitionerUserId))
                 {
                     await Shell.Current.DisplayAlert("Error", "Unable to book appointment", "OK");
                     return;
@@ -168,7 +211,7 @@ namespace CommuniZEN.ViewModels
                 var appointment = new Appointment
                 {
                     Id = Guid.NewGuid().ToString(),
-                    PractitionerId = _practitionerId,
+                    PractitionerId = _practitionerUserId,  // Use Firebase Auth ID instead of practice profile ID
                     ClientId = _clientId,
                     Date = SelectedDate,
                     TimeSlot = timeSlot,

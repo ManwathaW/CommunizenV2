@@ -10,7 +10,10 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
+            
             <converters:Base64ToImageSourceConverter x:Key="Base64ToImageSourceConverter"/>
+            <converters:ViewToggleIconConverter x:Key="ViewToggleIconConverter"/>
+            
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <converters:NotNullConverter x:Key="NotNullConverter"/>
 
@@ -32,9 +35,10 @@
             <Style x:Key="SearchFrameStyle" TargetType="Frame">
                 <Setter Property="BackgroundColor" Value="White"/>
                 <Setter Property="Opacity" Value="0.95"/>
-                <Setter Property="CornerRadius" Value="12"/>
-                <Setter Property="Margin" Value="20,0,20,15"/>
-                <Setter Property="HeightRequest" Value="45"/>
+             
+                <Setter Property="CornerRadius" Value="50"/>
+                <Setter Property="Margin" Value="8,0,20,15"/>
+                <Setter Property="HeightRequest" Value="48"/>
                 <Setter Property="Padding" Value="12,5"/>
                 <Setter Property="BorderColor" Value="#E2E8F0"/>
                 <Setter Property="HasShadow" Value="True"/>
@@ -72,7 +76,11 @@
         </VerticalStackLayout>
 
         <!-- Search Section -->
-        <Frame Grid.Row="1" Style="{StaticResource SearchFrameStyle}">
+        <HorizontalStackLayout Grid.Row="1" Spacing="-20">
+            
+             <Frame Grid.Row="1"
+                    Style="{StaticResource SearchFrameStyle}"
+                    Padding="3,0,0,0" >
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                 <entry:BorderlessEntry Grid.Column="0"
                        Placeholder="Search by name, location, or specialization"
@@ -85,19 +93,23 @@
 
                 <Image Grid.Column="1"
                       Source="search1.png"
-                      HeightRequest="20"
-                      WidthRequest="20"
+                      HeightRequest="40"
+                      WidthRequest="40"
                       VerticalOptions="Center"/>
 
-                <ImageButton Grid.Column="2"
-                           Source="{Binding IsMapView, Converter={StaticResource ViewToggleIconConverter}}"
-                           Command="{Binding ToggleViewCommand}"
-                           HeightRequest="24"
-                           WidthRequest="24"
-                           Opacity="0.8"
-                           Padding="2"/>
+
             </Grid>
         </Frame>
+                            <ImageButton 
+                                VerticalOptions="Start"
+                           Source="{Binding IsMapView, Converter={StaticResource ViewToggleIconConverter}}"
+                           Command="{Binding ToggleViewCommand}"
+                           HeightRequest="25"
+                           WidthRequest="25"
+                           Opacity="0.8"
+                           Padding="2"/>
+        </HorizontalStackLayout>
+       
 
         <!-- Content Section -->
         <Grid Grid.Row="2">
@@ -126,6 +138,12 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <Frame Style="{StaticResource PractitionerCardStyle}">
+                                    <Frame.GestureRecognizers>
+                                        <TapGestureRecognizer 
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:BookingsViewModel}}, Path=ViewPractitionerProfileCommand}"
+                                           CommandParameter="{Binding .}"/>
+                                    </Frame.GestureRecognizers>
+
                                     <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
                                         <!-- Profile Image -->
                                         <Frame Grid.Row="0"
@@ -176,13 +194,13 @@
                                             </HorizontalStackLayout>
                                         </VerticalStackLayout>
 
-                                        <!-- Book Button -->
-                                        <Button Grid.Row="2"
-                                               Text="Book Session"
-                                               Style="{StaticResource PrimaryButtonStyle}"
-                                               HeightRequest="35"
-                                               Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:BookingsViewModel}}, Path=ViewPractitionerProfileCommand}"
-                                               CommandParameter="{Binding .}"/>
+         
+                                     
+                                            
+                                            
+                                            
+                                       
+                                       
                                     </Grid>
                                 </Frame>
                             </DataTemplate>
@@ -193,12 +211,15 @@
 
             <!-- Map View -->
             <Grid IsVisible="{Binding IsMapView}"
-                  Padding="5"
+                  Padding="8,0,8,20"
                  RowDefinitions="*,Auto">
                
-                      <Frame  Padding="0,0,0,0" HasShadow="True">
+                      <Frame  Padding="5,5,5,5" 
+                              BackgroundColor="White"
+                              HasShadow="True">
                     
                              <maps:Map Grid.Row="0"
+                                      
                                    x:Name="mapControl"
                                    IsShowingUser="True"
                                    ItemsSource="{Binding FilteredPractitioners}"
@@ -206,6 +227,7 @@
                                 <maps:Map.ItemTemplate>
                                   <DataTemplate>
                                     <maps:Pin Location="{Binding Coordinates}"
+                                              
                                       Label="{Binding Name}"
                                       Address="{Binding Location}"
                                       Type="Place"
@@ -216,17 +238,17 @@
 
                 </Frame>
                     
-                
-              
-             
+
                 <!-- Selected Practitioner Card -->
                 <Frame Grid.Row="0"
-                       Padding="0,0,0,0"
+                       Padding="10,0,0,0"
+                       HasShadow="True"
                       IsVisible="{Binding SelectedPractitioner, Converter={StaticResource NotNullConverter}}"
                       Style="{StaticResource PractitionerCardStyle}"
-                       
-                       VerticalOptions="End"
-                      Margin="0,0,90,0"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Center"
+                       BorderColor="LightGrey"
+                      Margin="0,340,0,0"
                       HeightRequest="100">
                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                         <Frame Grid.Column="0"
@@ -250,9 +272,17 @@
                             <Label Text="{Binding SelectedPractitioner.Specialization}"
                                   TextColor="#4A5568"
                                   FontSize="12"/>
-                            <Label Text="{Binding SelectedPractitioner.Location}"
+                            <HorizontalStackLayout Spacing="4" 
+                                                            HorizontalOptions="Center">
+                                <Image Source="location.png"
+                                                      HeightRequest="14"
+                                                      WidthRequest="14"
+                                                      VerticalOptions="Center"/>
+                                <Label Text="{Binding SelectedPractitioner.Location}"
                                   TextColor="#718096"
-                                  FontSize="8"/>
+                                  FontSize="9"/>
+                            </HorizontalStackLayout>
+
                         </VerticalStackLayout>
 
                         <Button Grid.Column="2"

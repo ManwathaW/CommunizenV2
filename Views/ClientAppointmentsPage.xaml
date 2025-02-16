@@ -2,19 +2,51 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CommuniZEN.Views.ClientAppointmentsPage"
-                          xmlns:converters="clr-namespace:CommuniZEN.Converters"   
+             xmlns:converters="clr-namespace:CommuniZEN.Converters"   
              xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"
-             Title="Book Appointment"
-             BackgroundColor="#EDF2F7">
+             Shell.TabBarIsVisible="False"
+             BackgroundColor="White">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <converters:StatusColorConverter x:Key="StatusColorConverter"/>
+
+            <Style x:Key="TabButtonStyle" TargetType="Button">
+                <Setter Property="HeightRequest" Value="40"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="FontSize" Value="17"/>
+            </Style>
+            <Style x:Key="CardStyle" TargetType="Frame">
+                <Setter Property="BackgroundColor" Value="White"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Margin" Value="15"/>
+                <Setter Property="Padding" Value="15"/>
+                <Setter Property="BorderColor" Value="#E2E8F0"/>
+                <Setter Property="HasShadow" Value="True"/>
+            </Style>
+            <Style x:Key="HeaderLabelStyle" TargetType="Label">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="TextColor" Value="#2C5282"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="Margin" Value="0,0,0,10"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,Auto,*">
         <!-- Tab Buttons -->
         <Grid Grid.Row="0" 
+              Margin="0,-5,0,0"
               ColumnDefinitions="*,*" 
-              Padding="20,10"
+              Padding="0"
               BackgroundColor="White">
             <Button Text="Book Appointment"
                     Grid.Column="0"
+                    Style="{StaticResource TabButtonStyle}"
                     BackgroundColor="{Binding IsBookingTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#4299E1,#EDF2F7'}"
                     TextColor="{Binding IsBookingTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White,#2C5282'}"
                     Command="{Binding SwitchTabCommand}"
@@ -23,6 +55,7 @@
 
             <Button Text="My Appointments"
                     Grid.Column="1"
+                     Style="{StaticResource TabButtonStyle}"
                     BackgroundColor="{Binding IsBookingTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#EDF2F7,#4299E1'}"
                     TextColor="{Binding IsBookingTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#2C5282,White'}"
                     Command="{Binding SwitchTabCommand}"
@@ -32,7 +65,8 @@
 
         <!-- Content Area -->
         <Grid Grid.Row="1" Grid.RowSpan="2">
-            <!-- Booking Tab Content -->
+            <Frame BackgroundColor="#EDF2F7" Padding="0" BorderColor="white" CornerRadius="25">
+              <!-- Booking Tab Content -->
             <VerticalStackLayout IsVisible="{Binding IsBookingTabSelected}">
                 <Frame Margin="20,10" Padding="15" BackgroundColor="White">
                     <VerticalStackLayout Spacing="10">
@@ -85,6 +119,9 @@
                     </VerticalStackLayout>
                 </ScrollView>
             </VerticalStackLayout>
+                
+            </Frame>
+            
 
             <!-- My Appointments Tab Content -->
             <ScrollView IsVisible="{Binding IsBookingTabSelected, Converter={StaticResource InverseBoolConverter}}">

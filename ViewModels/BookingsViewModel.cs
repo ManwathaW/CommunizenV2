@@ -171,6 +171,11 @@ namespace CommuniZEN.ViewModels
         private async Task ViewPractitionerProfile(PracticeProfile practitioner)
         {
             if (practitioner == null) return;
+
+            Debug.WriteLine($"Navigating to appointments with:");
+            Debug.WriteLine($"Practice Profile ID: {practitioner.Id}");
+            Debug.WriteLine($"Practitioner User ID: {practitioner.UserId}");
+
             await _navigationService.NavigateToAsync($"appointments?PractitionerId={practitioner.Id}&UserId={practitioner.UserId}");
         }
 
