@@ -58,6 +58,11 @@
     
     <ShellContent 
       Shell.FlyoutBehavior="Disabled"
+      Route="awarenesspage"
+      ContentTemplate="{DataTemplate views:AwarenessPage }"/> 
+    
+    <ShellContent 
+      Shell.FlyoutBehavior="Disabled"
       Route="affirmationspage"
       ContentTemplate="{DataTemplate views:DailyAffirmationsPage }"/>
     
@@ -96,7 +101,7 @@
         <Tab Title="Profile" Icon="profile_icon.png">
             <ShellContent 
                 Title="Profile"
-                ContentTemplate="{DataTemplate views:ClientAppointmentsPage}"
+                ContentTemplate="{DataTemplate views:AwarenessPage}"
                 Route="practitionerprofile"/>
         </Tab>
 

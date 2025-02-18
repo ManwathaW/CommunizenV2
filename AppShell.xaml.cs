@@ -43,6 +43,7 @@ namespace CommuniZEN
             Routing.RegisterRoute("register", typeof(RegisterPage));
             Routing.RegisterRoute("chatbotintro", typeof(ChatbotIntro));
             Routing.RegisterRoute("practitionerdashboard", typeof(PractitionerDashboardPage));
+            Routing.RegisterRoute("awarenesspage", typeof(AwarenessPage));
 
             Routing.RegisterRoute("appointments", typeof(ClientAppointmentsPage));
             Routing.RegisterRoute("affirmationspage", typeof(DailyAffirmationsPage));

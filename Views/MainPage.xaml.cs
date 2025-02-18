@@ -17,7 +17,7 @@ namespace CommuniZEN.Views
 
             // Setup indicator
             horizontalScroll.Scrolled += OnScrollViewScrolled;
-            indicatorView.Count = 4; // Number of cards
+            indicatorView.Count = 3; // Number of cards
         }
 
         private void OnScrollViewScrolled(object sender, ScrolledEventArgs e)

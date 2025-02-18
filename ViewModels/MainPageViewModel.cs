@@ -172,6 +172,12 @@ namespace CommuniZEN.ViewModels
         private async Task OpenAffirmations()
         {
             await Shell.Current.GoToAsync("affirmationspage");
+        } 
+        
+        [RelayCommand]
+        private async Task OpenAwareness()
+        {
+            await Shell.Current.GoToAsync("awarenesspage");
         }
 
     }

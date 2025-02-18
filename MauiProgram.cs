@@ -190,6 +190,7 @@ namespace CommuniZEN
             services.AddTransient<JournalPage>();
             services.AddTransient<DailyAffirmationsPage>();
             services.AddTransient<ClientAppointmentsPage>();
+            services.AddTransient<AwarenessPage>();
         }
     }
 }
