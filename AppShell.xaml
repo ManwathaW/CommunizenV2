@@ -101,8 +101,8 @@
         <Tab Title="Profile" Icon="profile_icon.png">
             <ShellContent 
                 Title="Profile"
-                ContentTemplate="{DataTemplate views:AwarenessPage}"
-                Route="practitionerprofile"/>
+                ContentTemplate="{DataTemplate views:UserProfilePage}"
+                Route="profile"/>
         </Tab>
 
 

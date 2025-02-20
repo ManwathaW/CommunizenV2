@@ -6,6 +6,7 @@
             xmlns:models="clr-namespace:CommuniZEN.Models"
             xmlns:converters="clr-namespace:CommuniZEN.Converters"
             x:Class="CommuniZEN.Views.MainPage"
+             Shell.TabBarIsVisible="True"
             Shell.NavBarIsVisible="False" 
             BackgroundColor="#F5F9FF" >
 
@@ -23,7 +24,6 @@
             <Setter Property="CornerRadius" Value="15"/>
             <Setter Property="HasShadow" Value="True"/>
             <Setter Property="BorderColor" Value="#E8F0FE"/>
-           
         </Style>
         
         <Style x:Key="ActionButtonStyle" TargetType="Button">
@@ -479,7 +479,7 @@
                      MaximumWidthRequest="390" >
                     
                   <Frame.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding  OpenAwareness}"/>
+                            <TapGestureRecognizer Command="{Binding  OpenAwarenessCommand}"/>
                   </Frame.GestureRecognizers>
                         <VerticalStackLayout Spacing="0" 
                                VerticalOptions="Center"

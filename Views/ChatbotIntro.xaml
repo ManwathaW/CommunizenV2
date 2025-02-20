@@ -4,6 +4,7 @@
              xmlns:skia="clr-namespace:SkiaSharp.Extended.UI.Controls;assembly=SkiaSharp.Extended.UI"
              x:Class="CommuniZEN.Views.ChatbotIntro"
              Title=""
+                BackgroundColor="#F5F9FF"
              Shell.TabBarIsVisible="False">
     
     <Grid RowDefinitions="*,Auto,Auto,Auto" 

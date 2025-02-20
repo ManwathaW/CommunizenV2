@@ -2,17 +2,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Extended.UI.Controls;assembly=SkiaSharp.Extended.UI"
              x:Class="CommuniZEN.Views.AwarenessPage"
-             BackgroundColor="White">
+              BackgroundColor="#F5F9FF"
+             Shell.TabBarIsVisible="False"
+            >
 
     <ContentPage.Resources>
         <ResourceDictionary>
 
-            <Style TargetType="Frame" x:Key="CardStyle">
+            <Style x:Key="CardStyle" TargetType="Frame">
                 <Setter Property="BackgroundColor" Value="#E6F3FF"/>
-                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="CornerRadius" Value="15"/>
                 <Setter Property="HasShadow" Value="True"/>
-                <Setter Property="Padding" Value="15"/>
-                <Setter Property="Margin" Value="5"/>
+                <Setter Property="BorderColor" Value="#E8F0FE"/>
             </Style>
 
             <Style TargetType="Label" x:Key="HeaderStyle">
@@ -30,7 +31,7 @@
     </ContentPage.Resources>
 
     <ScrollView>
-        <VerticalStackLayout Spacing="15" Padding="15">
+        <VerticalStackLayout Spacing="10" Padding="10">
             <!-- Header remains the same -->
 
             <!-- Resource Cards Grid -->
@@ -41,18 +42,25 @@
 
                 <!-- Anxiety Card -->
                 <Frame Grid.Row="0" Grid.Column="0"
-                       BackgroundColor="#E6F3FF"
+                   
                        CornerRadius="10"
+                        Style="{StaticResource CardStyle}"
                        HasShadow="True">
-                    <Grid>
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAnxietyClicked"/>
+                    </Frame.GestureRecognizers>
+                   
+
+
+                        <Grid>
                         <skia:SKLottieView
                             Source="axiety.json"
                             RepeatCount="-1"
-                            HeightRequest="80"
-                            WidthRequest="80"
+                            HeightRequest="180"
+                            WidthRequest="180"
                             HorizontalOptions="Center"
                             VerticalOptions="Start"
-                            Margin="0,0,0,10"/>
+                            Margin="0,-40,0,10"/>
                         <VerticalStackLayout Margin="0,90,0,0">
                             <Label Text="Anxiety"
                                    FontSize="20"
@@ -68,17 +76,22 @@
                 <!-- Depression Card -->
                 <Frame Grid.Row="0" Grid.Column="1"
                        BackgroundColor="#E6F3FF"
+                         Style="{StaticResource CardStyle}"
                        CornerRadius="10"
                        HasShadow="True">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnDepressionClicked"/>
+                    </Frame.GestureRecognizers>
+
                     <Grid>
                         <skia:SKLottieView
                             Source="depression.json"
                             RepeatCount="-1"
-                            HeightRequest="80"
-                            WidthRequest="80"
+                            HeightRequest="120"
+                            WidthRequest="180"
                             HorizontalOptions="Center"
                             VerticalOptions="Start"
-                            Margin="0,0,0,10"/>
+                            Margin="0,-10,0,10"/>
                         <VerticalStackLayout Margin="0,90,0,0">
                             <Label Text="Depression"
                                    FontSize="20"
@@ -94,8 +107,13 @@
                 <!-- Stress Card -->
                 <Frame Grid.Row="1" Grid.Column="0"
                        BackgroundColor="#E6F3FF"
+                         Style="{StaticResource CardStyle}"
                        CornerRadius="10"
                        HasShadow="True">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnStressClicked"/>
+                    </Frame.GestureRecognizers>
+                    
                     <Grid>
                         <skia:SKLottieView
                             Source="Stress.json"
@@ -120,8 +138,12 @@
                 <!-- Well-being Card -->
                 <Frame Grid.Row="1" Grid.Column="1"
                        BackgroundColor="#E6F3FF"
+                         Style="{StaticResource CardStyle}"
                        CornerRadius="10"
                        HasShadow="True">
+                    <Frame.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnWellBeingClicked"/>
+                    </Frame.GestureRecognizers>
                     <Grid>
                         <skia:SKLottieView
                             Source="welbeing.json"
@@ -144,24 +166,31 @@
                 </Frame>
             </Grid>
 
-            <Frame BackgroundColor="White"
+            <Frame 
+                HeightRequest="80"
                    CornerRadius="10"
                    HasShadow="True"
+                    Padding="0"            
                    Margin="0,20,0,0">
                 <VerticalStackLayout>
-                    <Label Text="Resource Information"
-                           FontSize="24"
-                           FontAttributes="Bold"
-                           TextColor="#2B2B2B"/>
-                    <Label Text="More information here..."
-                           FontSize="16"
-                           TextColor="#666666"/>
+                    
+                    
+                    <Button Text="More information here..."
+                            Clicked="OnMoreInformationClicked"
+                            Margin="10"
+                            BackgroundColor="LightSkyBlue"
+                            TextColor="#666666"
+                            
+                           />
+
                 </VerticalStackLayout>
             </Frame>
 
             <!-- Contact Information -->
-            <Frame BackgroundColor="White"
+            <Frame 
+              
                    CornerRadius="10"
+                    Style="{StaticResource CardStyle}"
                    HasShadow="True"
                    Margin="0,10,0,20">
                 <VerticalStackLayout Spacing="10">
@@ -175,8 +204,9 @@
                            FontSize="16"
                            TextColor="#666666">
                         <Label.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding SendEmailCommand}"/>
+                            <TapGestureRecognizer Tapped="OnEmailTapped" CommandParameter="mokgaetjimashabela@gmail.com"/>
                         </Label.GestureRecognizers>
+
                     </Label>
 
                     <!-- Phone Numbers -->
@@ -184,34 +214,37 @@
                            FontSize="16"
                            TextColor="#FF0000">
                         <Label.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding CallPhoneCommand}"/>
+                            <TapGestureRecognizer Tapped="OnPhoneNumberTapped" CommandParameter="0724864572"/>
                         </Label.GestureRecognizers>
                     </Label>
 
-                    <Label Text="Need Immediate Help?"
-                           FontSize="20"
-                           FontAttributes="Bold"
-                           TextColor="#2B2B2B"/>
+                    <Label Text="Need Immediate Help?" FontSize="18" FontAttributes="Bold" TextColor="Black"/>
+                    <Label Text="General Emergency Number: 112" FontSize="16" TextColor="Red">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnPhoneNumberTapped" CommandParameter="112"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label Text="SADAG HelpLine: 080 045 6789" FontSize="16" TextColor="Red">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnPhoneNumberTapped" CommandParameter="0800456789"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label Text="ChildLine South Africa: 08000 55 555" FontSize="16" TextColor="Red">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnPhoneNumberTapped" CommandParameter="0800055555"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label Text="GBV Command Centre: 0800 428 428 " FontSize="16" TextColor="red">
+                        <Label.GestureRecognizers>
 
-                    <Label Text="General Emergency Number: 112"
-                           FontSize="16"
-                           TextColor="#FF0000"/>
-
-                    <Label Text="SADAG HelpLine: 080 045 6789"
-                           FontSize="16"
-                           TextColor="#FF0000"/>
-
-                    <Label Text="ChildLine South Africa: 08000 55 555"
-                           FontSize="16"
-                           TextColor="#FF0000"/>
-
-                    <Label Text="GBV Command Centre: 0800 428 428"
-                           FontSize="16"
-                           TextColor="#FF0000"/>
-
-                    <Label Text="Send SMS: 315131"
-                           FontSize="16"
-                           TextColor="#FF0000"/>
+                            <TapGestureRecognizer Tapped="OnPhoneNumberTapped" CommandParameter="0800428428"/>
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label Text="Send SMS : 315131" FontSize="16" TextColor="Red" >
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSmsTapped" CommandParameter="315131"/>
+                        </Label.GestureRecognizers>
+                    </Label>
                 </VerticalStackLayout>
             </Frame>
         </VerticalStackLayout>
