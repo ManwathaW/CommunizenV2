@@ -6,7 +6,8 @@
              xmlns:models="clr-namespace:CommuniZEN.Models"
              xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"
              x:Class="CommuniZEN.Views.JournalPage"
-             Title="My Journal"
+             Shell.TabBarIsVisible="False"
+             Title=""
              BackgroundColor="#F3F4F6">
 
     <ContentPage.Resources>

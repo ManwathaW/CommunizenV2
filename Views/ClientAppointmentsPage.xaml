@@ -13,6 +13,7 @@
             <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <converters:StatusColorConverter x:Key="StatusColorConverter"/>
+            <converters:Base64ToImageSourceConverter x:Key="Base64ToImageSourceConverter"/>
 
             <Style x:Key="TabButtonStyle" TargetType="Button">
                 <Setter Property="HeightRequest" Value="40"/>
@@ -37,7 +38,7 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,*">
         <!-- Tab Buttons -->
         <Grid Grid.Row="0" 
               Margin="0,-5,0,0"
@@ -63,17 +64,72 @@
                     Margin="5"/>
         </Grid>
 
+        <Border Grid.Row="1"
+                IsVisible="{Binding IsBookingTabSelected}"
+                HorizontalOptions="Center"
+                Margin="0,-567,0,0"
+                HeightRequest="147"
+                WidthRequest="150"
+                Stroke="White"
+                StrokeThickness="6"
+                StrokeShape="RoundRectangle 83"
+                ZIndex="1">
+            <Image Source="{Binding PractitionerImage, Converter={StaticResource Base64ToImageSourceConverter}}"
+                   Aspect="AspectFill"
+                   HeightRequest="150"
+                   WidthRequest="152"/>
+        </Border>
+
         <!-- Content Area -->
         <Grid Grid.Row="1" Grid.RowSpan="2">
-            <Frame BackgroundColor="#EDF2F7" Padding="0" BorderColor="white" CornerRadius="25">
+            <Frame BackgroundColor="#EDF2F7" Margin="5,50,5,5" Padding="10" BorderColor="white" CornerRadius="30">
               <!-- Booking Tab Content -->
-            <VerticalStackLayout IsVisible="{Binding IsBookingTabSelected}">
-                <Frame Margin="20,10" Padding="15" BackgroundColor="White">
+                 <VerticalStackLayout Margin="0,75,0,0" IsVisible="{Binding IsBookingTabSelected}">
+
+                   
+                        <Grid ColumnDefinitions="*" RowDefinitions="Auto,Auto,Auto" RowSpacing="8" >
+                           
+
+                            <Label Grid.Column="2"
+                                   HorizontalOptions="Center"
+                               Text="{Binding PractitionerName}"
+                               FontAttributes="Bold"
+                               TextColor="#2C5282"
+                               FontSize="20"/>
+
+                            <Label Grid.Column="1"
+                               Grid.Row="1"
+                               Margin="0,-5,0,0"
+                               HorizontalOptions="Center"
+                                         
+                               VerticalOptions="Center"
+                               HorizontalTextAlignment="Center"
+                               VerticalTextAlignment="Center"
+                               Text="{Binding PractitionerSpecialization}"
+                               TextColor="#4A5568"
+                               FontSize="14"/>
+
+                            <Label Grid.Column="1"
+                               Grid.Row="2"
+                                   HorizontalTextAlignment="Center"
+                               Text="{Binding PractitionerBio}"
+                               TextColor="#718096"
+                               FontSize="12"/>
+                        </Grid>
+                  
+
+                    <Frame Margin="20,10" Padding="10" BackgroundColor="White">
                     <VerticalStackLayout Spacing="10">
                         <Label Text="Select Appointment Date" 
-                               FontSize="16"
+                               FontSize="18"
+                               HorizontalTextAlignment="Center"
+                               FontAttributes="None"
                                TextColor="#2C5282"/>
                         <DatePicker Date="{Binding SelectedDate}"
+                                    HorizontalOptions="Center"
+                                    FontSize="20"
+                                    FontAttributes="Bold"
+                                    TextColor="DodgerBlue"
                                   MinimumDate="{Binding MinimumDate}"
                                   MaximumDate="{Binding MaximumDate}"/>
                     </VerticalStackLayout>
@@ -158,15 +214,24 @@
                                        Padding="15" 
                                        BackgroundColor="White"
                                        BorderColor="#BEE3F8">
-                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" 
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" 
                                           RowSpacing="5">
-                                        <Grid ColumnDefinitions="*,Auto">
-                                            <Label Text="{Binding PractitionerName}"
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                            <Image Source="{Binding PractitionerImage, Converter={StaticResource Base64ToImageSourceConverter}}"
+                                                   HeightRequest="50"
+                                                   WidthRequest="50"
+                                                   Aspect="AspectFill"/>
+                                            <StackLayout Grid.Column="1" Spacing="2">
+                                                <Label Text="{Binding PractitionerName}"
                                                    FontAttributes="Bold"
                                                    TextColor="#2C5282"/>
-                                            <Label Grid.Column="1"
+                                                <Label Text="{Binding PractitionerSpecialization}"
+                                                       TextColor="#4A5568"
+                                                       FontSize="12"/>
+                                                <Label Grid.Column="1"
                                                    Text="{Binding Status}"
                                                    TextColor="{Binding Status, Converter={StaticResource StatusColorConverter}}"/>
+                                            </StackLayout>
                                         </Grid>
 
                                         <Label Grid.Row="1"

@@ -13,6 +13,17 @@ namespace CommuniZEN.ViewModels
         private string _practitionerUserId; 
         private string _practitionerId;      
         private string _clientId;
+        [ObservableProperty]
+        private string practitionerName;
+
+        [ObservableProperty]
+        private string practitionerSpecialization;
+
+        [ObservableProperty]
+        private string practitionerBio;
+
+        [ObservableProperty]
+        private string practitionerImage;
 
         [ObservableProperty]
         private bool isBookingTabSelected = true;
@@ -25,6 +36,8 @@ namespace CommuniZEN.ViewModels
 
         [ObservableProperty]
         private DateTime minimumDate = DateTime.Today;
+
+   
 
         [ObservableProperty]
         private DateTime maximumDate = DateTime.Today.AddDays(30);
@@ -77,7 +90,17 @@ namespace CommuniZEN.ViewModels
                 _clientId = await authService.GetCurrentUserIdAsync();
                 Debug.WriteLine($"Initialized with ClientId: {_clientId}");
                 Debug.WriteLine($"Current PractitionerId: {_practitionerId}");
+                // Load practitioner details
+                var practitioners = await _dataService.GetAllPractitionersAsync();
+                var practitioner = practitioners.FirstOrDefault(p => p.UserId == _practitionerUserId);
 
+                if (practitioner != null)
+                {
+                    PractitionerName = practitioner.Name;
+                    PractitionerSpecialization = practitioner.Specialization;
+                    PractitionerBio = practitioner.Bio;
+                    PractitionerImage = practitioner.ProfileImage;
+                }
                 await LoadDataAsync();
             }
             catch (Exception ex)

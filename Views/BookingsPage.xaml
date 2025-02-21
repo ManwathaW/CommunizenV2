@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-            xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
-            x:Class="CommuniZEN.Views.BookingsPage"
-            xmlns:entry="clr-namespace:CommuniZEN"
-            xmlns:converters="clr-namespace:CommuniZEN.Converters"   
-            xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"            
-            BackgroundColor="#F7FAFC">
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
+             x:Class="CommuniZEN.Views.BookingsPage"
+             xmlns:entry="clr-namespace:CommuniZEN"
+             xmlns:converters="clr-namespace:CommuniZEN.Converters"   
+             xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"            
+             BackgroundColor="#F7FAFC">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -66,7 +66,9 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="0">
+    <Grid RowDefinitions="Auto,Auto,*"
+          Padding="5"
+          RowSpacing="0">
         <!-- Header Section -->
         <VerticalStackLayout Grid.Row="0" Margin="0,10,0,0">
             <Label Text="Find a Practitioner"
@@ -76,9 +78,12 @@
         </VerticalStackLayout>
 
         <!-- Search Section -->
-        <HorizontalStackLayout Grid.Row="1" Spacing="-20">
+        <HorizontalStackLayout 
+            HorizontalOptions="FillAndExpand"
+            Grid.Row="1" Spacing="-20">
             
              <Frame Grid.Row="1"
+                    WidthRequest="315"
                     Style="{StaticResource SearchFrameStyle}"
                     Padding="3,0,0,0" >
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
@@ -104,8 +109,8 @@
                                 VerticalOptions="Start"
                            Source="{Binding IsMapView, Converter={StaticResource ViewToggleIconConverter}}"
                            Command="{Binding ToggleViewCommand}"
-                           HeightRequest="25"
-                           WidthRequest="25"
+                           HeightRequest="50"
+                           WidthRequest="58"
                            Opacity="0.8"
                            Padding="2"/>
         </HorizontalStackLayout>

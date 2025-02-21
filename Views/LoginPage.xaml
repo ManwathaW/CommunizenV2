@@ -70,14 +70,14 @@
                                            VerticalOptions="End"
                                            IsPassword="True"
                                            PlaceholderColor="#cccccc"/>
-
+                                     
                                     <!-- Eye Toggle Button -->
                                     <ImageButton x:Name="TogglePasswordButton"
                                                  BackgroundColor="Transparent"
                                                  HorizontalOptions="End"
                                                  VerticalOptions="Center"
-                                                 WidthRequest="22"
-                                                 HeightRequest="22"
+                                                 WidthRequest="15"
+                                                 HeightRequest="15"
                                                  Margin="0,0,0,0"
                                                  Clicked="OnTogglePasswordButtonClicked">
                                         <ImageButton.Source>

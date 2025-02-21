@@ -20,7 +20,7 @@
                        BorderColor="#e8f4ff"
                        HorizontalOptions="Center"
                        Padding="0">
-                    <Image Source="user.png"
+                    <Image Source="logo.png"
                            Aspect="AspectFit"
                            Margin="20"/>
                 </Frame>
@@ -123,8 +123,8 @@
                             </VerticalStackLayout>
                             <ImageButton Grid.Column="1"
                                          Source="eye.png"
-                                         HeightRequest="24"
-                                         WidthRequest="24"
+                                         HeightRequest="20"
+                                         WidthRequest="20"
                                          Margin="0,0,5,0"
                                          Command="{Binding TogglePasswordCommand}"/>
 
