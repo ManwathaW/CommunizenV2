@@ -10,10 +10,14 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-
             <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <converters:StatusColorConverter x:Key="StatusColorConverter"/>
+            <converters:Base64ToImageSourceConverter x:Key="Base64ToImageSourceConverter"/>
+            
+            <converters:AppointmentActionVisibilityConverter x:Key="AppointmentActionVisibilityConverter"/>
+            <converters:StatusVisibilityConverter x:Key="StatusVisibilityConverter"/>
+        
 
             <Style x:Key="TabButtonStyle" TargetType="Button">
                 <Setter Property="HeightRequest" Value="40"/>
@@ -168,55 +172,81 @@
                                              HeightRequest="50"/>
 
                             <CollectionView ItemsSource="{Binding Appointments}"
-                                          EmptyView="No appointments found"
-                                          IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}">
+                                       
+                                          IsVisible="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
+                                          RemainingItemsThreshold="2">
+                                <CollectionView.ItemsLayout>
+                                    <LinearItemsLayout ItemSpacing="5" 
+                                                     Orientation="Vertical"/>
+                                </CollectionView.ItemsLayout>
+
+                                <CollectionView.EmptyView>
+                                    <StackLayout HorizontalOptions="Center" 
+                                               VerticalOptions="Center" 
+                                               Spacing="10">
+                                        <Label Text="No appointments found"
+                                               TextColor="#4A5568"
+                                               HorizontalOptions="Center"/>
+                                    </StackLayout>
+                                </CollectionView.EmptyView>
+
                                 <CollectionView.ItemTemplate>
-                                    <DataTemplate x:DataType="models:Appointment">
+                                    <DataTemplate>
                                         <Frame Margin="0,5" 
                                                Padding="15" 
-                                               BackgroundColor="#F7FAFC"
-                                               BorderColor="#E2E8F0"
-                                               CornerRadius="8">
-                                            <Grid RowDefinitions="Auto,Auto,Auto,Auto" 
-                                                  RowSpacing="8">
+                                               BackgroundColor="White"
+                                               BorderColor="#BEE3F8"
+                                               CornerRadius="8"
+                                               IsClippedToBounds="True">
+                                            <Grid RowDefinitions="Auto,Auto,Auto" 
+                                                  RowSpacing="10"
+                                                  IsClippedToBounds="True">
+                                                <!-- Client Info & Status -->
                                                 <Grid ColumnDefinitions="*,Auto">
-                                                    <Label Text="{Binding ClientName}"
-                                                           FontAttributes="Bold"
-                                                           TextColor="#2C5282"/>
+                                                    <VerticalStackLayout Spacing="4">
+                                                        <Label Text="{Binding ClientName}"
+                                                               FontAttributes="Bold"
+                                                               FontSize="16"
+                                                               TextColor="#2C5282"/>
+                                                        <Label Text="{Binding Date, StringFormat='{0:dddd, MMMM dd, yyyy}'}"
+                                                               TextColor="#4A5568"
+                                                               FontSize="14"/>
+                                                        <Label Text="{Binding TimeSlot.DisplayTime}"
+                                                               TextColor="#4A5568"
+                                                               FontSize="14"/>
+                                                    </VerticalStackLayout>
+
                                                     <Label Grid.Column="1"
                                                            Text="{Binding Status}"
-                                                           TextColor="{Binding Status, Converter={StaticResource StatusColorConverter}}"/>
+                                                           TextColor="{Binding Status, Converter={StaticResource StatusColorConverter}}"
+                                                           FontAttributes="Bold"
+                                                           VerticalOptions="Start"/>
                                                 </Grid>
 
-                                                <Label Grid.Row="1"
-                                                       Text="{Binding Date, StringFormat='{0:MMM dd, yyyy}'}"
-                                                       TextColor="#4A5568"/>
-
-                                                <Label Grid.Row="2"
-                                                       Text="{Binding TimeSlot.DisplayTime}"
-                                                       TextColor="#4A5568"/>
-
-                                                <HorizontalStackLayout Grid.Row="3" 
-                                                                     Spacing="10"
-                                                                     IsVisible="{Binding Status, Converter={StaticResource StatusVisibilityConverter}, ConverterParameter=Pending}">
+                                                <!-- Action Buttons -->
+                                                <StackLayout Grid.Row="2" 
+                                                             Orientation="Horizontal"
+                                                             Spacing="10">
                                                     <Button Text="Confirm"
-                                                            Command="{Binding ConfirmAppointmentCommand}"
+                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:PractitionerAppointmentsViewModel}}, Path=ConfirmAppointmentCommand}"
                                                             CommandParameter="{Binding .}"
                                                             BackgroundColor="#48BB78"
                                                             TextColor="White"
-                                                            HeightRequest="35"
-                                                            CornerRadius="6"
-                                                            Padding="15,0"/>
+                                                            HeightRequest="40"
+                                                            Padding="20,0"
+                                                            IsVisible="{Binding Status, Converter={StaticResource AppointmentActionVisibilityConverter}}"
+                                                            CornerRadius="8"/>
 
                                                     <Button Text="Cancel"
                                                             Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:PractitionerAppointmentsViewModel}}, Path=CancelAppointmentCommand}"
                                                             CommandParameter="{Binding .}"
                                                             BackgroundColor="#FC8181"
                                                             TextColor="White"
-                                                            HeightRequest="35"
-                                                            CornerRadius="6"
-                                                            Padding="15,0"/>
-                                                </HorizontalStackLayout>
+                                                            HeightRequest="40"
+                                                            Padding="20,0"
+                                                            IsVisible="{Binding Status, Converter={StaticResource AppointmentActionVisibilityConverter}}"
+                                                            CornerRadius="8"/>
+                                                </StackLayout>
                                             </Grid>
                                         </Frame>
                                     </DataTemplate>

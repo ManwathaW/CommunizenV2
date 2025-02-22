@@ -48,6 +48,8 @@ namespace CommuniZEN.Interfaces
         Task<List<Appointment>> GetClientAppointmentsAsync(string clientId);
         Task<string> GetFirebaseAuthToken();
 
+        Task<PracticeProfile> GetPractitionerProfileAsync(string practitionerId);
+
 
 
         Task CreateAppointmentAsync(Appointment appointment);

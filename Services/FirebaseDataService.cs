@@ -19,6 +19,16 @@ public class FirebaseDataService : IFirebaseDataService
     private const string AVAILABILITY_PATH = "availability";
     private readonly IFirebaseAuthService _authService;
     private readonly string _authToken;
+    private List<Appointment> _cachedAppointments;
+    private DateTime _lastAppointmentFetch = DateTime.MinValue;
+    private Dictionary<string, List<Appointment>> _clientAppointmentsCache = new();
+    private Dictionary<string, DateTime> _clientAppointmentsCacheTime = new();
+    private const int CLIENT_CACHE_DURATION_SECONDS = 30;
+
+    private const int CACHE_DURATION_SECONDS = 30;
+
+  
+
     public FirebaseDataService()
     {
         _authToken = FirebaseConfig.ApiKey;
@@ -440,18 +450,39 @@ public class FirebaseDataService : IFirebaseDataService
     {
         try
         {
-            var auth = FirebaseAuth.DefaultInstance;
-            var decodedToken = await auth.VerifyIdTokenAsync(_authToken);
-            return decodedToken.Uid;
+            Debug.WriteLine("=== GetCurrentUserIdAsync START ===");
+
+            var authService = Application.Current.Handler.MauiContext.Services.GetService<IFirebaseAuthService>();
+            if (authService == null)
+            {
+                Debug.WriteLine("ERROR: Firebase auth service is null");
+                throw new InvalidOperationException("Firebase auth service not initialized");
+            }
+
+            var userId = await authService.GetCurrentUserIdAsync();
+            Debug.WriteLine($"Current user ID: {userId ?? "null"}");
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                Debug.WriteLine("ERROR: No authenticated user found");
+                throw new UnauthorizedAccessException("No authenticated user found");
+            }
+
+            Debug.WriteLine("=== GetCurrentUserIdAsync END ===");
+            return userId;
         }
         catch (Exception ex)
         {
-            throw new Exception($"Failed to get user ID: {ex.Message}");
+            Debug.WriteLine($"ERROR in GetCurrentUserIdAsync: {ex.Message}");
+            Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            throw new Exception("Failed to get user ID", ex);
         }
     }
     #endregion
 
     #region Managing Appointments 
+
+
 
     public async Task<List<TimeSlot>> GetTimeSlotsAsync(DateTime date)
     {
@@ -682,12 +713,23 @@ public class FirebaseDataService : IFirebaseDataService
     }
 
 
+
+
     public async Task<List<Appointment>> GetClientAppointmentsAsync(string clientId)
     {
         try
         {
-            Debug.WriteLine($"=== GetClientAppointmentsAsync ===");
-            Debug.WriteLine($"Loading appointments for client: {clientId}");
+            // Check cache first
+            if (_clientAppointmentsCache.ContainsKey(clientId) &&
+                _clientAppointmentsCacheTime.ContainsKey(clientId))
+            {
+                var cacheTime = _clientAppointmentsCacheTime[clientId];
+                if (DateTime.Now.Subtract(cacheTime).TotalSeconds < CLIENT_CACHE_DURATION_SECONDS)
+                {
+                    Debug.WriteLine("Returning appointments from cache");
+                    return _clientAppointmentsCache[clientId];
+                }
+            }
 
             var snapshot = await _firebaseClient
                 .Child(APPOINTMENTS_PATH)
@@ -695,75 +737,87 @@ public class FirebaseDataService : IFirebaseDataService
                 .EqualTo(clientId)
                 .OnceAsync<Appointment>();
 
-            Debug.WriteLine($"Raw response: {JsonConvert.SerializeObject(snapshot)}");
+            var appointments = snapshot?
+                .Select(x => {
+                    var app = x.Object;
+                    app.Id = x.Key;
+                    return app;
+                })
+                .ToList() ?? new List<Appointment>();
 
-            var appointments = snapshot?.Select(x =>
-            {
-                var appointment = x.Object;
-                appointment.Id = x.Key;
-                Debug.WriteLine($"Processed appointment: {JsonConvert.SerializeObject(appointment)}");
-                return appointment;
-            }).ToList() ?? new List<Appointment>();
+            // Update cache
+            _clientAppointmentsCache[clientId] = appointments;
+            _clientAppointmentsCacheTime[clientId] = DateTime.Now;
 
-            Debug.WriteLine($"Total appointments found: {appointments.Count}");
             return appointments;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Error in GetClientAppointmentsAsync: {ex.Message}");
-            Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-            throw;
+            return _clientAppointmentsCache.GetValueOrDefault(clientId, new List<Appointment>());
         }
     }
 
-    public async Task<List<Appointment>> GetPractitionerAppointmentsAsync()
+    public async Task UpdateClientAppointmentAsync(Appointment appointment)
     {
         try
         {
-            var currentUserId = await GetCurrentPractitionerId();
-            Debug.WriteLine($"=== GetPractitionerAppointmentsAsync ===");
-            Debug.WriteLine($"Loading appointments for practitioner: {currentUserId}");
-
-            // Add a debug query to see what appointments exist
-            var allAppointments = await _firebaseClient
+            await _firebaseClient
                 .Child(APPOINTMENTS_PATH)
-                .OnceAsync<Appointment>();
+                .Child(appointment.Id)
+                .PutAsync(JsonConvert.SerializeObject(appointment));
 
-            Debug.WriteLine("All appointments in database:");
-            foreach (var app in allAppointments)
+            // Clear specific client cache
+            if (_clientAppointmentsCache.ContainsKey(appointment.ClientId))
             {
-                Debug.WriteLine($"Found appointment - ID: {app.Key}");
-                Debug.WriteLine($"PractitionerId: {app.Object.PractitionerId}");
-                Debug.WriteLine($"ClientId: {app.Object.ClientId}");
-                Debug.WriteLine($"Date: {app.Object.Date}");
-                Debug.WriteLine("---");
+                _clientAppointmentsCache.Remove(appointment.ClientId);
+                _clientAppointmentsCacheTime.Remove(appointment.ClientId);
             }
-
-            var snapshot = await _firebaseClient
-                .Child(APPOINTMENTS_PATH)
-                .OrderBy("PractitionerId")
-                .EqualTo(currentUserId)
-                .OnceAsync<Appointment>();
-
-            var appointments = snapshot?.Select(x =>
-            {
-                var appointment = x.Object;
-                appointment.Id = x.Key;
-                Debug.WriteLine($"Processed appointment: {JsonConvert.SerializeObject(appointment)}");
-                return appointment;
-            }).ToList() ?? new List<Appointment>();
-
-            Debug.WriteLine($"Total appointments found: {appointments.Count}");
-            return appointments;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error in GetPractitionerAppointmentsAsync: {ex.Message}");
-            Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            Debug.WriteLine($"Error updating appointment: {ex.Message}");
             throw;
         }
     }
 
+    public async Task<PracticeProfile> GetPractitionerProfileAsync(string practitionerId)
+    {
+        try
+        {
+            Debug.WriteLine($"Getting practitioner profile for ID: {practitionerId}");
+
+            if (string.IsNullOrEmpty(practitionerId))
+            {
+                Debug.WriteLine("ERROR: practitionerId is null or empty");
+                return null;
+            }
+
+            var snapshot = await _firebaseClient
+                .Child("practitioners")
+                .Child(practitionerId)
+                .OnceAsync<PracticeProfile>();
+
+            var practitioner = snapshot?.FirstOrDefault()?.Object;
+
+            if (practitioner != null)
+            {
+                // Get profile image
+                practitioner.ProfileImage = await GetProfileImageAsync(practitionerId);
+                Debug.WriteLine($"Found practitioner: {practitioner.Name}");
+                return practitioner;
+            }
+
+            Debug.WriteLine("Practitioner not found");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error getting practitioner profile: {ex.Message}");
+            Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            return null;
+        }
+    }
 
 
     public async Task CreateAppointmentAsync(Appointment appointment)
@@ -804,6 +858,49 @@ public class FirebaseDataService : IFirebaseDataService
         }
     }
 
+    public async Task<List<Appointment>> GetPractitionerAppointmentsAsync()
+    {
+        try
+        {
+            // Check cache first
+            if (_cachedAppointments != null &&
+                (DateTime.Now - _lastAppointmentFetch).TotalSeconds < CACHE_DURATION_SECONDS)
+            {
+                Debug.WriteLine("Returning cached appointments");
+                return _cachedAppointments;
+            }
+
+            Debug.WriteLine("Fetching appointments from Firebase");
+            var currentUserId = await GetCurrentUserIdAsync();
+
+            var snapshot = await _firebaseClient
+                .Child(APPOINTMENTS_PATH)
+                .OrderBy("PractitionerId")
+                .EqualTo(currentUserId)
+                .OnceAsync<Appointment>();
+
+            var appointments = snapshot?
+                .Select(x => {
+                    var app = x.Object;
+                    app.Id = x.Key;
+                    return app;
+                })
+                .ToList() ?? new List<Appointment>();
+
+            // Update cache
+            _cachedAppointments = appointments;
+            _lastAppointmentFetch = DateTime.Now;
+
+            Debug.WriteLine($"Fetched {appointments.Count} appointments");
+            return appointments;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error fetching appointments: {ex.Message}");
+            return _cachedAppointments ?? new List<Appointment>();
+        }
+    }
+
     public async Task UpdateAppointmentAsync(Appointment appointment)
     {
         try
@@ -811,34 +908,17 @@ public class FirebaseDataService : IFirebaseDataService
             await _firebaseClient
                 .Child(APPOINTMENTS_PATH)
                 .Child(appointment.Id)
-                .PutAsync(appointment);
+                .PutAsync(JsonConvert.SerializeObject(appointment));
 
-            // If appointment is cancelled, make the time slot available again
-            if (appointment.Status == AppointmentStatus.Cancelled)
-            {
-                var dateKey = appointment.Date.ToString("yyyy-MM-dd");
-                await _firebaseClient
-                    .Child(AVAILABILITY_PATH)
-                    .Child(dateKey)
-                    .Child(appointment.TimeSlot.Id)
-                    .Child("IsAvailable")
-                    .PutAsync(true);
-
-                await _firebaseClient
-                    .Child(AVAILABILITY_PATH)
-                    .Child(dateKey)
-                    .Child(appointment.TimeSlot.Id)
-                    .Child("AppointmentId")
-                    .DeleteAsync();
-            }
+            // Invalidate cache
+            _cachedAppointments = null;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error in UpdateAppointmentAsync: {ex.Message}");
+            Debug.WriteLine($"Error updating appointment: {ex.Message}");
             throw;
         }
     }
-
 
     // Additional helper methods
 

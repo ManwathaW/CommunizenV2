@@ -7,6 +7,7 @@ using Firebase.Database.Query;
 using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Windows.Input;
 
 namespace CommuniZEN.ViewModels
 {
@@ -49,23 +50,30 @@ namespace CommuniZEN.ViewModels
         [ObservableProperty]
         private TimeSlot selectedTimeSlot;
 
+
         public PractitionerAppointmentsViewModel(IFirebaseDataService dataService)
         {
             try
             {
+                Debug.WriteLine("=== PractitionerAppointmentsViewModel Constructor START ===");
+
                 if (dataService == null) throw new ArgumentNullException(nameof(dataService));
                 _dataService = dataService;
-                TimeSlots = new ObservableCollection<TimeSlot>();
-                Appointments = new ObservableCollection<Appointment>();
+
                 _firebaseClient = new FirebaseClient("https://communizen-c112-default-rtdb.asia-southeast1.firebasedatabase.app/");
-                Task.Run(async () => await InitializeAsync());
+
+                Debug.WriteLine("Initializing...");
+                MainThread.BeginInvokeOnMainThread(async () => await InitializeAsync());
+
+                Debug.WriteLine("=== PractitionerAppointmentsViewModel Constructor END ===");
             }
-           
-           catch (Exception ex)
+            catch (Exception ex)
             {
-              Debug.WriteLine($"INNER EXCEPTION: {ex.InnerException?.Message}"); // Log the actual error
+                Debug.WriteLine($"Constructor Error: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
+
 
 
 
@@ -221,21 +229,36 @@ namespace CommuniZEN.ViewModels
 
         private async Task LoadAppointmentsAsync()
         {
+            if (IsLoading) return; // Prevent multiple loads
+
             try
             {
                 IsLoading = true;
-                var apps = await _dataService.GetPractitionerAppointmentsAsync();
+                Debug.WriteLine("=== LoadAppointmentsAsync START ===");
 
-                Appointments.Clear();
-                foreach (var app in apps)
+                var appointments = await _dataService.GetPractitionerAppointmentsAsync();
+                if (appointments == null) appointments = new List<Appointment>();
+
+                // Sort appointments in memory before updating UI
+                var sortedAppointments = appointments
+                    .OrderByDescending(a => a.Date)
+                    .ThenBy(a => a.TimeSlot?.StartTime ?? TimeSpan.Zero)
+                    .ToList();
+
+                await MainThread.InvokeOnMainThreadAsync(() =>
                 {
-                    Appointments.Add(app);
-                }
+                    Appointments.Clear();
+                    foreach (var app in sortedAppointments)
+                    {
+                        Appointments.Add(app);
+                    }
+                });
+
+                Debug.WriteLine($"Loaded {Appointments.Count} appointments");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading appointments: {ex}");
-                await Shell.Current.DisplayAlert("Error", "Failed to load appointments", "OK");
+                Debug.WriteLine($"Error loading appointments: {ex.Message}");
             }
             finally
             {
@@ -248,15 +271,42 @@ namespace CommuniZEN.ViewModels
         {
             try
             {
+                Debug.WriteLine("=== ConfirmAppointment START ===");
+                if (appointment == null)
+                {
+                    Debug.WriteLine("Error: Appointment is null");
+                    return;
+                }
+
+                Debug.WriteLine($"Confirming appointment: {appointment.Id}");
+
+                bool confirm = await Application.Current.MainPage.DisplayAlert(
+                    "Confirm Appointment",
+                    "Are you sure you want to confirm this appointment?",
+                    "Yes", "No");
+
+                if (!confirm) return;
+
                 IsLoading = true;
                 appointment.Status = AppointmentStatus.Confirmed;
+
                 await _dataService.UpdateAppointmentAsync(appointment);
+                Debug.WriteLine("Database updated");
+
                 await LoadAppointmentsAsync();
+                Debug.WriteLine("Appointments reloaded");
+
+                await Application.Current.MainPage.DisplayAlert("Success",
+                    "Appointment confirmed successfully", "OK");
+
+                Debug.WriteLine("=== ConfirmAppointment END ===");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error confirming appointment: {ex}");
-                await Shell.Current.DisplayAlert("Error", "Failed to confirm appointment", "OK");
+                Debug.WriteLine($"Error confirming appointment: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                await Application.Current.MainPage.DisplayAlert("Error",
+                    "Failed to confirm appointment", "OK");
             }
             finally
             {
@@ -264,12 +314,13 @@ namespace CommuniZEN.ViewModels
             }
         }
 
+
         [RelayCommand]
         private async Task CancelAppointment(Appointment appointment)
         {
             if (appointment == null) return;
 
-            bool confirm = await Shell.Current.DisplayAlert(
+            bool confirm = await Application.Current.MainPage.DisplayAlert(
                 "Confirm Cancellation",
                 "Are you sure you want to cancel this appointment?",
                 "Yes", "No");
@@ -282,11 +333,15 @@ namespace CommuniZEN.ViewModels
                 appointment.Status = AppointmentStatus.Cancelled;
                 await _dataService.UpdateAppointmentAsync(appointment);
                 await LoadAppointmentsAsync();
+
+                await Application.Current.MainPage.DisplayAlert("Success",
+                    "Appointment cancelled successfully", "OK");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error cancelling appointment: {ex}");
-                await Shell.Current.DisplayAlert("Error", "Failed to cancel appointment", "OK");
+                await Application.Current.MainPage.DisplayAlert("Error",
+                    "Failed to cancel appointment", "OK");
             }
             finally
             {

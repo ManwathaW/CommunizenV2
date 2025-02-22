@@ -63,7 +63,7 @@
             <converters:DateTimeConverter x:Key="DateTimeConverter"/>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter"/>
-
+            
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />

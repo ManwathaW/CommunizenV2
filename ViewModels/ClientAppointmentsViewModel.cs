@@ -13,6 +13,9 @@ namespace CommuniZEN.ViewModels
         private string _practitionerUserId; 
         private string _practitionerId;      
         private string _clientId;
+        private Dictionary<string, PracticeProfile> _practitionerCache;
+        private DateTime _lastPractitionerFetch = DateTime.MinValue;
+        private const int PRACTITIONER_CACHE_DURATION_SECONDS = 60;
         [ObservableProperty]
         private string practitionerName;
 
@@ -187,25 +190,78 @@ namespace CommuniZEN.ViewModels
             }
         }
 
+
         private async Task LoadMyAppointmentsAsync()
         {
-            if (string.IsNullOrEmpty(_clientId)) return;
+            if (string.IsNullOrEmpty(_clientId) || IsLoading) return;
 
             try
             {
                 IsLoading = true;
-                var appointments = await _dataService.GetClientAppointmentsAsync(_clientId);
+                Debug.WriteLine("=== LoadMyAppointmentsAsync START ===");
 
-                MyAppointments.Clear();
-                foreach (var appointment in appointments)
+                // Get appointments
+                var appointments = await _dataService.GetClientAppointmentsAsync(_clientId);
+                if (appointments == null || !appointments.Any())
                 {
-                    MyAppointments.Add(appointment);
+                    await MainThread.InvokeOnMainThreadAsync(() => MyAppointments.Clear());
+                    return;
                 }
+
+                // Get unique practitioner IDs
+                var practitionerIds = appointments
+                    .Select(a => a.PractitionerId)
+                    .Where(id => !string.IsNullOrEmpty(id))
+                    .Distinct()
+                    .ToList();
+
+                Debug.WriteLine($"Found {practitionerIds.Count} unique practitioners");
+
+                // Load practitioners with their images
+                var practitionersWithImages = new Dictionary<string, (PracticeProfile Profile, string Image)>();
+                foreach (var id in practitionerIds)
+                {
+                    try
+                    {
+                        var practitioner = await _dataService.GetPractitionerProfileAsync(id);
+                        if (practitioner != null)
+                        {
+                            var image = await _dataService.GetProfileImageAsync(id);
+                            practitionersWithImages[id] = (practitioner, image);
+                            Debug.WriteLine($"Loaded practitioner: {practitioner.Name} with image");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Error loading practitioner {id}: {ex.Message}");
+                    }
+                }
+
+                // Update UI
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    MyAppointments.Clear();
+                    foreach (var appointment in appointments.OrderByDescending(a => a.Date))
+                    {
+                        if (practitionersWithImages.TryGetValue(appointment.PractitionerId, out var practitionerInfo))
+                        {
+                            appointment.PractitionerName = practitionerInfo.Profile.Name;
+                            appointment.PractitionerSpecialization = practitionerInfo.Profile.Specialization;
+                            appointment.PractitionerImage = practitionerInfo.Image;
+                            Debug.WriteLine($"Added appointment with practitioner: {appointment.PractitionerName}");
+                        }
+                        MyAppointments.Add(appointment);
+                    }
+                });
+
+                Debug.WriteLine($"=== LoadMyAppointmentsAsync END ===");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Error loading appointments: {ex}");
-                await Shell.Current.DisplayAlert("Error", "Failed to load appointments", "OK");
+                Debug.WriteLine($"Error loading appointments: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                await Application.Current.MainPage.DisplayAlert("Error",
+                    "Failed to load appointments", "OK");
             }
             finally
             {
@@ -220,21 +276,24 @@ namespace CommuniZEN.ViewModels
             {
                 if (string.IsNullOrEmpty(_clientId) || string.IsNullOrEmpty(_practitionerUserId))
                 {
-                    await Shell.Current.DisplayAlert("Error", "Unable to book appointment", "OK");
+                    await Application.Current.MainPage.DisplayAlert("Error",
+                        "Unable to book appointment", "OK");
                     return;
                 }
 
-                bool confirm = await Shell.Current.DisplayAlert(
+                bool confirm = await Application.Current.MainPage.DisplayAlert(
                     "Confirm Booking",
                     $"Would you like to book an appointment for {SelectedDate.ToShortDateString()} at {timeSlot.DisplayTime}?",
                     "Yes", "No");
 
                 if (!confirm) return;
 
+                IsLoading = true;
+
                 var appointment = new Appointment
                 {
                     Id = Guid.NewGuid().ToString(),
-                    PractitionerId = _practitionerUserId,  // Use Firebase Auth ID instead of practice profile ID
+                    PractitionerId = _practitionerUserId,
                     ClientId = _clientId,
                     Date = SelectedDate,
                     TimeSlot = timeSlot,
@@ -242,17 +301,18 @@ namespace CommuniZEN.ViewModels
                     CreatedAt = DateTime.UtcNow
                 };
 
-                IsLoading = true;
                 await _dataService.CreateAppointmentAsync(appointment);
-                await Shell.Current.DisplayAlert("Success", "Appointment booked successfully!", "OK");
+                await Application.Current.MainPage.DisplayAlert("Success",
+                    "Appointment booked successfully!", "OK");
 
                 IsBookingTabSelected = false;
-                await LoadDataAsync();
+                await LoadMyAppointmentsAsync();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error booking appointment: {ex.Message}");
-                await Shell.Current.DisplayAlert("Error", "Failed to book appointment", "OK");
+                await Application.Current.MainPage.DisplayAlert("Error",
+                    "Failed to book appointment", "OK");
             }
             finally
             {

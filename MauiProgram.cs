@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Maui;
 using CommuniZEN.Converters;
+
 using CommuniZEN.Interfaces;
 using CommuniZEN.Services;
 using CommuniZEN.ViewModels;
@@ -144,6 +145,9 @@ namespace CommuniZEN
             services.AddSingleton<InvertedBoolConverter>();
             services.AddSingleton<AudioPlayButtonConverter>();
             services.AddSingleton<TimeSpanToStringConverter>();
+            services.AddSingleton<AppointmentActionVisibilityConverter>();
+
+            
 
         }
 
