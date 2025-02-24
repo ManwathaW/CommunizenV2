@@ -6,89 +6,186 @@
              xmlns:viewmodels="clr-namespace:CommuniZEN.ViewModels"
              Shell.NavBarIsVisible="False"
              Title="UserProfilePage">
+    <ScrollView>
+        <Grid RowSpacing="20" Padding="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Profile Header Section -->
+            <Frame Grid.Row="0" 
+                   BackgroundColor="White"
+                   CornerRadius="15"
+                   Padding="20"
+                   Margin="0,20,0,0"
+                   BorderColor="#E1E8F5">
+                <VerticalStackLayout Spacing="15">
+                    <!-- Profile Image -->
+                    <Frame HeightRequest="120" 
+                           WidthRequest="120" 
+                           CornerRadius="60"
+                           IsClippedToBounds="True"
+                           HorizontalOptions="Center"
+                           Padding="0"
+                           BorderColor="#4A90E2">
+                        <Image x:Name="ProfileImage"
+                               Aspect="AspectFill"
+                               Source="{Binding ProfileImagePath, TargetNullValue='placeholder.png'}"/>
+                    </Frame>
+
+                    <!-- Change Photo Button - Only visible in edit mode -->
+                    <Button Text="Change Photo"
+                            Style="{StaticResource SecondaryButton}"
+                         
+                            IsVisible="{Binding IsEditMode}"
+                            HorizontalOptions="Center"/>
+
+                    <!-- Edit Profile Button - Only visible in display mode -->
+                    <Button Text="Edit Profile"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=ToggleEditModeCommand}"
+                            IsVisible="{Binding IsEditMode, Converter={StaticResource InverseBoolConverter}}"
+                            HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Personal Information Section -->
+            <Frame Grid.Row="1" 
+                   BackgroundColor="White"
+                   CornerRadius="15"
+                   Padding="20"
+                   BorderColor="#E1E8F5">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="Personal Information"
+                           FontSize="20"
+                           TextColor="#2B547E"
+                           FontAttributes="Bold"/>
+
+                    <!-- Display Mode -->
+                    <VerticalStackLayout IsVisible="{Binding IsEditMode, Converter={StaticResource InverseBoolConverter}}"
+                                       Spacing="15">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Name"
+                                   TextColor="#666666"
+                                   FontSize="14"/>
+                            <Label Text="{Binding Name}"
+                                   TextColor="#2B547E"
+                                   FontSize="16"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Surname"
+                                   TextColor="#666666"
+                                   FontSize="14"/>
+                            <Label Text="{Binding Surname}"
+                                   TextColor="#2B547E"
+                                   FontSize="16"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Email Address"
+                                   TextColor="#666666"
+                                   FontSize="14"/>
+                            <Label Text="{Binding EmailAddress}"
+                                   TextColor="#2B547E"
+                                   FontSize="16"/>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+
+                    <!-- Edit Mode -->
+                    <VerticalStackLayout IsVisible="{Binding IsEditMode}"
+                                       Spacing="15">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Name"
+                                   TextColor="#666666"
+                                   FontSize="14"/>
+                            <Entry Text="{Binding Name}"
+                                   BackgroundColor="#F8FAFD"
+                                   Placeholder="Enter your name"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Surname"
+                                   TextColor="#666666"
+                                   FontSize="14"/>
+                            <Entry Text="{Binding Surname}"
+                                   BackgroundColor="#F8FAFD"
+                                   Placeholder="Enter your surname"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Email Address"
+                                   TextColor="#666666"
+                                   FontSize="14"/>
+                            <Entry Text="{Binding EmailAddress}"
+                                   BackgroundColor="#F8FAFD"
+                                   Keyboard="Email"
+                                   Placeholder="Enter your email"/>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Bio Section -->
+            <Frame Grid.Row="2" 
+                   BackgroundColor="White"
+                   CornerRadius="15"
+                   Padding="20"
+                   BorderColor="#E1E8F5">
+                <VerticalStackLayout Spacing="15">
+                    <Label Text="About Me"
+                           FontSize="20"
+                           TextColor="#2B547E"
+                           FontAttributes="Bold"/>
+
+                    <!-- Display Mode Bio -->
+                    <Label Text="{Binding Bio}"
+                           TextColor="#2B547E"
+                           FontSize="16"
+                           IsVisible="{Binding IsEditMode, Converter={StaticResource InverseBoolConverter}}"/>
+
+                    <!-- Edit Mode Bio -->
+                    <Editor Text="{Binding Bio}"
+                            HeightRequest="120"
+                            BackgroundColor="#F8FAFD"
+                            Placeholder="Share a little about yourself..."
+                            AutoSize="TextChanges"
+                            IsVisible="{Binding IsEditMode}"/>
+
+                    <!-- Save Changes Button - Only visible in edit mode -->
+                    <Button Text="Save Changes"
+                            Style="{StaticResource PrimaryButton}"
+                         
+                            IsVisible="{Binding IsEditMode}"
+                            Margin="0,10,0,0"/>
+                </VerticalStackLayout>
+            </Frame>
+        </Grid>
+    </ScrollView>
+
     <ContentPage.Resources>
         <ResourceDictionary>
-
-            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+            <!-- Boolean Converter -->
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
-            <converters:StatusColorConverter x:Key="StatusColorConverter"/>
-            <converters:Base64ToImageSourceConverter x:Key="Base64ToImageSourceConverter"/>
 
-            <Style x:Key="TabButtonStyle" TargetType="Button">
-                <Setter Property="HeightRequest" Value="40"/>
-                <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Margin" Value="5"/>
-                <Setter Property="FontSize" Value="17"/>
-            </Style>
-            <Style x:Key="CardStyle" TargetType="Frame">
-                <Setter Property="BackgroundColor" Value="White"/>
+            <!-- Button Styles -->
+            <Style x:Key="PrimaryButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#4A90E2"/>
+                <Setter Property="TextColor" Value="White"/>
                 <Setter Property="CornerRadius" Value="10"/>
-                <Setter Property="Margin" Value="15"/>
-                <Setter Property="Padding" Value="15"/>
-                <Setter Property="BorderColor" Value="#E2E8F0"/>
-                <Setter Property="HasShadow" Value="True"/>
+                <Setter Property="HeightRequest" Value="50"/>
+                <Setter Property="Padding" Value="15,0"/>
             </Style>
-            <Style x:Key="HeaderLabelStyle" TargetType="Label">
-                <Setter Property="FontSize" Value="13"/>
-                <Setter Property="TextColor" Value="#2C5282"/>
-                <Setter Property="FontAttributes" Value="Bold"/>
-                <Setter Property="Margin" Value="0,0,0,10"/>
+
+            <Style x:Key="SecondaryButton" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#EBF3FF"/>
+                <Setter Property="TextColor" Value="#4A90E2"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="HeightRequest" Value="40"/>
+                <Setter Property="Padding" Value="15,0"/>
             </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
-
-    <Grid RowDefinitions="Auto,*">
-        <!-- Tab Buttons -->
-        <Grid Grid.Row="0" 
-              Margin="0,-5,0,0"
-              ColumnDefinitions="*,*" 
-              Padding="0"
-              BackgroundColor="White">
-            <Button Text="Book Appointment"
-                    Grid.Column="0"
-                    Style="{StaticResource TabButtonStyle}"
-                    BackgroundColor="{Binding IsBookingTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#4299E1,#EDF2F7'}"
-                    TextColor="{Binding IsBookingTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='White,#2C5282'}"
-                    Command="{Binding SwitchTabCommand}"
-                    CommandParameter="0"
-                    Margin="5"/>
-
-            <Button Text="My Appointments"
-                    Grid.Column="1"
-                     Style="{StaticResource TabButtonStyle}"
-                    BackgroundColor="{Binding IsBookingTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#EDF2F7,#4299E1'}"
-                    TextColor="{Binding IsBookingTabSelected, Converter={StaticResource BoolToColorConverter}, ConverterParameter='#2C5282,White'}"
-                    Command="{Binding SwitchTabCommand}"
-                    CommandParameter="1"
-                    Margin="5"/>
-        </Grid>
-
-        <Border Grid.Row="1"
-                IsVisible="{Binding IsBookingTabSelected}"
-                HorizontalOptions="Center"
-                Margin="0,-600,0,0"
-                HeightRequest="147"
-                WidthRequest="150"
-                Stroke="White"
-                StrokeThickness="6"
-                StrokeShape="RoundRectangle 83"
-                ZIndex="1">
-            <Image Source="{Binding PractitionerImage, Converter={StaticResource Base64ToImageSourceConverter}}"
-                   Aspect="AspectFill"
-                   HeightRequest="150"
-                   WidthRequest="152"/>
-        </Border>
-
-        <!-- Content Area -->
-        <Grid Grid.Row="1" Grid.RowSpan="2">
-            <Frame BackgroundColor="#EDF2F7" Margin="5,50,5,5" Padding="10" BorderColor="white" CornerRadius="30">
-                <!-- Booking Tab Content -->
-                
-
-            </Frame>
-
-
-          
-        </Grid>
-    </Grid>
 </ContentPage>

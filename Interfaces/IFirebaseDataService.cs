@@ -50,7 +50,7 @@ namespace CommuniZEN.Interfaces
 
         Task<PracticeProfile> GetPractitionerProfileAsync(string practitionerId);
 
-
+       
 
         Task CreateAppointmentAsync(Appointment appointment);
         Task UpdateAppointmentAsync(Appointment appointment);
