@@ -126,7 +126,57 @@ namespace CommuniZEN.ViewModels
         }
         #endregion
 
+
+
+        // New commands for the added functionality
+        [RelayCommand]
+        private async Task OpenChatWithClients()
+        {
+            try
+            {
+                await Shell.Current.GoToAsync("chatpage");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Navigation error: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to open chat at this time.", "OK");
+            }
+        }
+
+        [RelayCommand]
+        private async Task OpenSessionNotes()
+        {
+            try
+            {
+                await Shell.Current.GoToAsync("journalpage");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Navigation error: {ex.Message}");
+                await Shell.Current.DisplayAlert("Error", "Unable to open session notes at this time.", "OK");
+            }
+        }
+
+        [RelayCommand]
+        private async Task OpenAnalytics()
+        {
+            await Shell.Current.DisplayAlert("Client Analytics", "Analytics feature coming soon", "OK");
+        }
+
+        [RelayCommand]
+        private async Task OpenResources()
+        {
+            await Shell.Current.DisplayAlert("Resources", "Resources feature coming soon", "OK");
+        }
+
+
+
         #region Commands
+
+
+
+
+
         [RelayCommand]
         private async Task SaveProfile()
         {

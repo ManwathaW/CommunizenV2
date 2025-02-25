@@ -3,171 +3,489 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:CommuniZEN.Converters"
              x:Class="CommuniZEN.Views.PractitionerDashboardPage"
+              xmlns:skia="clr-namespace:SkiaSharp.Extended.UI.Controls;assembly=SkiaSharp.Extended.UI"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="#F5F9FF">
+
 
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:Base64ToImageSourceConverter x:Key="Base64ToImageSourceConverter"/>
-            <converters:BoolToColorConverter x:Key="BoolToColorConverter" 
-                                           />
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
         </ResourceDictionary>
+
+        <Style x:Key="HeaderLabelStyle" TargetType="Label">
+            <Setter Property="TextColor" Value="#2B5C9B"/>
+            <Setter Property="FontFamily" Value="OpenSansRegular"/>
+        </Style>
+
+        <Style x:Key="CardStyle" TargetType="Frame">
+            <Setter Property="BackgroundColor" Value="White"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="HasShadow" Value="True"/>
+            <Setter Property="BorderColor" Value="#E8F0FE"/>
+        </Style>
+
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="#4B89DC"/>
+            <Setter Property="TextColor" Value="White"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HeightRequest" Value="40"/>
+        </Style>
+
+        <Style x:Key="FeatureCardStyle" TargetType="Frame">
+            <Setter Property="BackgroundColor" Value="Transparent"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Padding" Value="0,2,0,0"/>
+            <Setter Property="HasShadow" Value="True"/>
+            <Setter Property="BorderColor" Value="#E8F0FE"/>
+            <Setter Property="HeightRequest" Value="200"/>
+            <Setter Property="WidthRequest" Value="345"/>
+
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#E6F3FF" Offset="0.0" />
+                        <GradientStop Color="#CCE7FF" Offset="0.5" />
+                        <GradientStop Color="#B3DBFF" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CardTitleStyle" TargetType="Label">
+            <Setter Property="Margin" Value="0,-10,0,0"/>
+            <Setter Property="TextColor" Value="DarkBlue"/>
+            <Setter Property="Padding" Value="0,10,0,0"/>
+            <Setter Property="HorizontalOptions" Value="Center"/>
+            <Setter Property="FontAttributes" Value="Bold"/>
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+
+        <Style x:Key="CardDescriptionStyle" TargetType="Label">
+            <Setter Property="TextColor" Value="#7F98C3"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="HorizontalTextAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,-10,0,0"/>
+            <Setter Property="LineBreakMode" Value="TailTruncation"/>
+            <Setter Property="MaxLines" Value="2"/>
+        </Style>
+
+        <Style x:Key="ToolCardStyle" TargetType="Frame">
+            <Setter Property="BackgroundColor" Value="#E6F3FF"/>
+            <Setter Property="Opacity" Value="0.9"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="HasShadow" Value="True"/>
+            <Setter Property="BorderColor" Value="#E8F0FE"/>
+            <Setter Property="HeightRequest" Value="220"/>
+        </Style>
     </ContentPage.Resources>
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="20">
-            <!-- Profile Edit Mode -->
-            <VerticalStackLayout IsVisible="{Binding IsEditing}">
-                <!-- Profile Image Section -->
-                <Frame HeightRequest="120" 
-                       WidthRequest="120" 
-                       CornerRadius="60"
-                       IsClippedToBounds="True"
-                       Padding="0"
-                       BorderColor="#E8F0FE"
-                       HorizontalOptions="Center">
+    <Grid RowDefinitions="Auto,*" Margin="0,20,0,0">
+        <!-- Header -->
+        <Frame Padding="5" 
+               HeightRequest="85"
+               BackgroundColor="White"
+               HasShadow="True"
+               BorderColor="#E8F0FE"
+               CornerRadius="5">
+
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Button Grid.Column="0"
+                         ImageSource="logo.png"
+                         HeightRequest="85"
+                         WidthRequest="85"
+                         Padding="10,0,0,0"
+                         BackgroundColor="Transparent"
+                         Command="{Binding OpenMenuCommand}"/>
+
+                <VerticalStackLayout Grid.Column="1" 
+                                     VerticalOptions="Center"
+                                     HorizontalOptions="Center"
+                                     Spacing="2">
+                    <Label Text="Practitioner Dashboard"
+                           Style="{StaticResource HeaderLabelStyle}"
+                           HorizontalOptions="Center"
+                           FontSize="16"
+                           TextColor="#7F98C3"/>
+                    <Label Text="{Binding Name}"
+                           Style="{StaticResource HeaderLabelStyle}"
+                           HorizontalOptions="Center"
+                           FontSize="18"
+                           FontAttributes="Bold"/>
+                </VerticalStackLayout>
+
+                <!-- profile pic-->
+                <Border Grid.Column="2"
+                        HorizontalOptions="End"
+                        HeightRequest="66"
+                        WidthRequest="66"
+                        Stroke="Green"
+                        StrokeThickness="2"
+                        StrokeShape="RoundRectangle 50"
+                        Padding="0">
+
                     <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
-                           Aspect="AspectFill">
+                           Aspect="AspectFill"
+                           HeightRequest="62"
+                           WidthRequest="62">
                         <Image.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding ChangeProfilePictureCommand}"/>
                         </Image.GestureRecognizers>
                     </Image>
-                </Frame>
+                </Border>
+            </Grid>
+        </Frame>
 
-                <!-- Basic Info -->
-                <Entry Placeholder="Name"
-                       Text="{Binding Name}"
-                       Margin="0,10"/>
+        <!-- Main Content -->
+        <ScrollView Grid.Row="1" VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Spacing="15" Padding="5,10,10,20">
+                <!-- Profile Edit Mode -->
+                <VerticalStackLayout IsVisible="{Binding IsEditing}" Spacing="10">
+                    <Frame Style="{StaticResource CardStyle}" Padding="15">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Edit Profile" 
+                                   TextColor="DarkBlue" 
+                                   FontSize="17" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"/>
 
-                <Entry Placeholder="Specialization"
-                       Text="{Binding Specialization}"
-                       Margin="0,10"/>
+                            <!-- Profile Image Section -->
+                            <Frame HeightRequest="120" 
+                                   WidthRequest="120" 
+                                   CornerRadius="60"
+                                   IsClippedToBounds="True"
+                                   Padding="0"
+                                   BorderColor="#E8F0FE"
+                                   HorizontalOptions="Center">
+                                <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
+                                       Aspect="AspectFill">
+                                    <Image.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding ChangeProfilePictureCommand}"/>
+                                    </Image.GestureRecognizers>
+                                </Image>
+                            </Frame>
 
-                <Editor Placeholder="Bio"
-                        Text="{Binding Bio}"
-                        HeightRequest="100"
-                        Margin="0,10"/>
+                            <!-- Basic Info -->
+                            <Entry Placeholder="Name"
+                                   Text="{Binding Name}"
+                                   Margin="0,5"/>
 
-                <!-- Location Section -->
-                <Frame Padding="15" 
-                       Margin="0,10"
-                       BorderColor="#E8F0FE"
-                       BackgroundColor="White">
-                    <VerticalStackLayout>
-                        <Label Text="Location"
-                               FontAttributes="Bold"
-                               Margin="0,0,0,10"/>
-                        <Label Text="{Binding Location}"
-                               TextColor="#666666"/>
-                        <Button Text="Set Location"
-                                Command="{Binding OpenMapPickerCommand}"
-                                BackgroundColor="#4B89DC"
-                                TextColor="White"
-                                Margin="0,10,0,0"/>
-                    </VerticalStackLayout>
-                </Frame>
+                            <Entry Placeholder="Specialization"
+                                   Text="{Binding Specialization}"
+                                   Margin="0,5"/>
 
+                            <Editor Placeholder="Bio"
+                                    Text="{Binding Bio}"
+                                    HeightRequest="100"
+                                    Margin="0,5"/>
 
-         
+                            <!-- Location Section -->
+                            <Label Text="Location"
+                                   FontAttributes="Bold"
+                                   Margin="0,5,0,0"/>
 
-       
+                            <Label Text="{Binding Location}"
+                                   TextColor="#666666"/>
 
-                <!-- Action Buttons -->
-                <StackLayout Orientation="Horizontal" 
-                           Spacing="10"
-                           Margin="0,20,0,0">
-                    <Button Text="Save"
-                            Command="{Binding SaveProfileCommand}"
-                            BackgroundColor="#4B89DC"
-                            TextColor="White"
-                            HorizontalOptions="FillAndExpand"/>
+                            <Button Text="Set Location"
+                                    Command="{Binding OpenMapPickerCommand}"
+                                    Style="{StaticResource ActionButtonStyle}"
+                                    Margin="0,5,0,0"/>
 
-                    <Button Text="Cancel"
-                            Command="{Binding CancelEditCommand}"
-                            BackgroundColor="#95A5A6"
-                            TextColor="White"
-                            HorizontalOptions="FillAndExpand"/>
-                </StackLayout>
-            </VerticalStackLayout>
+                            <!-- Action Buttons -->
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
+                                <Button Text="Save"
+                                        Command="{Binding SaveProfileCommand}"
+                                        Style="{StaticResource ActionButtonStyle}"
+                                        Grid.Column="0"/>
 
-            <!-- Profile Preview Mode -->
-            <VerticalStackLayout IsVisible="{Binding HasProfile}">
-                <!-- Your existing profile preview code -->
-                <Frame Padding="20" 
-                       BorderColor="#E8F0FE"
-                       BackgroundColor="White">
-                    <VerticalStackLayout>
-                        <Frame HeightRequest="120" 
-                               WidthRequest="120" 
-                               CornerRadius="60"
-                               IsClippedToBounds="True"
-                               Padding="0"
-                               BorderColor="#E8F0FE"
-                               HorizontalOptions="Center">
-                            <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
-                                   Aspect="AspectFill"/>
+                                <Button Text="Cancel"
+                                        Command="{Binding CancelEditCommand}"
+                                        BackgroundColor="#95A5A6"
+                                        TextColor="White"
+                                        CornerRadius="15"
+                                        Grid.Column="1"/>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+
+                <!-- Profile Preview Mode -->
+                <VerticalStackLayout IsVisible="{Binding HasProfile}" Spacing="10">
+                    <Frame Style="{StaticResource CardStyle}" Padding="15">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Profile" 
+                                   TextColor="DarkBlue" 
+                                   FontSize="17" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"/>
+
+                            <Frame HeightRequest="120" 
+                                   WidthRequest="120" 
+                                   CornerRadius="60"
+                                   IsClippedToBounds="True"
+                                   Padding="0"
+                                   BorderColor="#E8F0FE"
+                                   HorizontalOptions="Center">
+                                <Image Source="{Binding ProfileImage, Converter={StaticResource Base64ToImageSourceConverter}}"
+                                       Aspect="AspectFill"/>
+                            </Frame>
+
+                            <Label Text="{Binding Name}"
+                                   FontSize="24"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   TextColor="#2B5C9B"
+                                   Margin="0,5"/>
+
+                            <Label Text="{Binding Specialization}"
+                                   FontSize="18"
+                                   TextColor="#7F98C3"
+                                   HorizontalOptions="Center"/>
+
+                            <Label Text="{Binding Bio}"
+                                   Margin="0,10"
+                                   TextColor="#666666"/>
+
+                            <Label Text="{Binding Location}"
+                                   TextColor="#666666"/>
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
+                                <Button Text="Edit Profile"
+                                        Command="{Binding EditProfileCommand}"
+                                        Style="{StaticResource ActionButtonStyle}"
+                                        Grid.Column="0"/>
+
+                                <Button Text="Delete Profile"
+                                        Command="{Binding DeleteProfileCommand}"
+                                        BackgroundColor="#FF4B4B"
+                                        TextColor="White"
+                                        CornerRadius="15"
+                                        Grid.Column="1"/>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Practitioner Tools -->
+                    <Label Text="My Practice Tools" 
+                           TextColor="DarkBlue" 
+                           FontSize="17" 
+                           FontAttributes="Bold"/>
+
+                    <!-- App Features -->
+                    <ScrollView Orientation="Horizontal" 
+                                HorizontalScrollBarVisibility="Never">
+                        <HorizontalStackLayout Spacing="10" Padding="5">
+                            <!-- Manage Appointments Card -->
+                            <Frame Style="{StaticResource FeatureCardStyle}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ViewAppointmentsCommand}"/>
+                                </Frame.GestureRecognizers>
+                                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10" Padding="5">
+                                    <Label Text="MANAGE APPOINTMENTS"
+                                         Style="{StaticResource CardTitleStyle}"/>
+
+                                    <Grid ColumnDefinitions="*,auto,*" Margin="0,-80,0,0" >
+                                        <skia:SKLottieView Grid.Row="1" Grid.Column="0"
+                                               Margin="0,-15,0,0"
+                                               Source="wave.json"
+                                               RepeatCount="-1"
+                                               IsAnimationEnabled="True"
+                                               HeightRequest="300"
+                                               WidthRequest="200"/>
+
+                                        <Frame HeightRequest="145" Grid.Row="1" Grid.Column="1"
+                                               WidthRequest="245"
+                                               CornerRadius="20"
+                                               Margin="0,65,0,0"
+                                               HasShadow="True"
+                                               BorderColor="LightGrey"
+                                               BackgroundColor="DarkBlue"
+                                               Padding="-20">
+                                            <Image Source="appointments.png" 
+                                                   WidthRequest="250" 
+                                                   HeightRequest="160" />
+                                        </Frame>
+
+                                        <skia:SKLottieView Grid.Row="1" Grid.Column="2"
+                                               Margin="0,-15,0,0"
+                                               Source="wave.json"
+                                               RepeatCount="-1"
+                                               IsAnimationEnabled="True"
+                                               HeightRequest="300"
+                                               WidthRequest="200"/>
+                                    </Grid>
+
+                                    <Label Grid.Row="2"
+                                         Text="Schedule and manage client appointments"
+                                         Style="{StaticResource CardDescriptionStyle}"/>
+                                </Grid>
+                            </Frame>
+
+                            <!-- Chat With Clients Card -->
+                            <Frame Style="{StaticResource FeatureCardStyle}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenChatWithClientsCommand}"/>
+                                </Frame.GestureRecognizers>
+                                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10" Padding="5">
+                                    <Label Text="CHAT WITH CLIENTS"
+                                         Style="{StaticResource CardTitleStyle}"/>
+
+                                    <Grid ColumnDefinitions="*,auto,*" Margin="0,-80,0,0" >
+                                        <skia:SKLottieView Grid.Row="1" Grid.Column="0"
+                                               Margin="0,-15,0,0"
+                                               Source="wave.json"
+                                               RepeatCount="-1"
+                                               IsAnimationEnabled="True"
+                                               HeightRequest="300"
+                                               WidthRequest="200"/>
+
+                                        <Frame HeightRequest="145" Grid.Row="1" Grid.Column="1"
+                                               WidthRequest="245"
+                                               CornerRadius="20"
+                                               Margin="0,65,0,0"
+                                               HasShadow="True"
+                                               BorderColor="LightGrey"
+                                               BackgroundColor="DarkBlue"
+                                               Padding="-20">
+                                            <Image Source="chats.png" 
+                                                   WidthRequest="250" 
+                                                   HeightRequest="160" />
+                                        </Frame>
+
+                                        <skia:SKLottieView Grid.Row="1" Grid.Column="2"
+                                               Margin="0,-15,0,0"
+                                               Source="wave.json"
+                                               RepeatCount="-1"
+                                               IsAnimationEnabled="True"
+                                               HeightRequest="300"
+                                               WidthRequest="200"/>
+                                    </Grid>
+
+                                    <Label Grid.Row="2"
+                                         Text="Message and connect with your clients"
+                                         Style="{StaticResource CardDescriptionStyle}"/>
+                                </Grid>
+                            </Frame>
+
+                            <!-- Session Notes Card -->
+                            <Frame Style="{StaticResource FeatureCardStyle}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenSessionNotesCommand}"/>
+                                </Frame.GestureRecognizers>
+                                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="10" Padding="5">
+                                    <Label Text="SESSION NOTES"
+                                         Style="{StaticResource CardTitleStyle}"/>
+
+                                    <Grid ColumnDefinitions="*,auto,*" Margin="0,-80,0,0" >
+                                        <skia:SKLottieView Grid.Row="1" Grid.Column="0"
+                                               Margin="0,-15,0,0"
+                                               Source="wave.json"
+                                               RepeatCount="-1"
+                                               IsAnimationEnabled="True"
+                                               HeightRequest="300"
+                                               WidthRequest="200"/>
+
+                                        <Frame HeightRequest="145" Grid.Row="1" Grid.Column="1"
+                                               WidthRequest="245"
+                                               CornerRadius="20"
+                                               Margin="0,65,0,0"
+                                               HasShadow="True"
+                                               BorderColor="LightGrey"
+                                               BackgroundColor="DarkBlue"
+                                               Padding="-20">
+                                            <Image Source="gjournal.png" 
+                                                   WidthRequest="250" 
+                                                   HeightRequest="160" />
+                                        </Frame>
+
+                                        <skia:SKLottieView Grid.Row="1" Grid.Column="2"
+                                               Margin="0,-15,0,0"
+                                               Source="wave.json"
+                                               RepeatCount="-1"
+                                               IsAnimationEnabled="True"
+                                               HeightRequest="300"
+                                               WidthRequest="200"/>
+                                    </Grid>
+
+                                    <Label Grid.Row="2"
+                                         Text="Record and manage client session notes"
+                                         Style="{StaticResource CardDescriptionStyle}"/>
+                                </Grid>
+                            </Frame>
+                        </HorizontalStackLayout>
+                    </ScrollView>
+
+                    <!-- Quick Tools -->
+                    <Label Text="Quick Tools" 
+                           TextColor="DarkBlue" 
+                           FontSize="17" 
+                           FontAttributes="Bold"
+                           Margin="0,10,0,0"/>
+
+                    <Grid ColumnDefinitions="*,10,*" Margin="0,5,0,0">
+                        <!-- Client Analytics Frame -->
+                        <Frame Grid.Column="0"
+                               Style="{StaticResource ToolCardStyle}"
+                               MinimumWidthRequest="160">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenAnalyticsCommand}"/>
+                            </Frame.GestureRecognizers>
+                            <VerticalStackLayout Spacing="6" 
+                                          VerticalOptions="Center" 
+                                          HorizontalOptions="Center">
+                                <Image Source="awareness.png"
+                                        HeightRequest="100"
+                                        WidthRequest="100"
+                                        HorizontalOptions="Center"
+                                        Aspect="AspectFit"/>
+                                <Label Text="Client Analytics"
+                                       TextColor="DarkBlue"
+                                       FontAttributes="Bold"
+                                       FontSize="16"
+                                       HorizontalOptions="Center"/>
+                                <Label Text="View client progress data"
+                                       TextColor="#2B5C9B"
+                                       FontSize="12"
+                                       Opacity="0.8"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
                         </Frame>
 
-                        <Label Text="{Binding Name}"
-                               FontSize="24"
-                               FontAttributes="Bold"
-                               HorizontalOptions="Center"
-                               Margin="0,10"/>
-
-                        <Label Text="{Binding Specialization}"
-                               FontSize="18"
-                               TextColor="#666666"
-                               HorizontalOptions="Center"/>
-
-                        <Label Text="{Binding Bio}"
-                               Margin="0,20"
-                               TextColor="#666666"/>
-
-                        <Label Text="{Binding Location}"
-                               TextColor="#666666"/>
-
-                    
-
-                        <Button Text="Edit Profile"
-                                Command="{Binding EditProfileCommand}"
-                                BackgroundColor="#4B89DC"
-                                TextColor="White"
-                                Margin="0,20,0,0"/>
-
-                        <Button Text="Delete Profile"
-                                Command="{Binding DeleteProfileCommand}"
-                                BackgroundColor="#FF4B4B"
-                                TextColor="White"
-                                Margin="0,10,0,0"/>
-                    </VerticalStackLayout>
-                </Frame>
+                        <!-- Resources Frame -->
+                        <Frame Grid.Column="2"
+                               Style="{StaticResource ToolCardStyle}"
+                               MinimumWidthRequest="170">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenResourcesCommand}"/>
+                            </Frame.GestureRecognizers>
+                            <VerticalStackLayout Spacing="8" 
+                                     VerticalOptions="Center"
+                                     HorizontalOptions="Center">
+                                <Image Source="affirmation.png"
+                                       HeightRequest="90"
+                                       WidthRequest="100"
+                                       HorizontalOptions="Center"
+                                       Aspect="AspectFit"/>
+                                <Label Text="Resources"
+                                       TextColor="DarkBlue"
+                                       FontAttributes="Bold"
+                                       FontSize="16"
+                                       HorizontalOptions="Center"/>
+                                <Label Text="Client support materials"
+                                       TextColor="#2B5C9B"
+                                       FontSize="12"
+                                       Opacity="0.8"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </Grid>
+                </VerticalStackLayout>
             </VerticalStackLayout>
-
-
-<!--MANAGE APPOINTMENTS-->
-            <!-- Manage Appointments Button -->
-            <Frame Margin="0,10" 
-                   Padding="15" 
-                   BackgroundColor="White"
-                   BorderColor="#E8F0FE"
-                   CornerRadius="15"
-                   HasShadow="True">
-                <Frame.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding ViewAppointmentsCommand}"/>
-                </Frame.GestureRecognizers>
-                <StackLayout>
-                    <Label Text="Manage Appointments"
-                           HorizontalOptions="CenterAndExpand"
-                           TextColor="DarkBlue" 
-                           FontSize="Medium"  
-                           FontAttributes="Bold" />
-                    <Image Source="appointments.png"/>
-                </StackLayout>
-            </Frame>
-
-
-
-
-        </VerticalStackLayout>
-     
-    </ScrollView>
+        </ScrollView>
+    </Grid>
 </ContentPage>
